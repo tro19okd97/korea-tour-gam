@@ -1,0 +1,2829 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>韓国ツアー語学ゲーム 🇰🇷</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Noto+Sans+JP:wght@300;400;700&display=swap');
+
+  :root {
+    --pink: #FF6B9D;
+    --purple: #9B59B6;
+    --blue: #3498DB;
+    --gold: #F39C12;
+    --bg-dark: #1a0a2e;
+    --bg-mid: #16213e;
+    --card-bg: rgba(255,255,255,0.07);
+    --text: #f0e6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', 'Noto Sans KR', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== TITLE SCREEN ===== */
+  #title-screen {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(160deg, #1a0a2e 0%, #0d0020 50%, #1a0a2e 100%);
+  }
+
+  .title-bg-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(155,89,182,0.3) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+
+  .title-container { position: relative; z-index: 2; }
+
+  .idol-avatar-large {
+    width: 180px; height: 220px;
+    margin: 0 auto 24px;
+    animation: float 3s ease-in-out infinite;
+    position: relative;
+    filter: drop-shadow(0 0 30px rgba(255,107,157,0.7)) drop-shadow(0 0 60px rgba(155,89,182,0.4));
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .title-main {
+    font-size: 42px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #FF6B9D, #f0c0ff, #9B59B6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .title-sub {
+    font-size: 16px;
+    color: rgba(240,230,255,0.7);
+    margin-bottom: 32px;
+    letter-spacing: 2px;
+  }
+
+  .idol-intro-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,107,157,0.3);
+    border-radius: 20px;
+    padding: 20px 32px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+    max-width: 380px;
+  }
+
+  .idol-name { font-size: 20px; color: var(--pink); font-weight: 700; margin-bottom: 4px; }
+  .idol-desc { font-size: 14px; color: rgba(240,230,255,0.75); line-height: 1.6; }
+
+  .btn-start {
+    background: linear-gradient(135deg, #FF6B9D, #9B59B6);
+    border: none;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px 48px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 30px rgba(255,107,157,0.4);
+    transition: all 0.3s;
+    font-family: inherit;
+    letter-spacing: 1px;
+  }
+
+  .btn-start:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(255,107,157,0.6);
+  }
+
+  /* ===== MAP SCREEN ===== */
+  #map-screen {
+    padding: 20px;
+    background: linear-gradient(160deg, #0d0020 0%, #1a0a2e 100%);
+  }
+
+  .map-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 14px 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .idol-avatar-small {
+    width: 56px; height: 70px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 10px rgba(255,107,157,0.6));
+  }
+
+  .speech-bubble {
+    background: rgba(255,107,157,0.1);
+    border: 1px solid rgba(255,107,157,0.3);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+    flex: 1;
+  }
+
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: -10px; top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right-color: rgba(255,107,157,0.3);
+  }
+
+  .score-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    justify-content: flex-end;
+  }
+
+  .score-chip {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .score-chip .val { color: var(--gold); font-weight: 700; }
+
+  .map-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: rgba(240,230,255,0.9);
+  }
+
+  .locations-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .location-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .location-card:hover:not(.locked) {
+    transform: translateY(-5px);
+    border-color: var(--pink);
+    box-shadow: 0 10px 30px rgba(255,107,157,0.3);
+  }
+
+  .location-card.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .location-card.completed {
+    border-color: var(--gold);
+  }
+
+  .loc-banner {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loc-banner-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.6;
+  }
+
+  .loc-banner-emoji { position: relative; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+
+  .loc-info { padding: 16px; }
+  .loc-name-kr { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .loc-name-jp { font-size: 13px; color: rgba(240,230,255,0.6); margin-bottom: 10px; }
+
+  .loc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .loc-tag {
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: rgba(240,230,255,0.75);
+  }
+
+  .loc-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--purple));
+    border-radius: 3px;
+    transition: width 0.5s;
+  }
+
+  .loc-status {
+    font-size: 12px;
+    color: rgba(240,230,255,0.6);
+    white-space: nowrap;
+  }
+
+  .lock-icon {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .complete-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  /* ===== LESSON SCREEN ===== */
+  #lesson-screen {
+    background: linear-gradient(160deg, #0d0020 0%, #1a0a2e 100%);
+  }
+
+  .lesson-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .btn-back {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    font-size: 20px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .btn-back:hover { background: rgba(255,255,255,0.2); }
+
+  .lesson-loc-info { flex: 1; }
+  .lesson-loc-name { font-size: 18px; font-weight: 700; }
+  .lesson-loc-sub { font-size: 13px; color: rgba(240,230,255,0.6); }
+
+  .lesson-progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .lesson-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--purple));
+    transition: width 0.5s;
+  }
+
+  .lesson-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Scene card */
+  .scene-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .scene-location-banner {
+    text-align: center;
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  .scene-situation {
+    background: rgba(52,152,219,0.1);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: rgba(240,230,255,0.85);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  /* Dialogue */
+  .dialogue-box {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+
+  .dialogue-box.npc { flex-direction: row; }
+  .dialogue-box.player { flex-direction: row-reverse; }
+
+  .dialogue-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .dialogue-box.npc .dialogue-avatar {
+    background: transparent;
+    filter: drop-shadow(0 0 8px rgba(255,107,157,0.5));
+    width: 56px; height: 70px;
+  }
+
+  .dialogue-box.player .dialogue-avatar {
+    background: linear-gradient(135deg, #3498DB, #2ecc71);
+    box-shadow: 0 0 15px rgba(52,152,219,0.4);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    font-size: 24px;
+  }
+
+  .dialogue-content { flex: 1; }
+
+  .dialogue-speaker {
+    font-size: 12px;
+    color: rgba(240,230,255,0.5);
+    margin-bottom: 4px;
+  }
+
+  .dialogue-text-box {
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .dialogue-box.npc .dialogue-text-box {
+    background: rgba(255,107,157,0.12);
+    border: 1px solid rgba(255,107,157,0.25);
+    border-top-left-radius: 4px;
+  }
+
+  .dialogue-box.player .dialogue-text-box {
+    background: rgba(52,152,219,0.12);
+    border: 1px solid rgba(52,152,219,0.25);
+    border-top-right-radius: 4px;
+    text-align: right;
+  }
+
+  .korean-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .pronunciation {
+    font-size: 13px;
+    color: rgba(240,230,255,0.6);
+    font-style: italic;
+  }
+
+  .japanese-text {
+    font-size: 13px;
+    color: rgba(240,230,255,0.7);
+    margin-top: 4px;
+  }
+
+  /* Vocab highlight */
+  .vocab-highlight {
+    display: inline-block;
+    background: rgba(243,156,18,0.2);
+    border: 1px solid rgba(243,156,18,0.4);
+    border-radius: 4px;
+    padding: 0 4px;
+    color: var(--gold);
+  }
+
+  /* Quiz */
+  .quiz-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+  }
+
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .quiz-badge {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .quiz-question {
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    color: rgba(240,230,255,0.9);
+  }
+
+  .quiz-question .q-korean {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .choice-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  .choice-btn:hover:not(:disabled) {
+    background: rgba(255,107,157,0.1);
+    border-color: rgba(255,107,157,0.4);
+    transform: translateY(-2px);
+  }
+
+  .choice-btn.correct {
+    background: rgba(46,204,113,0.2);
+    border-color: #2ecc71;
+    color: #2ecc71;
+  }
+
+  .choice-btn.wrong {
+    background: rgba(231,76,60,0.2);
+    border-color: #e74c3c;
+    color: #e74c3c;
+  }
+
+  .choice-btn:disabled { cursor: not-allowed; }
+
+  /* Feedback */
+  .feedback-box {
+    margin-top: 16px;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.7;
+    display: none;
+  }
+
+  .feedback-box.correct {
+    background: rgba(46,204,113,0.1);
+    border: 1px solid rgba(46,204,113,0.3);
+    color: #a8f0c6;
+    display: block;
+  }
+
+  .feedback-box.wrong {
+    background: rgba(231,76,60,0.1);
+    border: 1px solid rgba(231,76,60,0.3);
+    color: #f0a8a8;
+    display: block;
+  }
+
+  .feedback-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+
+  .btn-next {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    background: linear-gradient(135deg, #FF6B9D, #9B59B6);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+    display: none;
+  }
+
+  .btn-next:hover { opacity: 0.9; transform: translateY(-2px); }
+  .btn-next.visible { display: block; }
+
+  /* ===== RESULT SCREEN ===== */
+  #result-screen {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(160deg, #0d0020 0%, #1a0a2e 100%);
+    padding: 30px 20px;
+  }
+
+  .result-idol {
+    width: 150px; height: 185px;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 0 30px rgba(255,107,157,0.7));
+    animation: pulse-idol 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-idol {
+    0%,100% { filter: drop-shadow(0 0 20px rgba(255,107,157,0.6)); transform: translateY(0); }
+    50% { filter: drop-shadow(0 0 40px rgba(255,107,157,0.9)) drop-shadow(0 0 60px rgba(155,89,182,0.5)); transform: translateY(-6px); }
+  }
+
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 40px rgba(255,107,157,0.6); }
+    50% { box-shadow: 0 0 60px rgba(255,107,157,0.9), 0 0 100px rgba(155,89,182,0.4); }
+  }
+
+  .result-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #FF6B9D, #f0c0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .result-comment {
+    font-size: 16px;
+    color: rgba(240,230,255,0.75);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .result-stats {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 16px 24px;
+    min-width: 100px;
+  }
+
+  .stat-val { font-size: 28px; font-weight: 700; color: var(--gold); }
+  .stat-label { font-size: 12px; color: rgba(240,230,255,0.6); margin-top: 4px; }
+
+  .result-vocab {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: left;
+    max-width: 400px;
+    width: 100%;
+    margin: 0 auto 28px;
+  }
+
+  .result-vocab h3 { font-size: 14px; color: rgba(240,230,255,0.6); margin-bottom: 12px; letter-spacing: 1px; }
+
+  .vocab-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+  }
+
+  .vocab-item:last-child { border-bottom: none; }
+  .vocab-kr { font-weight: 700; color: var(--pink); }
+  .vocab-jp { color: rgba(240,230,255,0.7); }
+
+  .btn-map {
+    background: linear-gradient(135deg, #FF6B9D, #9B59B6);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(255,107,157,0.4);
+    transition: all 0.3s;
+    font-family: inherit;
+    margin-right: 12px;
+  }
+
+  .btn-map:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(255,107,157,0.5); }
+
+  /* Phrase card mode */
+  .phrase-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .phrase-kr {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .phrase-pron {
+    font-size: 16px;
+    color: var(--pink);
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+
+  .phrase-jp {
+    font-size: 16px;
+    color: rgba(240,230,255,0.8);
+    margin-bottom: 16px;
+  }
+
+  .phrase-example {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: rgba(240,230,255,0.7);
+    line-height: 1.7;
+    text-align: left;
+  }
+
+  .btn-got-it {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    background: linear-gradient(135deg, #3498DB, #9B59B6);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+  }
+
+  .btn-got-it:hover { opacity: 0.9; transform: translateY(-2px); }
+
+  /* Step indicator */
+  .step-indicator {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.3s;
+  }
+
+  .step-dot.done { background: var(--pink); }
+  .step-dot.active { background: white; width: 24px; border-radius: 4px; }
+
+  /* Confetti */
+  .confetti { position: fixed; pointer-events: none; z-index: 999; }
+
+  /* Animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .lesson-body > * { animation: slideIn 0.4s ease both; }
+
+  /* Drill banner */
+  .drill-banner {
+    max-width: 960px;
+    margin: 0 auto 20px;
+    cursor: pointer;
+  }
+  .drill-banner-inner {
+    background: linear-gradient(135deg, rgba(243,156,18,0.15), rgba(255,107,157,0.15));
+    border: 1px solid rgba(243,156,18,0.4);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.3s;
+  }
+  .drill-banner-inner:hover {
+    background: linear-gradient(135deg, rgba(243,156,18,0.25), rgba(255,107,157,0.25));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(243,156,18,0.2);
+  }
+  .drill-icon { font-size: 32px; }
+  .drill-title { font-size: 18px; font-weight: 700; color: var(--gold); }
+  .drill-sub { font-size: 13px; color: rgba(240,230,255,0.65); }
+  .drill-arrow { font-size: 20px; color: var(--gold); margin-left: auto; }
+
+  /* Category card */
+  .cat-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+  .cat-card:hover {
+    border-color: var(--pink);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(255,107,157,0.2);
+  }
+  .cat-icon { font-size: 30px; margin-bottom: 6px; }
+  .cat-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .cat-count { font-size: 12px; color: rgba(240,230,255,0.5); }
+
+  /* Drill streak */
+  .streak-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    justify-content: center;
+  }
+  .streak-chip {
+    background: rgba(243,156,18,0.15);
+    border: 1px solid rgba(243,156,18,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    color: var(--gold);
+  }
+
+  /* ===== 人気度バー ===== */
+  .pop-bar-wrap {
+    padding: 0 20px 16px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .pop-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .pop-level-badge {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .pop-label { font-size: 12px; color: rgba(240,230,255,0.55); }
+  .pop-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .pop-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+  .pop-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 6px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 3px;
+    filter: blur(2px);
+  }
+
+  /* 制覇バナー */
+  .conquer-banner {
+    max-width: 960px;
+    margin: 0 auto 12px;
+    padding: 0 20px;
+  }
+  .conquer-inner {
+    background: linear-gradient(135deg, rgba(243,156,18,0.2), rgba(231,76,60,0.15));
+    border: 1px solid rgba(243,156,18,0.5);
+    border-radius: 12px;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--gold);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,107,157,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SVG idol character template (reusable) -->
+<svg id="yuna-svg-def" style="display:none">
+  <defs>
+    <!-- Reusable Yuna character paths defined via JS -->
+  </defs>
+</svg>
+
+<!-- ===== TITLE SCREEN ===== -->
+<div id="title-screen" class="screen active">
+  <div class="title-bg-glow"></div>
+  <div class="title-container">
+    <div class="idol-avatar-large" id="title-idol"></div>
+    <h1 class="title-main">韓国ツアー<br>語学アドベンチャー</h1>
+    <p class="title-sub">한국 여행 어학 어드벤처</p>
+    <div class="idol-intro-card">
+      <div class="idol-name">🎀 チェ・ユナ（崔有娜）</div>
+      <div class="idol-desc">
+        안녕하세요〜！ユナです✨<br>
+        一緒に韓国を旅しながら、韓国語を楽しく覚えましょう！<br>
+        各観光地で使えるフレーズを教えるね💕
+      </div>
+    </div>
+    <button class="btn-start" onclick="showMap()">旅を始める ✈️</button>
+  </div>
+</div>
+
+<!-- ===== MAP SCREEN ===== -->
+<div id="map-screen" class="screen">
+  <div class="map-header">
+    <div class="idol-avatar-small" id="map-idol"></div>
+    <div class="speech-bubble" id="map-speech">
+      どこに行く？クリックして観光地を選んでね〜！どんどん覚えていこう✨
+    </div>
+    <div class="score-chip">⭐ <span class="val" id="total-score">0</span>pts</div>
+  </div>
+
+  <!-- 人気度バー -->
+  <div class="pop-bar-wrap">
+    <div class="pop-bar-header">
+      <span class="pop-level-badge" id="pop-level-badge">신인</span>
+      <span class="pop-label" id="pop-label">人気度 0 / 100</span>
+    </div>
+    <div class="pop-bar-track">
+      <div class="pop-bar-fill" id="pop-bar-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- 制覇バナー（全制覇時のみ表示） -->
+  <div class="conquer-banner" id="conquer-banner" style="display:none">
+    <div class="conquer-inner">🏆 韓国全地名制覇おめでとう！あなたは伝説のアイドルガイド！</div>
+  </div>
+
+  <div class="map-title">🗺️ 韓国観光マップ</div>
+
+  <div class="drill-banner" onclick="startDrillMode()">
+    <div class="drill-banner-inner">
+      <div class="drill-icon">⚡</div>
+      <div>
+        <div class="drill-title">∞ 特訓モード</div>
+        <div class="drill-sub">1000問以上！カテゴリ別ランダム出題</div>
+      </div>
+      <div class="drill-arrow">▶</div>
+    </div>
+  </div>
+
+  <div class="locations-grid" id="locations-grid">
+    <!-- JS で生成 -->
+  </div>
+</div>
+
+<!-- ===== DRILL SCREEN ===== -->
+<div id="drill-screen" class="screen">
+  <div class="lesson-topbar">
+    <button class="btn-back" onclick="showMap()">←</button>
+    <div class="lesson-loc-info">
+      <div class="lesson-loc-name" id="drill-category-name">⚡ 特訓モード</div>
+      <div class="lesson-loc-sub" id="drill-progress-text">問題 1 / ∞</div>
+    </div>
+    <div class="score-chip">⭐ <span class="val" id="drill-score">0</span></div>
+  </div>
+  <div class="lesson-progress-bar">
+    <div class="lesson-progress-fill" id="drill-progress-fill" style="width:0%"></div>
+  </div>
+
+  <div class="lesson-body" id="drill-body"></div>
+</div>
+
+<!-- ===== DRILL CATEGORY SELECT ===== -->
+<div id="drill-select-screen" class="screen">
+  <div class="lesson-topbar">
+    <button class="btn-back" onclick="showMap()">←</button>
+    <div class="lesson-loc-info">
+      <div class="lesson-loc-name">⚡ 特訓モード</div>
+      <div class="lesson-loc-sub">カテゴリを選んでね</div>
+    </div>
+    <div class="score-chip">⭐ <span class="val" id="dsel-score">0</span></div>
+  </div>
+  <div style="padding:20px; max-width:700px; margin:0 auto;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;background:var(--card-bg);border:1px solid rgba(255,107,157,0.3);border-radius:16px;padding:14px 18px;">
+      <div style="width:50px;height:62px;" id="dsel-idol"></div>
+      <div style="font-size:14px;color:rgba(240,230,255,0.8);line-height:1.6;">
+        どのカテゴリで特訓する？<br>「全部まとめて」なら <strong style="color:var(--pink)">ランダム全問</strong> を選んでね！
+      </div>
+    </div>
+    <div id="category-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+  </div>
+</div>
+
+<!-- ===== LESSON SCREEN ===== -->
+<div id="lesson-screen" class="screen">
+  <div class="lesson-topbar">
+    <button class="btn-back" onclick="showMap()">←</button>
+    <div class="lesson-loc-info">
+      <div class="lesson-loc-name" id="lesson-loc-name"></div>
+      <div class="lesson-loc-sub" id="lesson-loc-sub"></div>
+    </div>
+    <div class="score-chip">⭐ <span class="val" id="lesson-score">0</span></div>
+  </div>
+  <div class="lesson-progress-bar">
+    <div class="lesson-progress-fill" id="lesson-progress-fill"></div>
+  </div>
+
+  <div class="lesson-body" id="lesson-body">
+    <!-- JS で生成 -->
+  </div>
+</div>
+
+<!-- ===== RESULT SCREEN ===== -->
+<div id="result-screen" class="screen">
+  <div class="result-idol" id="result-idol"></div>
+  <div class="result-title" id="result-title"></div>
+  <div class="result-comment" id="result-comment"></div>
+  <div class="result-stats">
+    <div class="stat-card">
+      <div class="stat-val" id="res-score"></div>
+      <div class="stat-label">獲得ポイント</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="res-correct"></div>
+      <div class="stat-label">正解数</div>
+    </div>
+  </div>
+  <div class="result-vocab">
+    <h3>📚 今回覚えたフレーズ</h3>
+    <div id="result-vocab-list"></div>
+  </div>
+  <button class="btn-map" onclick="showMap()">🗺️ マップに戻る</button>
+</div>
+
+<script>
+// ===== DATA =====
+const locations = [
+  {
+    id: 'gyeongbok',
+    name: '경복궁',
+    nameJp: '景福宮',
+    emoji: '🏯',
+    color: ['#c0392b', '#8b0000'],
+    tags: ['あいさつ', '丁寧語', '観光'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '안녕하세요',
+        pronunciation: 'アンニョンハセヨ',
+        japanese: 'こんにちは（丁寧）',
+        example: 'ユナ：宮殿の入口でガイドさんに会ったら…\n→「안녕하세요！」って笑顔で言ってみて！',
+        situation: '景福宮に到着！ガイドさんがお出迎えしてくれました。',
+      },
+      {
+        type: 'dialogue',
+        situation: '入場チケットを買う場面です。',
+        npc: { korean: '어디서 오셨어요?', pronunciation: 'オディソ オショッソヨ？', japanese: 'どちらからいらっしゃいましたか？', speaker: 'ガイド' },
+        player: { korean: '일본에서 왔어요.', pronunciation: 'イルボネソ ワッソヨ', japanese: '日本から来ました。', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「ありがとうございます」は韓国語で？',
+        questionKr: '감사합니다',
+        choices: [
+          { text: '감사합니다\n（カムサハムニダ）', correct: true, feedback: '正解！よく使う最重要フレーズです。「감사해요」も使えます✨' },
+          { text: '죄송합니다\n（チェソンハムニダ）', correct: false, feedback: 'これは「すみません／申し訳ありません」です。' },
+          { text: '괜찮아요\n（ケンチャナヨ）', correct: false, feedback: 'これは「大丈夫です」という意味です。' },
+          { text: '천천히\n（チョンチョニ）', correct: false, feedback: 'これは「ゆっくり」という意味です。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「写真を撮ってもいいですか？」は？',
+        questionKr: '사진 찍어도 돼요?',
+        choices: [
+          { text: '사진 찍어도 돼요?\n（サジン チゴド デヨ？）', correct: true, feedback: '完璧！観光地で必須のフレーズ。「사진」＝写真 です📸' },
+          { text: '어디예요?\n（オディエヨ？）', correct: false, feedback: 'これは「どこですか？」という意味です。' },
+          { text: '얼마예요?\n（オルマエヨ？）', correct: false, feedback: 'これは「いくらですか？」という意味です。' },
+          { text: '도와주세요\n（トワジュセヨ）', correct: false, feedback: 'これは「助けてください」という意味です。' },
+        ],
+      },
+    ],
+    idolComment: '景福宮は朝鮮王朝の正宮よ！ここで覚えたあいさつ、絶対使えるから！💫',
+  },
+  {
+    id: 'myeongdong',
+    name: '명동',
+    nameJp: '明洞（ミョンドン）',
+    emoji: '🛍️',
+    color: ['#e91e8c', '#9c27b0'],
+    tags: ['買い物', '値段交渉', 'コスメ'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '얼마예요?',
+        pronunciation: 'オルマエヨ？',
+        japanese: 'いくらですか？',
+        example: 'ユナ：明洞ではコスメやストリートフードがいっぱい！値段を聞くときは…\n→「이거 얼마예요？（これいくらですか？）」',
+        situation: '明洞のコスメショップに入りました。かわいいリップを発見！',
+      },
+      {
+        type: 'dialogue',
+        situation: 'ショップの店員さんと話しています。',
+        npc: { korean: '이거 한번 발라 보세요!', pronunciation: 'イゴ ハンボン バルラ ボセヨ！', japanese: 'これ一度つけてみてください！', speaker: '店員さん' },
+        player: { korean: '이거 얼마예요?', pronunciation: 'イゴ オルマエヨ？', japanese: 'これいくらですか？', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「これください」は韓国語で？',
+        questionKr: '이거 주세요',
+        choices: [
+          { text: '이거 주세요\n（イゴ ジュセヨ）', correct: true, feedback: '正解！「이거」＝これ、「주세요」＝ください。とても使えるフレーズ💕' },
+          { text: '저거 봐요\n（チョゴ バヨ）', correct: false, feedback: '「저거」＝あれ、「봐요」＝見ます、なので「あれを見ます」に近いです。' },
+          { text: '맛있어요\n（マシッソヨ）', correct: false, feedback: 'これは「おいしいです」という意味です。' },
+          { text: '너무 비싸요\n（ノム ビッサヨ）', correct: false, feedback: 'これは「とても高いです」という意味です。値引き交渉に使えますね😄' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「試着してもいいですか？」は？',
+        questionKr: '입어 봐도 돼요?',
+        choices: [
+          { text: '입어 봐도 돼요?\n（イボ バドデヨ？）', correct: true, feedback: '완벽해요（ワンビョケヨ）！完璧です！「입다」＝着る、「봐도 돼요」＝してもいいですか' },
+          { text: '어디 있어요?\n（オディ イッソヨ？）', correct: false, feedback: 'これは「どこにありますか？」という意味です。' },
+          { text: '다른 색 있어요?\n（タルン セク イッソヨ？）', correct: false, feedback: '惜しい！これは「他の色はありますか？」という便利なフレーズです。' },
+          { text: '영수증 주세요\n（ヨンスジュン ジュセヨ）', correct: false, feedback: 'これは「レシートください」という意味です。覚えておこう！' },
+        ],
+      },
+    ],
+    idolComment: '明洞は私も大好きな買い物エリア！コスメは絶対買ってね〜🛍️',
+    locked: true,
+  },
+  {
+    id: 'hanriver',
+    name: '한강공원',
+    nameJp: '漢江公園（ハンガン）',
+    emoji: '🌸',
+    color: ['#27ae60', '#2980b9'],
+    tags: ['日常会話', '友達と', 'ピクニック'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '같이 먹어요!',
+        pronunciation: 'カチ モゴヨ！',
+        japanese: '一緒に食べましょう！',
+        example: 'ユナ：漢江公園ではチキンやトッポギのピクニックが定番！\n→「같이 먹어요！（一緒に食べましょう！）」って誘ってみよう',
+        situation: '漢江公園でピクニック中。地元の友達ができました！',
+      },
+      {
+        type: 'dialogue',
+        situation: '友達がピクニックに誘ってくれました。',
+        npc: { korean: '오늘 날씨 너무 좋다!', pronunciation: 'オヌル ナルシ ノム チョタ！', japanese: '今日の天気、すごくいいね！', speaker: '友達' },
+        player: { korean: '맞아! 같이 사진 찍자!', pronunciation: 'マジャ！カチ サジン チクチャ！', japanese: 'そうだね！一緒に写真撮ろう！', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「おいしい！」は韓国語で？',
+        questionKr: '맛있어요!',
+        choices: [
+          { text: '맛있어요!\n（マシッソヨ）', correct: true, feedback: '正解！韓国料理を食べたら必ず使いたい一言！短く「맛있다!」でもOK🍜' },
+          { text: '재미있어요!\n（チェミイッソヨ）', correct: false, feedback: 'これは「楽しいです／おもしろいです」という意味です。' },
+          { text: '배불러요\n（ペブルロヨ）', correct: false, feedback: 'これは「お腹いっぱいです」という意味です。食後に使えますね。' },
+          { text: '조금만요\n（チョグムマニョ）', correct: false, feedback: 'これは「少しだけ」という意味です。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「また会いましょう！」は？',
+        questionKr: '또 만나요!',
+        choices: [
+          { text: '또 만나요!\n（ト マンナヨ！）', correct: true, feedback: '정말 잘했어요（チョンマル チャレッソヨ）！本当によくできました！「또」＝また、「만나다」＝会う✨' },
+          { text: '잘 지내요?\n（チャル チネヨ？）', correct: false, feedback: 'これは「元気ですか？」という意味です。久々の再会時に使います。' },
+          { text: '안녕히 가세요\n（アンニョンヒ カセヨ）', correct: false, feedback: 'これは「さようなら（去る人に）」という意味。別れの挨拶としても正解に近いですが…' },
+          { text: '보고 싶어요\n（ポゴ シポヨ）', correct: false, feedback: 'これは「会いたいです」というロマンチックなフレーズです💕' },
+        ],
+      },
+    ],
+    idolComment: '漢江でのピクニック、私も大好き！友達との韓国語トーク最高よ🌸',
+    locked: true,
+  },
+  {
+    id: 'busan',
+    name: '부산 해운대',
+    nameJp: '釜山・海雲台（ヘウンデ）',
+    emoji: '🏖️',
+    color: ['#2980b9', '#1abc9c'],
+    tags: ['道案内', '交通', '海鮮料理'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '여기가 어디예요?',
+        pronunciation: 'ヨギガ オディエヨ？',
+        japanese: 'ここはどこですか？',
+        example: 'ユナ：釜山は広いから道に迷うこともあるかも！\n→「해운대가 어디예요？（ヘウンデはどこですか？）」って聞いてみよう',
+        situation: '釜山駅に到着。海雲台ビーチへ行きたいけど方向がわからない！',
+      },
+      {
+        type: 'dialogue',
+        situation: '地元の方に道を聞いています。',
+        npc: { korean: '지하철 타고 가면 돼요.', pronunciation: 'チハチョル タゴ カミョン デヨ', japanese: '地下鉄に乗って行けばいいです。', speaker: '地元の方' },
+        player: { korean: '감사합니다! 몇 번 출구예요?', pronunciation: 'カムサハムニダ！ミョッ ボン チュルグエヨ？', japanese: 'ありがとうございます！何番出口ですか？', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「〜まで行きたいです」は？',
+        questionKr: '~까지 가고 싶어요',
+        choices: [
+          { text: '~까지 가고 싶어요\n（~ッカジ カゴ シポヨ）', correct: true, feedback: '正解！「까지」＝〜まで、「가고 싶다」＝行きたい。タクシーで便利！🚕' },
+          { text: '~에서 왔어요\n（~エソ ワッソヨ）', correct: false, feedback: 'これは「〜から来ました」という意味です。' },
+          { text: '~이/가 있어요?\n（~イ/ガ イッソヨ？）', correct: false, feedback: 'これは「〜はありますか？」という意味です。' },
+          { text: '~은/는 어때요?\n（~ウン/ヌン オッテヨ？）', correct: false, feedback: 'これは「〜はどうですか？」という意味です。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '海鮮市場で「一番おすすめは？」',
+        questionKr: '제일 추천은 뭐예요?',
+        choices: [
+          { text: '제일 추천은 뭐예요?\n（チェイル チュチョヌン ムォエヨ？）', correct: true, feedback: '완벽! 「제일」＝一番、「추천」＝おすすめ。お店でよく使えます🦀' },
+          { text: '맵지 않아요?\n（メプジ アナヨ？）', correct: false, feedback: 'これは「辛くないですか？」という意味です。辛いものが苦手な方に便利！' },
+          { text: '포장해 주세요\n（ポジャンヘ ジュセヨ）', correct: false, feedback: 'これは「テイクアウトでお願いします」という意味です。' },
+          { text: '물 주세요\n（ムル ジュセヨ）', correct: false, feedback: 'これは「お水ください」という意味です。飲食店の基本フレーズ！' },
+        ],
+      },
+    ],
+    idolComment: '釜山の海鮮、最高においしいよ！道案内フレーズ覚えておいてね🏖️',
+    locked: true,
+  },
+  {
+    id: 'jeju',
+    name: '제주도',
+    nameJp: '済州島（チェジュド）',
+    emoji: '🌺',
+    color: ['#e67e22', '#f39c12'],
+    tags: ['食事', 'レストラン', '感情表現'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '메뉴 주세요!',
+        pronunciation: 'メニュ ジュセヨ！',
+        japanese: 'メニューをください！',
+        example: 'ユナ：済州島名物の黒豚！レストランに入ったらまず…\n→「메뉴 주세요！（メニューをください！）」と「이게 뭐예요？（これは何ですか？）」を覚えてね',
+        situation: '済州島の人気レストランへ。黒豚の焼肉を食べに来ました！',
+      },
+      {
+        type: 'dialogue',
+        situation: 'レストランで注文します。',
+        npc: { korean: '뭐 드시겠어요?', pronunciation: 'ムォ トゥシゲッソヨ？', japanese: '何になさいますか？', speaker: '店員さん' },
+        player: { korean: '흑돼지 2인분 주세요!', pronunciation: 'フクデジ イインブン ジュセヨ！', japanese: '黒豚2人前ください！', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「おすすめは何ですか？」は？',
+        questionKr: '추천 메뉴가 뭐예요?',
+        choices: [
+          { text: '추천 메뉴가 뭐예요?\n（チュチョン メニュガ ムォエヨ？）', correct: true, feedback: '정답！「추천」＝おすすめ、「메뉴」＝メニュー。初めてのお店で使えます！🍖' },
+          { text: '잘 먹겠습니다\n（チャル モッケッスムニダ）', correct: false, feedback: 'これは「いただきます」という意味。食事前に使いましょう！' },
+          { text: '배달 돼요?\n（ペダル デヨ？）', correct: false, feedback: 'これは「デリバリーできますか？」という意味です。' },
+          { text: '계산해 주세요\n（ケサネ ジュセヨ）', correct: false, feedback: 'これは「お会計をお願いします」という意味です。食後に使います。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '食後に「ごちそうさまでした」は？',
+        questionKr: '잘 먹었습니다',
+        choices: [
+          { text: '잘 먹었습니다\n（チャル モゴッスムニダ）', correct: true, feedback: '완벽해요！「잘 먹었어요」でもOK。店員さんへの感謝が伝わります🙏' },
+          { text: '맛없어요\n（マドムソヨ）', correct: false, feedback: 'これは「まずいです」という意味。絶対使わないように（笑）' },
+          { text: '또 올게요\n（ト オルケヨ）', correct: false, feedback: 'これは「また来ます」という意味。お気に入りのお店を出るときに使えます！' },
+          { text: '배고파요\n（ペゴパヨ）', correct: false, feedback: 'これは「お腹が空きました」という意味です。' },
+        ],
+      },
+    ],
+    idolComment: '제주도 너무 예뻐요〜！（済州島、すごく綺麗！）絶対行ってほしい場所No.1💕',
+    locked: true,
+  },
+  {
+    id: 'insadong',
+    name: '인사동',
+    nameJp: '仁寺洞（インサドン）',
+    emoji: '🏮',
+    color: ['#8B4513', '#D2691E'],
+    tags: ['伝統文化', '工芸品', 'お土産'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '얼마예요? / 깎아 주세요!',
+        pronunciation: 'オルマエヨ？ / カッカ ジュセヨ！',
+        japanese: 'いくらですか？ / 安くしてください！',
+        example: 'ユナ：仁寺洞は伝統工芸品や骨董品がいっぱい！お店での交渉フレーズを覚えよう。\n→「이거 얼마예요？」→「조금 깎아 주세요！」',
+        situation: '仁寺洞の伝統工芸店へ。素敵な扇子を発見！',
+      },
+      {
+        type: 'dialogue',
+        situation: '工芸品のお店で値段交渉をしています。',
+        npc: { korean: '마음에 드세요?', pronunciation: 'マウメ トゥセヨ？', japanese: '気に入りましたか？', speaker: '店主さん' },
+        player: { korean: '네! 조금 깎아 주실 수 있어요?', pronunciation: 'ネ！チョグム カッカ ジュシル ス イッソヨ？', japanese: 'はい！少し安くしてもらえますか？', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「伝統的な」は韓国語で？',
+        questionKr: '전통적인',
+        choices: [
+          { text: '전통적인\n（チョントンジョギン）', correct: true, feedback: '正解！「전통」＝伝統。仁寺洞らしい言葉ですね🏮' },
+          { text: '현대적인\n（ヒョンデジョギン）', correct: false, feedback: '「현대적인」は「現代的な」という意味です。' },
+          { text: '세련된\n（セリョンドゥン）', correct: false, feedback: '「세련된」は「洗練された」という意味です。' },
+          { text: '독특한\n（トクトゥカン）', correct: false, feedback: '「독특한」は「独特な」という意味です。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「お土産」は韓国語で？',
+        questionKr: '기념품 / 선물',
+        choices: [
+          { text: '기념품 / 선물\n（キニョムプム / ソンムル）', correct: true, feedback: '完璧！「기념품」＝記念品・お土産、「선물」＝プレゼント🎁' },
+          { text: '영수증\n（ヨンスジュン）', correct: false, feedback: '「영수증」はレシートです。' },
+          { text: '할인\n（ハリン）', correct: false, feedback: '「할인」は割引という意味です。' },
+          { text: '계산\n（ケサン）', correct: false, feedback: '「계산」は計算・お会計という意味です。' },
+        ],
+      },
+    ],
+    idolComment: '인사동는 한국 전통의 멋이 가득！（仁寺洞は韓国の伝統の魅力満載！）🏮',
+    locked: true,
+  },
+  {
+    id: 'hongdae',
+    name: '홍대',
+    nameJp: '弘大（ホンデ）',
+    emoji: '🎵',
+    color: ['#6C3483', '#1A5276'],
+    tags: ['K-POP', 'クラブ', 'ストリート'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '같이 춤춰요!',
+        pronunciation: 'カチ チュムチュォヨ！',
+        japanese: '一緒に踊りましょう！',
+        example: 'ユナ：弘大はK-POPと若者文化の聖地！ストリートパフォーマンスも多いよ！\n→「노래 너무 좋아요！（この曲めっちゃ好き！）」「같이 춤춰요！（一緒に踊ろう！）」',
+        situation: '弘大の路上でK-POPのストリートパフォーマンスが始まった！',
+      },
+      {
+        type: 'dialogue',
+        situation: 'K-POPファンの地元の子と仲良くなりました。',
+        npc: { korean: '어떤 아이돌 좋아해요?', pronunciation: 'オットン アイドル チョアヘヨ？', japanese: 'どのアイドルが好きですか？', speaker: 'ファンの子' },
+        player: { korean: '저는 K-POP 너무 좋아해요!', pronunciation: 'チョヌン ケイポプ ノム チョアヘヨ！', japanese: '私はK-POPがすごく好きです！', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「コンサートに行きたい！」は韓国語で？',
+        questionKr: '콘서트에 가고 싶어요!',
+        choices: [
+          { text: '콘서트에 가고 싶어요!\n（コンソトゥエ カゴ シポヨ）', correct: true, feedback: '완벽！「콘서트」＝コンサート、「가고 싶어요」＝行きたいです🎤' },
+          { text: '팬미팅에 가고 싶어요!\n（ペンミティンエ カゴ シポヨ）', correct: false, feedback: '「팬미팅」はファンミーティングのこと。ちょっと違います！' },
+          { text: '연습하고 싶어요!\n（ヨンスパゴ シポヨ）', correct: false, feedback: '「연습」は練習という意味です。' },
+          { text: '음악 듣고 싶어요!\n（ウマク トゥッコ シポヨ）', correct: false, feedback: '「음악 듣고 싶어요」は音楽を聴きたいです。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「この曲は何ですか？」は韓国語で？',
+        questionKr: '이 노래 제목이 뭐예요?',
+        choices: [
+          { text: '이 노래 제목이 뭐예요?\n（イ ノレ チェモギ ムォエヨ？）', correct: true, feedback: '정답！「노래」＝歌、「제목」＝タイトル。音楽好き必須フレーズ🎵' },
+          { text: '노래 잘 해요?\n（ノレ チャル ヘヨ？）', correct: false, feedback: '「노래 잘 해요？」は歌が上手ですか？という意味です。' },
+          { text: '춤 출 수 있어요?\n（チュム チュル ス イッソヨ？）', correct: false, feedback: '「춤 출 수 있어요？」はダンスできますか？という意味です。' },
+          { text: '누가 불러요?\n（ヌガ プルロヨ？）', correct: false, feedback: '「누가 불러요？」は誰が歌っていますか？という意味。惜しい！' },
+        ],
+      },
+    ],
+    idolComment: '홍대는 정말 활기차！（弘大は本当に活気がある！）K-POPの本場を感じてね🎵',
+    locked: true,
+  },
+  {
+    id: 'gyeongju',
+    name: '경주',
+    nameJp: '慶州（キョンジュ）',
+    emoji: '🗿',
+    color: ['#2C3E50', '#8E44AD'],
+    tags: ['古都', '世界遺産', '歴史'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '역사가 참 깊네요!',
+        pronunciation: 'ヨクサガ チャム キプネヨ！',
+        japanese: '歴史が本当に深いですね！',
+        example: 'ユナ：慶州は千年の都・新羅王国の都！仏国寺や石窟庵など世界遺産もたくさん。\n→「불국사가 어디예요？（仏国寺はどこですか？）」',
+        situation: '慶州の古都に到着。古墳や仏国寺が見えてきました！',
+      },
+      {
+        type: 'dialogue',
+        situation: '観光ガイドさんが説明してくれています。',
+        npc: { korean: '여기가 신라 시대의 유적이에요.', pronunciation: 'ヨギガ シルラ シデエ ユジョギエヨ', japanese: 'ここは新羅時代の遺跡です。', speaker: 'ガイドさん' },
+        player: { korean: '정말요? 역사가 깊네요!', pronunciation: 'チョンマリョ？ ヨクサガ キプネヨ！', japanese: 'そうなんですか？歴史が深いですね！', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「世界遺産」は韓国語で？',
+        questionKr: '세계유산',
+        choices: [
+          { text: '세계유산\n（セゲユサン）', correct: true, feedback: '正解！「세계」＝世界、「유산」＝遺産。慶州には多数の世界遺産があります🗿' },
+          { text: '국립공원\n（クンニプコンウォン）', correct: false, feedback: '「국립공원」は国立公園という意味です。' },
+          { text: '박물관\n（パンムルグァン）', correct: false, feedback: '「박물관」は博物館という意味です。' },
+          { text: '문화재\n（ムンファジェ）', correct: false, feedback: '「문화재」は文化財という意味。近いですが惜しい！' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「昔・古い時代に」は韓国語で？',
+        questionKr: '옛날에',
+        choices: [
+          { text: '옛날에\n（イェンナレ）', correct: true, feedback: '완벽！「옛날」＝昔・古い時代。歴史の話に欠かせない言葉！' },
+          { text: '지금은\n（チグムン）', correct: false, feedback: '「지금」は今という意味です。' },
+          { text: '나중에\n（ナジュンエ）', correct: false, feedback: '「나중에」はあとで、という意味です。' },
+          { text: '미래에\n（ミレエ）', correct: false, feedback: '「미래」は未来という意味です。' },
+        ],
+      },
+    ],
+    idolComment: '경주는 정말 아름다운 역사도시！（慶州は本当に美しい歴史の街！）🗿',
+    locked: true,
+  },
+  {
+    id: 'jeonju',
+    name: '전주 한옥마을',
+    nameJp: '全州韓屋村（チョンジュ）',
+    emoji: '🏘️',
+    color: ['#7D6608', '#117A65'],
+    tags: ['韓屋', '伝統食', 'ビビンバ'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '한복 입어 보고 싶어요!',
+        pronunciation: 'ハンボク イボ ボゴ シポヨ！',
+        japanese: 'チマチョゴリを着てみたいです！',
+        example: 'ユナ：全州韓屋村は韓服（ハンボク）体験と全州ビビンバが有名！\n→「한복 빌릴 수 있어요？（チマチョゴリをレンタルできますか？）」',
+        situation: '全州韓屋村に到着！伝統家屋が立ち並ぶ美しい街並み。',
+      },
+      {
+        type: 'dialogue',
+        situation: 'ハンボクレンタル店に入りました。',
+        npc: { korean: '어떤 색 좋아하세요?', pronunciation: 'オットン セク チョアハセヨ？', japanese: 'どの色がお好きですか？', speaker: 'スタッフさん' },
+        player: { korean: '분홍색이요! 제일 예쁜 거 입고 싶어요!', pronunciation: 'プノンセギヨ！チェイル イェップン ゴ イプコ シポヨ！', japanese: 'ピンクです！一番かわいいのを着たいです！', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「全州ビビンバ」は韓国語で？',
+        questionKr: '전주비빔밥',
+        choices: [
+          { text: '전주비빔밥\n（チョンジュ ビビムバプ）', correct: true, feedback: '정답！「전주」＝全州、「비빔밥」＝ビビンバ。本場の味は最高！🍚' },
+          { text: '돌솥비빔밥\n（トルソッ ビビムバプ）', correct: false, feedback: '「돌솥」は石鍋のこと。石鍋ビビンバも美味しいですよ！' },
+          { text: '콩나물국밥\n（コンナムル クッパプ）', correct: false, feedback: '「콩나물국밥」は全州名物のもやしクッパです。' },
+          { text: '떡갈비\n（トッカルビ）', correct: false, feedback: '「떡갈비」は求肥カルビという料理です。' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「チマチョゴリ（韓服）」は韓国語で？',
+        questionKr: '한복',
+        choices: [
+          { text: '한복\n（ハンボク）', correct: true, feedback: '완벽！「한」＝韓国の、「복」＝服。韓国の民族衣装です👘' },
+          { text: '기모노\n（キモノ）', correct: false, feedback: '「기모노」は日本の着物！韓国の民族衣装は한복です。' },
+          { text: '양복\n（ヤンボク）', correct: false, feedback: '「양복」は西洋服・スーツという意味です。' },
+          { text: '교복\n（キョボク）', correct: false, feedback: '「교복」は制服（学校の）という意味です。' },
+        ],
+      },
+    ],
+    idolComment: '전주 한옥마을 너무 이뻐！（全州韓屋村めちゃ綺麗！）한복 같이 입자！（一緒にハンボク着よう！）🏘️',
+    locked: true,
+  },
+  {
+    id: 'dmz',
+    name: 'DMZ / 판문점',
+    nameJp: 'DMZ・板門店',
+    emoji: '🪖',
+    color: ['#1C2833', '#2E4053'],
+    tags: ['歴史', '平和', '現代史'],
+    lessons: [
+      {
+        type: 'phrase',
+        korean: '평화를 바랍니다.',
+        pronunciation: 'ピョンファルル バラムニダ',
+        japanese: '平和を願います。',
+        example: 'ユナ：DMZは南北朝鮮を分ける非武装地帯。平和への想いを持って訪れてほしい場所。\n→「통일이 되길 바랍니다（統一されることを願います）」',
+        situation: 'DMZ（非武装地帯）を訪問。歴史の重さを感じます。',
+      },
+      {
+        type: 'dialogue',
+        situation: 'ガイドさんが南北分断の歴史を説明しています。',
+        npc: { korean: '여기가 남북을 나누는 경계선이에요.', pronunciation: 'ヨギガ ナムブグル ナヌヌン キョンゲソニエヨ', japanese: 'ここが南北を分ける境界線です。', speaker: 'ガイドさん' },
+        player: { korean: '언젠가 통일이 됐으면 좋겠어요.', pronunciation: 'オンジェンガ トンイリ デッスミョン チョッケッソヨ', japanese: 'いつか統一されたらいいですね。', speaker: 'あなた' },
+      },
+      {
+        type: 'quiz',
+        question: '「平和」は韓国語で？',
+        questionKr: '평화',
+        choices: [
+          { text: '평화\n（ピョンファ）', correct: true, feedback: '정답！「평화」＝平和。DMZを訪れたら心に刻みたい言葉です🕊️' },
+          { text: '전쟁\n（チョンジェン）', correct: false, feedback: '「전쟁」は戦争という意味です。' },
+          { text: '역사\n（ヨクサ）', correct: false, feedback: '「역사」は歴史という意味です。' },
+          { text: '통일\n（トンイル）', correct: false, feedback: '「통일」は統一という意味です。関連する大切な言葉！' },
+        ],
+      },
+      {
+        type: 'quiz',
+        question: '「境界線」は韓国語で？',
+        questionKr: '경계선',
+        choices: [
+          { text: '경계선\n（キョンゲソン）', correct: true, feedback: '완벽！DMZの38度線を指す言葉です。' },
+          { text: '국경\n（クッキョン）', correct: false, feedback: '「국경」は国境という意味。似ていますが少し違います。' },
+          { text: '도로\n（トロ）', correct: false, feedback: '「도로」は道路という意味です。' },
+          { text: '다리\n（タリ）', correct: false, feedback: '「다리」は橋という意味です。' },
+        ],
+      },
+    ],
+    idolComment: '평화와 통일을 바라는 마음으로... （平和と統一を願う気持ちで…）大切な場所です🕊️',
+    locked: true,
+  },
+];
+
+// ===== QUESTION BANK (1000問) =====
+// format: { cat, q (question jp), kr (korean answer), pron, jp (meaning), wrong: [3 strings] }
+const QB = [
+// ── あいさつ・基本 ─────────────────────────────────────────
+{cat:'あいさつ',q:'「こんにちは」（丁寧）',kr:'안녕하세요',pron:'アンニョンハセヨ',jp:'こんにちは（丁寧）',wrong:['감사합니다','죄송합니다','잘 부탁드립니다']},
+{cat:'あいさつ',q:'「おはようございます」',kr:'좋은 아침이에요',pron:'チョウン アチミエヨ',jp:'おはようございます',wrong:['안녕히 주무세요','저녁 먹었어요?','오늘도 화이팅']},
+{cat:'あいさつ',q:'「こんばんは」',kr:'안녕하세요（저녁）',pron:'アンニョンハセヨ',jp:'こんばんは（夕方でも안녕하세요を使う）',wrong:['좋은 밤이에요','저녁 안녕','밤 안녕하세요']},
+{cat:'あいさつ',q:'「さようなら」（去る側が言う）',kr:'안녕히 계세요',pron:'アンニョンヒ ケセヨ',jp:'さようなら（自分が去るとき）',wrong:['안녕히 가세요','잘 지내요','또 봐요']},
+{cat:'あいさつ',q:'「さようなら」（残る側が言う）',kr:'안녕히 가세요',pron:'アンニョンヒ カセヨ',jp:'さようなら（相手が去るとき）',wrong:['안녕히 계세요','잘 있어요','가세요']},
+{cat:'あいさつ',q:'「ありがとうございます」',kr:'감사합니다',pron:'カムサハムニダ',jp:'ありがとうございます',wrong:['미안합니다','괜찮아요','천만에요']},
+{cat:'あいさつ',q:'「すみません」（呼びかけ）',kr:'저기요',pron:'チョギヨ',jp:'すみません（呼びかけ）',wrong:['죄송합니다','감사합니다','잠깐만요']},
+{cat:'あいさつ',q:'「申し訳ありません」',kr:'죄송합니다',pron:'チェソンハムニダ',jp:'申し訳ありません',wrong:['감사합니다','괜찮아요','저기요']},
+{cat:'あいさつ',q:'「どういたしまして」',kr:'천만에요',pron:'チョンマネヨ',jp:'どういたしまして',wrong:['감사해요','괜찮아요','미안해요']},
+{cat:'あいさつ',q:'「大丈夫です」',kr:'괜찮아요',pron:'ケンチャナヨ',jp:'大丈夫です',wrong:['힘들어요','아파요','나빠요']},
+{cat:'あいさつ',q:'「はじめまして」',kr:'처음 뵙겠습니다',pron:'チョウム ベッケッスムニダ',jp:'はじめまして',wrong:['잘 부탁드려요','오랜만이에요','반가워요']},
+{cat:'あいさつ',q:'「よろしくお願いします」',kr:'잘 부탁드립니다',pron:'チャル プタットゥリムニダ',jp:'よろしくお願いします',wrong:['천천히 부탁해요','나중에 봐요','죄송합니다']},
+{cat:'あいさつ',q:'「久しぶりです」',kr:'오랜만이에요',pron:'オレンマニエヨ',jp:'久しぶりです',wrong:['처음 만나요','자주 봐요','잘 지냈어요?']},
+{cat:'あいさつ',q:'「元気ですか？」',kr:'잘 지냈어요?',pron:'チャル チネッソヨ？',jp:'元気でしたか？',wrong:['밥 먹었어요?','어디 있어요?','뭐 해요?']},
+{cat:'あいさつ',q:'「また会いましょう！」',kr:'또 만나요',pron:'ト マンナヨ',jp:'また会いましょう',wrong:['나중에 전화해요','잘 자요','잘 가요']},
+{cat:'あいさつ',q:'「おやすみなさい」',kr:'잘 자요',pron:'チャル チャヨ',jp:'おやすみなさい',wrong:['좋은 꿈 꿔요','빨리 자요','안녕히 가세요']},
+{cat:'あいさつ',q:'「いってらっしゃい」',kr:'잘 다녀오세요',pron:'チャル タニョオセヨ',jp:'いってらっしゃい',wrong:['잘 지내요','어서 오세요','빨리 와요']},
+{cat:'あいさつ',q:'「いらっしゃいませ」',kr:'어서 오세요',pron:'オソ オセヨ',jp:'いらっしゃいませ',wrong:['잘 오셨어요','반갑습니다','어서 가세요']},
+{cat:'あいさつ',q:'「ファイト！がんばって！」',kr:'화이팅',pron:'ファイティン',jp:'ファイト！頑張れ！',wrong:['포기해요','힘들어요','쉬어요']},
+{cat:'あいさつ',q:'「ありがとう」（カジュアル）',kr:'고마워',pron:'コマウォ',jp:'ありがとう（親しい相手に）',wrong:['미안해','귀찮아','됐어']},
+
+// ── 数字 ────────────────────────────────────────────────
+{cat:'数字',q:'「1（ひとつ）」漢数字',kr:'일',pron:'イル',jp:'1（漢数字）',wrong:['하나','이','한']},
+{cat:'数字',q:'「2（ふたつ）」漢数字',kr:'이',pron:'イ',jp:'2（漢数字）',wrong:['둘','일','삼']},
+{cat:'数字',q:'「3（みっつ）」漢数字',kr:'삼',pron:'サム',jp:'3（漢数字）',wrong:['셋','이','사']},
+{cat:'数字',q:'「4（よっつ）」漢数字',kr:'사',pron:'サ',jp:'4（漢数字）',wrong:['넷','삼','오']},
+{cat:'数字',q:'「5（いつつ）」漢数字',kr:'오',pron:'オ',jp:'5（漢数字）',wrong:['다섯','사','육']},
+{cat:'数字',q:'「6（むっつ）」漢数字',kr:'육',pron:'ユク',jp:'6（漢数字）',wrong:['여섯','오','칠']},
+{cat:'数字',q:'「7（ななつ）」漢数字',kr:'칠',pron:'チル',jp:'7（漢数字）',wrong:['일곱','육','팔']},
+{cat:'数字',q:'「8（やっつ）」漢数字',kr:'팔',pron:'パル',jp:'8（漢数字）',wrong:['여덟','칠','구']},
+{cat:'数字',q:'「9（ここのつ）」漢数字',kr:'구',pron:'ク',jp:'9（漢数字）',wrong:['아홉','팔','십']},
+{cat:'数字',q:'「10（とお）」漢数字',kr:'십',pron:'シプ',jp:'10（漢数字）',wrong:['열','구','백']},
+{cat:'数字',q:'「100」漢数字',kr:'백',pron:'ペク',jp:'100',wrong:['천','십','만']},
+{cat:'数字',q:'「1000」漢数字',kr:'천',pron:'チョン',jp:'1000',wrong:['백','만','억']},
+{cat:'数字',q:'「1（ひとつ）」固有語',kr:'하나',pron:'ハナ',jp:'1（固有語）',wrong:['일','둘','한']},
+{cat:'数字',q:'「2（ふたつ）」固有語',kr:'둘',pron:'トゥル',jp:'2（固有語）',wrong:['이','셋','두']},
+{cat:'数字',q:'「3（みっつ）」固有語',kr:'셋',pron:'セッ',jp:'3（固有語）',wrong:['삼','넷','세']},
+{cat:'数字',q:'「4（よっつ）」固有語',kr:'넷',pron:'ネッ',jp:'4（固有語）',wrong:['사','다섯','네']},
+{cat:'数字',q:'「5（いつつ）」固有語',kr:'다섯',pron:'タソッ',jp:'5（固有語）',wrong:['오','여섯','닷']},
+{cat:'数字',q:'「6（むっつ）」固有語',kr:'여섯',pron:'ヨソッ',jp:'6（固有語）',wrong:['육','일곱','엿']},
+{cat:'数字',q:'「7（ななつ）」固有語',kr:'일곱',pron:'イルゴプ',jp:'7（固有語）',wrong:['칠','여덟','닐곱']},
+{cat:'数字',q:'「8（やっつ）」固有語',kr:'여덟',pron:'ヨドル',jp:'8（固有語）',wrong:['팔','아홉','열']},
+{cat:'数字',q:'「9（ここのつ）」固有語',kr:'아홉',pron:'アホプ',jp:'9（固有語）',wrong:['구','열','하나']},
+{cat:'数字',q:'「10（とお）」固有語',kr:'열',pron:'ヨル',jp:'10（固有語）',wrong:['십','스물','열다섯']},
+{cat:'数字',q:'「20（はたち）」固有語',kr:'스물',pron:'スムル',jp:'20（固有語）',wrong:['이십','열','서른']},
+{cat:'数字',q:'「30（みそか）」固有語',kr:'서른',pron:'ソルン',jp:'30（固有語）',wrong:['삼십','스물','마흔']},
+{cat:'数字',q:'「何番ですか？」',kr:'몇 번이에요?',pron:'ミョッ ポニエヨ？',jp:'何番ですか？',wrong:['몇 시예요?','몇 개예요?','몇 살이에요?']},
+{cat:'数字',q:'「いくら？」',kr:'얼마예요?',pron:'オルマエヨ？',jp:'いくらですか？',wrong:['어디예요?','뭐예요?','누구예요?']},
+
+// ── 食べ物・飲み物 ──────────────────────────────────────
+{cat:'食べ物',q:'「ご飯・食事」',kr:'밥',pron:'パプ',jp:'ご飯・食事',wrong:['물','빵','국']},
+{cat:'食べ物',q:'「水」',kr:'물',pron:'ムル',jp:'水',wrong:['술','차','밥']},
+{cat:'食べ物',q:'「お茶」',kr:'차',pron:'チャ',jp:'お茶',wrong:['물','커피','주스']},
+{cat:'食べ物',q:'「コーヒー」',kr:'커피',pron:'コピ',jp:'コーヒー',wrong:['차','물','술']},
+{cat:'食べ物',q:'「ビール」',kr:'맥주',pron:'メクチュ',jp:'ビール',wrong:['소주','막걸리','와인']},
+{cat:'食べ物',q:'「焼酎」',kr:'소주',pron:'ソジュ',jp:'焼酎',wrong:['맥주','막걸리','위스키']},
+{cat:'食べ物',q:'「マッコリ」',kr:'막걸리',pron:'マッコルリ',jp:'マッコリ',wrong:['소주','맥주','동동주']},
+{cat:'食べ物',q:'「キムチ」',kr:'김치',pron:'キムチ',jp:'キムチ',wrong:['깍두기','동치미','나물']},
+{cat:'食べ物',q:'「チゲ（鍋）」',kr:'찌개',pron:'チゲ',jp:'チゲ（鍋料理）',wrong:['국','탕','전골']},
+{cat:'食べ物',q:'「トッポッキ」',kr:'떡볶이',pron:'トッポッキ',jp:'トッポッキ',wrong:['순대','라면','만두']},
+{cat:'食べ物',q:'「ラーメン」',kr:'라면',pron:'ラミョン',jp:'ラーメン',wrong:['국수','우동','소바']},
+{cat:'食べ物',q:'「チキン」',kr:'치킨',pron:'チキン',jp:'チキン（フライドチキン）',wrong:['삼겹살','불고기','갈비']},
+{cat:'食べ物',q:'「サムギョプサル（豚バラ焼肉）」',kr:'삼겹살',pron:'サムギョプサル',jp:'三枚肉の焼き肉',wrong:['불고기','갈비','목살']},
+{cat:'食べ物',q:'「プルコギ（焼き肉）」',kr:'불고기',pron:'プルコギ',jp:'焼き肉',wrong:['삼겹살','갈비','제육볶음']},
+{cat:'食べ物',q:'「ビビンバ」',kr:'비빔밥',pron:'ビビムバプ',jp:'ビビンバ',wrong:['볶음밥','덮밥','공기밥']},
+{cat:'食べ物',q:'「スンドゥブ（豆腐チゲ）」',kr:'순두부찌개',pron:'スンドゥブチゲ',jp:'豆腐チゲ',wrong:['김치찌개','된장찌개','부대찌개']},
+{cat:'食べ物',q:'「キムチチゲ」',kr:'김치찌개',pron:'キムチチゲ',jp:'キムチチゲ',wrong:['순두부찌개','된장찌개','해물찌개']},
+{cat:'食べ物',q:'「海鮮料理」',kr:'해물요리',pron:'ヘムルヨリ',jp:'海鮮料理',wrong:['고기요리','채소요리','분식']},
+{cat:'食べ物',q:'「パン」',kr:'빵',pron:'パン',jp:'パン',wrong:['밥','떡','과자']},
+{cat:'食べ物',q:'「卵」',kr:'달걀 / 계란',pron:'タルギャル / ケラン',jp:'卵',wrong:['닭고기','생선','두부']},
+{cat:'食べ物',q:'「おいしい！」',kr:'맛있어요!',pron:'マシッソヨ！',jp:'おいしいです！',wrong:['맛없어요','싱거워요','짜요']},
+{cat:'食べ物',q:'「辛い」',kr:'매워요',pron:'メウォヨ',jp:'辛いです',wrong:['달아요','짜요','싱거워요']},
+{cat:'食べ物',q:'「甘い」',kr:'달아요',pron:'タラヨ',jp:'甘いです',wrong:['매워요','짜요','써요']},
+{cat:'食べ物',q:'「塩辛い」',kr:'짜요',pron:'チャヨ',jp:'塩辛いです',wrong:['달아요','매워요','시어요']},
+{cat:'食べ物',q:'「酸っぱい」',kr:'시어요',pron:'シオヨ',jp:'酸っぱいです',wrong:['달아요','매워요','짜요']},
+{cat:'食べ物',q:'「辛くないですか？」',kr:'맵지 않아요?',pron:'メプジ アナヨ？',jp:'辛くないですか？',wrong:['맛있어요?','달지 않아요?','짜지 않아요?']},
+{cat:'食べ物',q:'「いただきます」',kr:'잘 먹겠습니다',pron:'チャル モッケッスムニダ',jp:'いただきます',wrong:['잘 먹었습니다','감사합니다','고마워요']},
+{cat:'食べ物',q:'「ごちそうさまでした」',kr:'잘 먹었습니다',pron:'チャル モゴッスムニダ',jp:'ごちそうさまでした',wrong:['잘 먹겠습니다','맛있었어요','감사합니다']},
+{cat:'食べ物',q:'「お腹が空きました」',kr:'배고파요',pron:'ペゴパヨ',jp:'お腹が空きました',wrong:['배불러요','배아파요','먹었어요']},
+{cat:'食べ物',q:'「お腹がいっぱいです」',kr:'배불러요',pron:'ペブルロヨ',jp:'お腹がいっぱいです',wrong:['배고파요','배아파요','먹고 싶어요']},
+{cat:'食べ物',q:'「お水ください」',kr:'물 주세요',pron:'ムル ジュセヨ',jp:'水をください',wrong:['밥 주세요','차 주세요','메뉴 주세요']},
+{cat:'食べ物',q:'「テイクアウト」',kr:'포장',pron:'ポジャン',jp:'テイクアウト・持ち帰り',wrong:['배달','드시고 가세요','가져가세요']},
+{cat:'食べ物',q:'「お会計お願いします」',kr:'계산해 주세요',pron:'ケサネ ジュセヨ',jp:'お会計お願いします',wrong:['주문할게요','뭐예요?','더 주세요']},
+{cat:'食べ物',q:'「2人前ください」',kr:'이인분 주세요',pron:'イインブン ジュセヨ',jp:'2人前ください',wrong:['이개 주세요','두 그릇 주세요','둘이서요']},
+{cat:'食べ物',q:'「おすすめは何ですか？」',kr:'추천 메뉴가 뭐예요?',pron:'チュチョン メニュガ ムォエヨ？',jp:'おすすめは何ですか？',wrong:['인기메뉴가 있어요?','맛있는 거요?','제일 비싼 거요?']},
+{cat:'食べ物',q:'「アイスコーヒー」',kr:'아이스 아메리카노',pron:'アイス アメリカーノ',jp:'アイスアメリカーノ',wrong:['따뜻한 커피','라떼','아이스크림']},
+{cat:'食べ物',q:'「お箸」',kr:'젓가락',pron:'チョッカラク',jp:'お箸',wrong:['숟가락','포크','나이프']},
+{cat:'食べ物',q:'「スプーン」',kr:'숟가락',pron:'スッカラク',jp:'スプーン',wrong:['젓가락','포크','그릇']},
+{cat:'食べ物',q:'「もう少しください」',kr:'좀 더 주세요',pron:'チョム ト ジュセヨ',jp:'もう少しください',wrong:['됐어요','많이 주세요','다 먹었어요']},
+
+// ── 買い物 ──────────────────────────────────────────────
+{cat:'買い物',q:'「これください」',kr:'이거 주세요',pron:'イゴ ジュセヨ',jp:'これをください',wrong:['저거 주세요','그거 주세요','됐어요']},
+{cat:'買い物',q:'「あれください」',kr:'저거 주세요',pron:'チョゴ ジュセヨ',jp:'あれをください',wrong:['이거 주세요','그거 주세요','없어요']},
+{cat:'買い物',q:'「これはいくらですか？」',kr:'이거 얼마예요?',pron:'イゴ オルマエヨ？',jp:'これはいくらですか？',wrong:['어디 있어요?','뭐예요?','있어요?']},
+{cat:'買い物',q:'「高いです」',kr:'비싸요',pron:'ビッサヨ',jp:'高いです（値段）',wrong:['싸요','괜찮아요','좋아요']},
+{cat:'買い物',q:'「安いです」',kr:'싸요',pron:'サヨ',jp:'安いです',wrong:['비싸요','높아요','크아요']},
+{cat:'買い物',q:'「もう少し安くなりますか？」',kr:'좀 깎아 주세요',pron:'チョム カッカ ジュセヨ',jp:'少し安くしてください',wrong:['더 비싸게 해주세요','그냥 줘요','얼마예요?']},
+{cat:'買い物',q:'「試着してもいいですか？」',kr:'입어 봐도 돼요?',pron:'イボ バドデヨ？',jp:'試着してもいいですか？',wrong:['써 봐도 돼요?','먹어 봐도 돼요?','마셔 봐도 돼요?']},
+{cat:'買い物',q:'「他の色はありますか？」',kr:'다른 색 있어요?',pron:'タルン セク イッソヨ？',jp:'他の色はありますか？',wrong:['다른 사이즈 있어요?','이것만 있어요?','새 것 있어요?']},
+{cat:'買い物',q:'「サイズが合いません」',kr:'사이즈가 안 맞아요',pron:'サイズガ アン マジャヨ',jp:'サイズが合いません',wrong:['색이 안 맞아요','모양이 달라요','마음에 안 들어요']},
+{cat:'買い物',q:'「カード払いできますか？」',kr:'카드 돼요?',pron:'カドゥ デヨ？',jp:'カード払いできますか？',wrong:['현금만 돼요?','영수증 주세요','거스름돈 주세요']},
+{cat:'買い物',q:'「レシートください」',kr:'영수증 주세요',pron:'ヨンスジュン ジュセヨ',jp:'レシートをください',wrong:['카드 주세요','잔돈 주세요','봉투 주세요']},
+{cat:'買い物',q:'「袋はいりますか？」',kr:'봉투 필요하세요?',pron:'ポントゥ ピリョハセヨ？',jp:'袋はいりますか？',wrong:['계산해 드려요?','할인 해드려요?','포장해 드려요?']},
+{cat:'買い物',q:'「1つ」',kr:'하나',pron:'ハナ',jp:'1つ（個数）',wrong:['일','둘','한 개']},
+{cat:'買い物',q:'「2つ」',kr:'두 개',pron:'トゥ ゲ',jp:'2つ（個数）',wrong:['둘','이','세 개']},
+{cat:'買い物',q:'「セールですか？」',kr:'세일 중이에요?',pron:'セイル チュンイエヨ？',jp:'セール中ですか？',wrong:['할인 안 해요?','몇 % 할인이에요?','새 상품이에요?']},
+{cat:'買い物',q:'「免税になりますか？」',kr:'면세 돼요?',pron:'ミョンセ デヨ？',jp:'免税になりますか？',wrong:['환불 돼요?','교환 돼요?','할인 돼요?']},
+{cat:'買い物',q:'「返品できますか？」',kr:'환불 돼요?',pron:'ファンブル デヨ？',jp:'返品できますか？',wrong:['교환 돼요?','면세 돼요?','수선 돼요?']},
+{cat:'買い物',q:'「コスメ・化粧品」',kr:'화장품',pron:'ファジャンプム',jp:'化粧品',wrong:['의류','식품','악세서리']},
+{cat:'買い物',q:'「服」',kr:'옷',pron:'オッ',jp:'服',wrong:['신발','가방','모자']},
+{cat:'買い物',q:'「靴」',kr:'신발',pron:'シンバル',jp:'靴',wrong:['옷','가방','양말']},
+{cat:'買い物',q:'「バッグ」',kr:'가방',pron:'カバン',jp:'バッグ',wrong:['신발','옷','지갑']},
+{cat:'買い物',q:'「財布」',kr:'지갑',pron:'チガプ',jp:'財布',wrong:['가방','열쇠','핸드폰']},
+
+// ── 交通・道案内 ────────────────────────────────────────
+{cat:'交通',q:'「〜はどこですか？」',kr:'~은/는 어디예요?',pron:'~ウン/ヌン オディエヨ？',jp:'〜はどこですか？',wrong:['~이/가 있어요?','~을/를 주세요','~에 가요']},
+{cat:'交通',q:'「〜まで行きたいです」',kr:'~까지 가고 싶어요',pron:'~ッカジ カゴ シポヨ',jp:'〜まで行きたいです',wrong:['~에서 왔어요','~에 있어요','~으로 오세요']},
+{cat:'交通',q:'「タクシーを呼んでください」',kr:'택시 불러 주세요',pron:'テクシ ブルロ ジュセヨ',jp:'タクシーを呼んでください',wrong:['버스 불러 주세요','지하철 불러 주세요','전철 불러 주세요']},
+{cat:'交通',q:'「地下鉄」',kr:'지하철',pron:'チハチョル',jp:'地下鉄',wrong:['버스','택시','기차']},
+{cat:'交通',q:'「バス」',kr:'버스',pron:'ポス',jp:'バス',wrong:['지하철','택시','기차']},
+{cat:'交通',q:'「電車」',kr:'기차',pron:'キチャ',jp:'電車・列車',wrong:['지하철','버스','비행기']},
+{cat:'交通',q:'「飛行機」',kr:'비행기',pron:'ビヘンギ',jp:'飛行機',wrong:['기차','배','버스']},
+{cat:'交通',q:'「駅」',kr:'역',pron:'ヨク',jp:'駅',wrong:['공항','버스 정류장','터미널']},
+{cat:'交通',q:'「空港」',kr:'공항',pron:'コンハン',jp:'空港',wrong:['역','항구','정류장']},
+{cat:'交通',q:'「右に曲がってください」',kr:'오른쪽으로 가세요',pron:'オルンチョグロ カセヨ',jp:'右に行ってください',wrong:['왼쪽으로 가세요','직진하세요','돌아가세요']},
+{cat:'交通',q:'「左に曲がってください」',kr:'왼쪽으로 가세요',pron:'エンチョグロ カセヨ',jp:'左に行ってください',wrong:['오른쪽으로 가세요','직진하세요','U턴하세요']},
+{cat:'交通',q:'「まっすぐ行ってください」',kr:'직진하세요',pron:'チクチンハセヨ',jp:'まっすぐ行ってください',wrong:['돌아가세요','왼쪽으로 가세요','멈추세요']},
+{cat:'交通',q:'「止まってください」（タクシー）',kr:'여기서 세워 주세요',pron:'ヨギソ セウォ ジュセヨ',jp:'ここで止めてください',wrong:['더 가세요','빨리 가세요','천천히 가세요']},
+{cat:'交通',q:'「何号線に乗ればいいですか？」',kr:'몇 호선 타요?',pron:'ミョッ ホソン タヨ？',jp:'何号線に乗ればいいですか？',wrong:['어느 역이에요?','어디서 내려요?','몇 번 버스예요?']},
+{cat:'交通',q:'「乗り換え」',kr:'환승',pron:'ファンスン',jp:'乗り換え',wrong:['도착','출발','탑승']},
+{cat:'交通',q:'「出口」',kr:'출구',pron:'チュルグ',jp:'出口',wrong:['입구','화장실','엘리베이터']},
+{cat:'交通',q:'「入口」',kr:'입구',pron:'イプグ',jp:'入口',wrong:['출구','화장실','계단']},
+{cat:'交通',q:'「何番出口ですか？」',kr:'몇 번 출구예요?',pron:'ミョッ ポン チュルグエヨ？',jp:'何番出口ですか？',wrong:['어느 역이에요?','몇 호선이에요?','어디 있어요?']},
+{cat:'交通',q:'「迷いました（道に迷った）」',kr:'길을 잃었어요',pron:'キルル イロッソヨ',jp:'道に迷いました',wrong:['길을 찾았어요','알아요','여기예요']},
+{cat:'交通',q:'「近いですか？」',kr:'가까워요?',pron:'カッカウォヨ？',jp:'近いですか？',wrong:['멀어요?','어디예요?','오래 걸려요?']},
+{cat:'交通',q:'「遠いですか？」',kr:'멀어요?',pron:'モロヨ？',jp:'遠いですか？',wrong:['가까워요?','걸어서 가요?','버스 타요?']},
+{cat:'交通',q:'「歩いていけますか？」',kr:'걸어서 갈 수 있어요?',pron:'コロソ カル ス イッソヨ？',jp:'歩いていけますか？',wrong:['택시 타야 해요?','멀어요?','버스 타요?']},
+{cat:'交通',q:'「Tマネー（韓国交通カード）」',kr:'티머니',pron:'ティモニ',jp:'Tマネー（交通系ICカード）',wrong:['신용카드','현금','교통카드']},
+
+// ── ホテル・宿泊 ────────────────────────────────────────
+{cat:'ホテル',q:'「チェックインをお願いします」',kr:'체크인 해주세요',pron:'チェクイン ヘジュセヨ',jp:'チェックインをお願いします',wrong:['체크아웃 해주세요','예약했어요','방 주세요']},
+{cat:'ホテル',q:'「チェックアウトをお願いします」',kr:'체크아웃 해주세요',pron:'チェクアウト ヘジュセヨ',jp:'チェックアウトをお願いします',wrong:['체크인 해주세요','연장하고 싶어요','더 있을게요']},
+{cat:'ホテル',q:'「予約しています」',kr:'예약했어요',pron:'イェヤケッソヨ',jp:'予約しています',wrong:['예약 안 했어요','빈 방 있어요?','얼마예요?']},
+{cat:'ホテル',q:'「部屋のキーをなくしました」',kr:'방 열쇠를 잃어버렸어요',pron:'パン ヨルスェルル イロボリョッソヨ',jp:'部屋の鍵をなくしました',wrong:['열쇠가 안 돼요','방이 더워요','샤워가 안 나와요']},
+{cat:'ホテル',q:'「WiFiのパスワードは？」',kr:'와이파이 비밀번호가 뭐예요?',pron:'ワイパイ ビミルポノガ ムォエヨ？',jp:'WiFiのパスワードは？',wrong:['인터넷 없어요?','충전기 있어요?','전화 돼요?']},
+{cat:'ホテル',q:'「タオルをください」',kr:'수건 주세요',pron:'スゴン ジュセヨ',jp:'タオルをください',wrong:['베개 주세요','담요 주세요','이불 주세요']},
+{cat:'ホテル',q:'「エアコンが動きません」',kr:'에어컨이 안 돼요',pron:'エオコニ アン デヨ',jp:'エアコンが動きません',wrong:['난방이 안 돼요','샤워가 안 나와요','와이파이 안 돼요']},
+{cat:'ホテル',q:'「朝食は何時からですか？」',kr:'조식은 몇 시부터예요?',pron:'チョシクン ミョッシブトエヨ？',jp:'朝食は何時からですか？',wrong:['체크인은 몇 시예요?','체크아웃은 몇 시예요?','저녁은 있어요?']},
+
+// ── 観光・写真 ─────────────────────────────────────────
+{cat:'観光',q:'「写真を撮ってもいいですか？」',kr:'사진 찍어도 돼요?',pron:'サジン チゴド デヨ？',jp:'写真を撮ってもいいですか？',wrong:['같이 찍어요?','사진 좋아해요?','카메라 있어요?']},
+{cat:'観光',q:'「一緒に写真を撮りましょう！」',kr:'같이 사진 찍어요!',pron:'カチ サジン チゴヨ！',jp:'一緒に写真撮りましょう！',wrong:['혼자 찍어요','사진 찍지 마세요','사진 싫어요']},
+{cat:'観光',q:'「ここはどこですか？」',kr:'여기가 어디예요?',pron:'ヨギガ オディエヨ？',jp:'ここはどこですか？',wrong:['저기가 어디예요?','몇 층이에요?','화장실이에요?']},
+{cat:'観光',q:'「入場料はいくらですか？」',kr:'입장료가 얼마예요?',pron:'イプジャンニョガ オルマエヨ？',jp:'入場料はいくらですか？',wrong:['무료예요?','할인 있어요?','어린이는요?']},
+{cat:'観光',q:'「何時に閉まりますか？」',kr:'몇 시에 닫아요?',pron:'ミョッ シエ タダヨ？',jp:'何時に閉まりますか？',wrong:['몇 시에 열어요?','오늘 해요?','내일도 해요?']},
+{cat:'観光',q:'「観光案内所」',kr:'관광안내소',pron:'クァングァン アンネソ',jp:'観光案内所',wrong:['화장실','매표소','출입구']},
+{cat:'観光',q:'「見どころ・見所」',kr:'볼거리',pron:'ポルゴリ',jp:'見どころ',wrong:['먹거리','살거리','즐길거리']},
+{cat:'観光',q:'「美しいです」',kr:'아름다워요',pron:'アルムダウォヨ',jp:'美しいです',wrong:['못생겼어요','평범해요','별로예요']},
+{cat:'観光',q:'「素晴らしいです」',kr:'멋있어요',pron:'モシッソヨ',jp:'素晴らしい・かっこいい',wrong:['나빠요','평범해요','별로예요']},
+{cat:'観光',q:'「楽しかったです！」',kr:'재미있었어요!',pron:'チェミイッソッソヨ！',jp:'楽しかったです！',wrong:['재미없었어요','지루했어요','별로였어요']},
+{cat:'観光',q:'「景福宮」',kr:'경복궁',pron:'キョンボックン',jp:'景福宮',wrong:['창덕궁','창경궁','덕수궁']},
+{cat:'観光',q:'「明洞」',kr:'명동',pron:'ミョンドン',jp:'明洞',wrong:['홍대','이태원','강남']},
+{cat:'観光',q:'「ホンデ（弘大）」',kr:'홍대',pron:'ホンデ',jp:'弘大',wrong:['명동','이태원','강남']},
+{cat:'観光',q:'「江南（カンナム）」',kr:'강남',pron:'カンナム',jp:'江南',wrong:['명동','홍대','종로']},
+{cat:'観光',q:'「済州島」',kr:'제주도',pron:'チェジュド',jp:'済州島',wrong:['부산','대구','인천']},
+{cat:'観光',q:'「釜山」',kr:'부산',pron:'プサン',jp:'釜山',wrong:['제주도','인천','대전']},
+{cat:'観光',q:'「漢江」',kr:'한강',pron:'ハンガン',jp:'漢江',wrong:['낙동강','섬진강','금강']},
+{cat:'観光',q:'「N서울타워（Nソウルタワー）」',kr:'N서울타워',pron:'エヌ ソウル タウォ',jp:'Nソウルタワー',wrong:['남산','북한산','인왕산']},
+
+// ── 感情・状態 ─────────────────────────────────────────
+{cat:'感情',q:'「嬉しいです」',kr:'기뻐요',pron:'キッポヨ',jp:'嬉しいです',wrong:['슬퍼요','화났어요','무서워요']},
+{cat:'感情',q:'「悲しいです」',kr:'슬퍼요',pron:'スルポヨ',jp:'悲しいです',wrong:['기뻐요','화났어요','놀랐어요']},
+{cat:'感情',q:'「怒っています」',kr:'화났어요',pron:'ファナッソヨ',jp:'怒っています',wrong:['기뻐요','슬퍼요','괜찮아요']},
+{cat:'感情',q:'「疲れました」',kr:'피곤해요',pron:'ピゴネヨ',jp:'疲れました',wrong:['힘이 나요','좋아요','괜찮아요']},
+{cat:'感情',q:'「楽しいです」',kr:'즐거워요',pron:'チュルゴウォヨ',jp:'楽しいです',wrong:['지루해요','힘들어요','무서워요']},
+{cat:'感情',q:'「退屈です」',kr:'지루해요',pron:'チルヘヨ',jp:'退屈です',wrong:['즐거워요','재미있어요','신나요']},
+{cat:'感情',q:'「驚きました！」',kr:'놀랐어요!',pron:'ノルラッソヨ！',jp:'驚きました！',wrong:['알았어요','봤어요','들었어요']},
+{cat:'感情',q:'「怖いです」',kr:'무서워요',pron:'ムソウォヨ',jp:'怖いです',wrong:['재미있어요','신나요','좋아요']},
+{cat:'感情',q:'「好きです」',kr:'좋아요',pron:'チョアヨ',jp:'好きです・良いです',wrong:['싫어요','별로예요','나빠요']},
+{cat:'感情',q:'「嫌いです」',kr:'싫어요',pron:'シロヨ',jp:'嫌いです',wrong:['좋아요','괜찮아요','관심 있어요']},
+{cat:'感情',q:'「会いたいです」',kr:'보고 싶어요',pron:'ポゴ シポヨ',jp:'会いたいです',wrong:['보기 싫어요','안 보고 싶어요','잊었어요']},
+{cat:'感情',q:'「愛しています」',kr:'사랑해요',pron:'サランヘヨ',jp:'愛しています',wrong:['싫어요','관심 없어요','헤어져요']},
+{cat:'感情',q:'「すごい！」',kr:'대박!',pron:'テバク！',jp:'すごい！やばい！',wrong:['별로예요','그냥요','아니요']},
+{cat:'感情',q:'「かわいいです」',kr:'귀여워요',pron:'クィヨウォヨ',jp:'かわいいです',wrong:['무서워요','못생겼어요','이상해요']},
+{cat:'感情',q:'「かっこいいです」',kr:'멋있어요',pron:'モシッソヨ',jp:'かっこいいです',wrong:['못생겼어요','평범해요','이상해요']},
+{cat:'感情',q:'「残念です」',kr:'아쉬워요',pron:'アシウォヨ',jp:'残念です・惜しいです',wrong:['좋아요','다행이에요','신나요']},
+{cat:'感情',q:'「よかったです！」',kr:'다행이에요!',pron:'タヘンイエヨ！',jp:'よかったです！',wrong:['아쉬워요','나빠요','힘들었어요']},
+
+// ── 時間・日程 ─────────────────────────────────────────
+{cat:'時間',q:'「今何時ですか？」',kr:'지금 몇 시예요?',pron:'チグム ミョッ シエヨ？',jp:'今何時ですか？',wrong:['오늘 몇 일이에요?','무슨 요일이에요?','언제예요?']},
+{cat:'時間',q:'「今日」',kr:'오늘',pron:'オヌル',jp:'今日',wrong:['어제','내일','모레']},
+{cat:'時間',q:'「昨日」',kr:'어제',pron:'オジェ',jp:'昨日',wrong:['오늘','내일','그제']},
+{cat:'時間',q:'「明日」',kr:'내일',pron:'ネイル',jp:'明日',wrong:['오늘','어제','모레']},
+{cat:'時間',q:'「今」',kr:'지금',pron:'チグム',jp:'今',wrong:['나중에','아까','이따가']},
+{cat:'時間',q:'「あとで」',kr:'이따가',pron:'イッタガ',jp:'あとで',wrong:['지금','먼저','벌써']},
+{cat:'時間',q:'「朝」',kr:'아침',pron:'アチム',jp:'朝',wrong:['점심','저녁','밤']},
+{cat:'時間',q:'「昼」',kr:'점심',pron:'チョムシム',jp:'昼・お昼',wrong:['아침','저녁','밤']},
+{cat:'時間',q:'「夜」',kr:'저녁 / 밤',pron:'チョニョク / パム',jp:'夕方・夜',wrong:['아침','점심','낮']},
+{cat:'時間',q:'「月曜日」',kr:'월요일',pron:'ウォリョイル',jp:'月曜日',wrong:['화요일','수요일','목요일']},
+{cat:'時間',q:'「火曜日」',kr:'화요일',pron:'ファヨイル',jp:'火曜日',wrong:['월요일','수요일','목요일']},
+{cat:'時間',q:'「水曜日」',kr:'수요일',pron:'スヨイル',jp:'水曜日',wrong:['화요일','목요일','금요일']},
+{cat:'時間',q:'「木曜日」',kr:'목요일',pron:'モギョイル',jp:'木曜日',wrong:['수요일','금요일','토요일']},
+{cat:'時間',q:'「金曜日」',kr:'금요일',pron:'クミョイル',jp:'金曜日',wrong:['목요일','토요일','일요일']},
+{cat:'時間',q:'「土曜日」',kr:'토요일',pron:'トヨイル',jp:'土曜日',wrong:['금요일','일요일','월요일']},
+{cat:'時間',q:'「日曜日」',kr:'일요일',pron:'イリョイル',jp:'日曜日',wrong:['토요일','월요일','화요일']},
+{cat:'時間',q:'「何曜日ですか？」',kr:'무슨 요일이에요?',pron:'ムスン ヨイリエヨ？',jp:'何曜日ですか？',wrong:['몇 시예요?','몇 월이에요?','언제예요?']},
+{cat:'時間',q:'「先週」',kr:'지난주',pron:'チナンジュ',jp:'先週',wrong:['이번 주','다음 주','지난달']},
+{cat:'時間',q:'「今週」',kr:'이번 주',pron:'イボン ジュ',jp:'今週',wrong:['지난주','다음 주','지난달']},
+{cat:'時間',q:'「来週」',kr:'다음 주',pron:'タウム ジュ',jp:'来週',wrong:['이번 주','지난주','다음 달']},
+
+// ── 天気 ────────────────────────────────────────────────
+{cat:'天気',q:'「今日の天気は？」',kr:'오늘 날씨가 어때요?',pron:'オヌル ナルシガ オッテヨ？',jp:'今日の天気はどうですか？',wrong:['오늘 기온이 어때요?','비가 와요?','구름 있어요?']},
+{cat:'天気',q:'「晴れています」',kr:'맑아요',pron:'マルガヨ',jp:'晴れています',wrong:['흐려요','비 와요','눈 와요']},
+{cat:'天気',q:'「曇っています」',kr:'흐려요',pron:'フリョヨ',jp:'曇っています',wrong:['맑아요','비 와요','바람 불어요']},
+{cat:'天気',q:'「雨が降っています」',kr:'비가 와요',pron:'ビガ ワヨ',jp:'雨が降っています',wrong:['맑아요','눈이 와요','흐려요']},
+{cat:'天気',q:'「雪が降っています」',kr:'눈이 와요',pron:'ヌニ ワヨ',jp:'雪が降っています',wrong:['비가 와요','맑아요','바람 불어요']},
+{cat:'天気',q:'「暑いです」',kr:'더워요',pron:'トウォヨ',jp:'暑いです',wrong:['추워요','시원해요','따뜻해요']},
+{cat:'天気',q:'「寒いです」',kr:'추워요',pron:'チュウォヨ',jp:'寒いです',wrong:['더워요','따뜻해요','시원해요']},
+{cat:'天気',q:'「涼しいです」',kr:'시원해요',pron:'シウォネヨ',jp:'涼しいです',wrong:['추워요','더워요','따뜻해요']},
+{cat:'天気',q:'「暖かいです」',kr:'따뜻해요',pron:'タットゥテヨ',jp:'暖かいです',wrong:['시원해요','추워요','더워요']},
+{cat:'天気',q:'「傘を持って行ってください」',kr:'우산 가져가세요',pron:'ウサン カジョガセヨ',jp:'傘を持って行ってください',wrong:['선글라스 쓰세요','두껍게 입으세요','얇게 입으세요']},
+
+// ── 病気・緊急 ──────────────────────────────────────────
+{cat:'緊急',q:'「助けてください！」',kr:'도와주세요!',pron:'トワジュセヨ！',jp:'助けてください！',wrong:['저기요!','잠깐만요!','조용히 해주세요!']},
+{cat:'緊急',q:'「病院に行きたいです」',kr:'병원에 가고 싶어요',pron:'ピョンウォネ カゴ シポヨ',jp:'病院に行きたいです',wrong:['약국에 가고 싶어요','호텔에 가고 싶어요','편의점에 가고 싶어요']},
+{cat:'緊急',q:'「頭が痛いです」',kr:'머리가 아파요',pron:'モリガ アパヨ',jp:'頭が痛いです',wrong:['배가 아파요','목이 아파요','다리가 아파요']},
+{cat:'緊急',q:'「お腹が痛いです」',kr:'배가 아파요',pron:'ペガ アパヨ',jp:'お腹が痛いです',wrong:['머리가 아파요','목이 아파요','등이 아파요']},
+{cat:'緊急',q:'「薬局」',kr:'약국',pron:'ヤクグク',jp:'薬局',wrong:['병원','편의점','슈퍼']},
+{cat:'緊急',q:'「救急車を呼んでください」',kr:'구급차 불러 주세요',pron:'クグプチャ プルロ ジュセヨ',jp:'救急車を呼んでください',wrong:['경찰 불러 주세요','택시 불러 주세요','소방차 불러 주세요']},
+{cat:'緊急',q:'「財布をなくしました」',kr:'지갑을 잃어버렸어요',pron:'チガブル イロボリョッソヨ',jp:'財布をなくしました',wrong:['핸드폰을 잃어버렸어요','여권을 잃어버렸어요','가방을 잃어버렸어요']},
+{cat:'緊急',q:'「パスポートをなくしました」',kr:'여권을 잃어버렸어요',pron:'ヨックォヌル イロボリョッソヨ',jp:'パスポートをなくしました',wrong:['지갑을 잃어버렸어요','핸드폰을 잃어버렸어요','열쇠를 잃어버렸어요']},
+{cat:'緊急',q:'「警察を呼んでください」',kr:'경찰을 불러 주세요',pron:'キョンチャルル ブルロ ジュセヨ',jp:'警察を呼んでください',wrong:['구급차 불러 주세요','소방차 불러 주세요','택시 불러 주세요']},
+{cat:'緊急',q:'「アレルギーがあります」',kr:'알레르기가 있어요',pron:'アルレルギガ イッソヨ',jp:'アレルギーがあります',wrong:['알레르기가 없어요','괜찮아요','문제없어요']},
+
+// ── 家族・人 ────────────────────────────────────────────
+{cat:'家族',q:'「お父さん」',kr:'아버지 / 아빠',pron:'アボジ / アッパ',jp:'お父さん',wrong:['어머니','형','누나']},
+{cat:'家族',q:'「お母さん」',kr:'어머니 / 엄마',pron:'オモニ / オンマ',jp:'お母さん',wrong:['아버지','오빠','언니']},
+{cat:'家族',q:'「兄（男性が呼ぶ）」',kr:'형',pron:'ヒョン',jp:'お兄さん（男性が呼ぶ）',wrong:['오빠','언니','누나']},
+{cat:'家族',q:'「兄（女性が呼ぶ）」',kr:'오빠',pron:'オッパ',jp:'お兄さん（女性が呼ぶ）',wrong:['형','언니','누나']},
+{cat:'家族',q:'「姉（男性が呼ぶ）」',kr:'누나',pron:'ヌナ',jp:'お姉さん（男性が呼ぶ）',wrong:['언니','오빠','형']},
+{cat:'家族',q:'「姉（女性が呼ぶ）」',kr:'언니',pron:'オンニ',jp:'お姉さん（女性が呼ぶ）',wrong:['누나','오빠','형']},
+{cat:'家族',q:'「友達」',kr:'친구',pron:'チング',jp:'友達',wrong:['가족','선배','후배']},
+{cat:'家族',q:'「先輩」',kr:'선배',pron:'ソンベ',jp:'先輩',wrong:['후배','친구','동생']},
+{cat:'家族',q:'「後輩」',kr:'후배',pron:'フベ',jp:'後輩',wrong:['선배','친구','동생']},
+{cat:'家族',q:'「男性の彼氏への呼び方」（上のの人への呼称）',kr:'오빠',pron:'オッパ',jp:'彼氏への愛称（女性から）',wrong:['형','언니','누나']},
+
+// ── K-POPフレーズ ────────────────────────────────────
+{cat:'K-POP',q:'「ファンです！」',kr:'팬이에요!',pron:'ペニエヨ！',jp:'ファンです！',wrong:['가수예요','아이돌이에요','좋아해요']},
+{cat:'K-POP',q:'「コンサートに行きたいです！」',kr:'콘서트에 가고 싶어요!',pron:'コンソトゥエ カゴ シポヨ！',jp:'コンサートに行きたいです！',wrong:['팬미팅에 가고 싶어요!','영화 보고 싶어요!','음악 듣고 싶어요!']},
+{cat:'K-POP',q:'「最高！」',kr:'최고예요!',pron:'チェゴエヨ！',jp:'最高です！',wrong:['별로예요','나빠요','그냥요']},
+{cat:'K-POP',q:'「응원해요（応援してます）」',kr:'응원해요',pron:'ウンウォネヨ',jp:'応援しています',wrong:['욕해요','무시해요','싫어해요']},
+{cat:'K-POP',q:'「노래（歌）」',kr:'노래',pron:'ノレ',jp:'歌',wrong:['춤','음악','영화']},
+{cat:'K-POP',q:'「춤（ダンス）」',kr:'춤',pron:'チュム',jp:'ダンス',wrong:['노래','음악','연기']},
+{cat:'K-POP',q:'「예쁘다（かわいい・綺麗）」',kr:'예뻐요',pron:'イェッポヨ',jp:'綺麗です・かわいいです',wrong:['못생겼어요','평범해요','이상해요']},
+{cat:'K-POP',q:'「대박（すごい・やばい）」',kr:'대박이에요!',pron:'テバキエヨ！',jp:'すごい！やばい！',wrong:['별로예요','그냥이에요','괜찮아요']},
+{cat:'K-POP',q:'「셀카（自撮り）」',kr:'셀카',pron:'セルカ',jp:'自撮り',wrong:['단체사진','풍경사진','증명사진']},
+{cat:'K-POP',q:'「아이돌（アイドル）」',kr:'아이돌',pron:'アイドル',jp:'アイドル',wrong:['가수','배우','모델']},
+{cat:'K-POP',q:'「컴백（カムバック・新曲リリース）」',kr:'컴백',pron:'コムベク',jp:'カムバック（新曲リリース）',wrong:['데뷔','은퇴','활동 중단']},
+{cat:'K-POP',q:'「데뷔（デビュー）」',kr:'데뷔',pron:'テビュ',jp:'デビュー',wrong:['컴백','은퇴','졸업']},
+{cat:'K-POP',q:'「팬클럽（ファンクラブ）」',kr:'팬클럽',pron:'ペンクルロプ',jp:'ファンクラブ',wrong:['팬미팅','콘서트','뮤직비디오']},
+{cat:'K-POP',q:'「뮤직비디오（ミュージックビデオ）」',kr:'뮤직비디오',pron:'ミュジクビデオ',jp:'ミュージックビデオ',wrong:['콘서트','팬미팅','앨범']},
+{cat:'K-POP',q:'「앨범（アルバム）」',kr:'앨범',pron:'エルボム',jp:'アルバム',wrong:['뮤직비디오','콘서트','팬클럽']},
+
+// ── SNS・日常会話 ───────────────────────────────────────
+{cat:'日常会話',q:'「わかりました」',kr:'알겠어요',pron:'アルゲッソヨ',jp:'わかりました',wrong:['모르겠어요','됐어요','안 돼요']},
+{cat:'日常会話',q:'「わかりません」',kr:'모르겠어요',pron:'モルゲッソヨ',jp:'わかりません',wrong:['알겠어요','맞아요','틀려요']},
+{cat:'日常会話',q:'「そうです」',kr:'맞아요',pron:'マジャヨ',jp:'そうです・合っています',wrong:['아니에요','틀려요','모르겠어요']},
+{cat:'日常会話',q:'「違います」',kr:'아니에요',pron:'アニエヨ',jp:'違います',wrong:['맞아요','그래요','네']},
+{cat:'日常会話',q:'「ちょっと待ってください」',kr:'잠깐만요',pron:'チャムカンマニョ',jp:'ちょっと待ってください',wrong:['빨리요','어서요','가세요']},
+{cat:'日常会話',q:'「ゆっくり話してください」',kr:'천천히 말해 주세요',pron:'チョンチョニ マレ ジュセヨ',jp:'ゆっくり話してください',wrong:['빨리 말해 주세요','크게 말해 주세요','작게 말해 주세요']},
+{cat:'日常会話',q:'「もう一度言ってください」',kr:'다시 한번 말해 주세요',pron:'タシ ハンボン マレ ジュセヨ',jp:'もう一度言ってください',wrong:['천천히 말해 주세요','한국어로 말해 주세요','일본어로 말해 주세요']},
+{cat:'日常会話',q:'「日本語が話せますか？」',kr:'일본어 할 수 있어요?',pron:'イルポノ ハル ス イッソヨ？',jp:'日本語は話せますか？',wrong:['한국어 할 수 있어요?','영어 할 수 있어요?','중국어 할 수 있어요?']},
+{cat:'日常会話',q:'「韓国語が少し話せます」',kr:'한국어를 조금 할 수 있어요',pron:'ハングゴルル チョグム ハル ス イッソヨ',jp:'韓国語を少し話せます',wrong:['한국어를 잘 해요','한국어를 못 해요','일본어만 해요']},
+{cat:'日常会話',q:'「一緒に行きましょう！」',kr:'같이 가요!',pron:'カチ カヨ！',jp:'一緒に行きましょう！',wrong:['혼자 가요','먼저 가요','나중에 가요']},
+{cat:'日常会話',q:'「おすすめです！」',kr:'추천해요!',pron:'チュチョネヨ！',jp:'おすすめします！',wrong:['별로예요','하지 마세요','안 해요']},
+{cat:'日常会話',q:'「〜が好きです」',kr:'~을/를 좋아해요',pron:'~ウル/ルル チョアヘヨ',jp:'〜が好きです',wrong:['~을/를 싫어해요','~이/가 좋아요','~을/를 원해요']},
+{cat:'日常会話',q:'「명함（名刺）ください」',kr:'명함 주세요',pron:'ミョンハム ジュセヨ',jp:'名刺をください',wrong:['전화번호 주세요','이메일 알려주세요','카카오톡 알려주세요']},
+{cat:'日常会話',q:'「カカオトークのIDを教えてください」',kr:'카카오톡 아이디 알려주세요',pron:'カカオトク アイディ アルリョジュセヨ',jp:'カカオトークのID教えてください',wrong:['전화번호 알려주세요','이메일 알려주세요','인스타 알려주세요']},
+{cat:'日常会話',q:'「どんな音楽が好きですか？」',kr:'어떤 음악을 좋아해요?',pron:'オットン ウマグル チョアヘヨ？',jp:'どんな音楽が好きですか？',wrong:['어떤 음식을 좋아해요?','어떤 영화를 좋아해요?','어떤 책을 좋아해요?']},
+{cat:'日常会話',q:'「インスタやっています？」',kr:'인스타 해요?',pron:'インスタ ヘヨ？',jp:'インスタやっていますか？',wrong:['카카오톡 해요?','유튜브 해요?','틱톡 해요?']},
+{cat:'日常会話',q:'「何歳ですか？」',kr:'몇 살이에요?',pron:'ミョッ サリエヨ？',jp:'何歳ですか？',wrong:['어디서 왔어요?','직업이 뭐예요?','이름이 뭐예요?']},
+{cat:'日常会話',q:'「名前は何ですか？」',kr:'이름이 뭐예요?',pron:'イルミ ムォエヨ？',jp:'名前は何ですか？',wrong:['나이가 어떻게 돼요?','어디서 왔어요?','직업이 뭐예요?']},
+{cat:'日常会話',q:'「職業は何ですか？」',kr:'직업이 뭐예요?',pron:'チゴビ ムォエヨ？',jp:'職業は何ですか？',wrong:['이름이 뭐예요?','몇 살이에요?','어디서 왔어요?']},
+
+// ── 文法・表現 ─────────────────────────────────────────
+{cat:'文法',q:'「〜したいです」の語尾は？',kr:'~고 싶어요',pron:'~ゴ シポヨ',jp:'〜したいです',wrong:['~고 있어요','~아/어요','~겠어요']},
+{cat:'文法',q:'「〜しています」（現在進行）の語尾は？',kr:'~고 있어요',pron:'~ゴ イッソヨ',jp:'〜しています',wrong:['~고 싶어요','~았/었어요','~겠어요']},
+{cat:'文法',q:'「〜でした」（過去）の語尾は？',kr:'~았/었어요',pron:'~アッ/オッソヨ',jp:'〜でした（過去形）',wrong:['~아/어요','~겠어요','~고 있어요']},
+{cat:'文法',q:'「〜ましょう」（勧誘）の語尾は？',kr:'~아/어요 / ~자',pron:'~アヨ / チャ',jp:'〜しましょう',wrong:['~고 싶어요','~면 돼요','~세요']},
+{cat:'文法',q:'「これ」は韓国語で？',kr:'이것 / 이거',pron:'イゴッ / イゴ',jp:'これ',wrong:['저것','그것','여기']},
+{cat:'文法',q:'「それ」は韓国語で？',kr:'그것 / 그거',pron:'クゴッ / クゴ',jp:'それ',wrong:['이것','저것','거기']},
+{cat:'文法',q:'「あれ」は韓国語で？',kr:'저것 / 저거',pron:'チョゴッ / チョゴ',jp:'あれ',wrong:['이것','그것','여기']},
+{cat:'文法',q:'「ここ」は韓国語で？',kr:'여기',pron:'ヨギ',jp:'ここ',wrong:['거기','저기','어디']},
+{cat:'文法',q:'「そこ」は韓国語で？',kr:'거기',pron:'コギ',jp:'そこ',wrong:['여기','저기','어디']},
+{cat:'文法',q:'「あそこ」は韓国語で？',kr:'저기',pron:'チョギ',jp:'あそこ',wrong:['여기','거기','어디']},
+{cat:'文法',q:'「〜ですか？」（疑問）の語尾',kr:'~이에요? / ~예요?',pron:'~イエヨ？ / ~イエヨ？',jp:'〜ですか？',wrong:['~이에요','~고 싶어요?','~세요?']},
+{cat:'文法',q:'「〜してください」（丁寧な依頼）',kr:'~아/어 주세요',pron:'~ア/オ ジュセヨ',jp:'〜してください',wrong:['~아/어요','~세요','~고 싶어요']},
+{cat:'文法',q:'「〜できます」は？',kr:'~(을/를) 수 있어요',pron:'~スイッソヨ',jp:'〜できます',wrong:['~고 싶어요','~아/어요','~면 돼요']},
+{cat:'文法',q:'「〜できません」は？',kr:'~(을/를) 수 없어요',pron:'~スオプソヨ',jp:'〜できません',wrong:['~고 싶지 않아요','~안 해요','~못 해요']},
+{cat:'文法',q:'「なぜ？」',kr:'왜요?',pron:'ウェヨ？',jp:'なぜですか？',wrong:['뭐예요?','어디예요?','언제예요?']},
+{cat:'文法',q:'「いつ？」',kr:'언제예요?',pron:'オンジェエヨ？',jp:'いつですか？',wrong:['어디예요?','뭐예요?','왜요?']},
+{cat:'文法',q:'「誰？」',kr:'누구예요?',pron:'ヌグエヨ？',jp:'誰ですか？',wrong:['뭐예요?','어디예요?','언제예요?']},
+{cat:'文法',q:'「どのように？」',kr:'어떻게요?',pron:'オットケヨ？',jp:'どのようにですか？',wrong:['왜요?','언제요?','어디요?']},
+{cat:'文法',q:'「どんな？どのような？」',kr:'어떤?',pron:'オットン？',jp:'どんな？どのような？',wrong:['어떻게?','얼마나?','얼마?']},
+
+// ── 色・形容詞 ─────────────────────────────────────────
+{cat:'形容詞',q:'「赤い」',kr:'빨간색',pron:'パルガンセク',jp:'赤い・赤色',wrong:['파란색','노란색','초록색']},
+{cat:'形容詞',q:'「青い」',kr:'파란색',pron:'パランセク',jp:'青い・青色',wrong:['빨간색','노란색','하얀색']},
+{cat:'形容詞',q:'「黄色い」',kr:'노란색',pron:'ノランセク',jp:'黄色い・黄色',wrong:['빨간색','파란색','초록색']},
+{cat:'形容詞',q:'「緑色」',kr:'초록색',pron:'チョロクセク',jp:'緑色',wrong:['파란색','노란색','검은색']},
+{cat:'形容詞',q:'「白い」',kr:'하얀색',pron:'ハヤンセク',jp:'白い・白色',wrong:['검은색','회색','빨간색']},
+{cat:'形容詞',q:'「黒い」',kr:'검은색',pron:'コムンセク',jp:'黒い・黒色',wrong:['하얀색','회색','노란색']},
+{cat:'形容詞',q:'「ピンク色」',kr:'분홍색',pron:'プノンセク',jp:'ピンク色',wrong:['주황색','보라색','노란색']},
+{cat:'形容詞',q:'「紫色」',kr:'보라색',pron:'ポラセク',jp:'紫色',wrong:['분홍색','주황색','파란색']},
+{cat:'形容詞',q:'「大きい」',kr:'커요',pron:'コヨ',jp:'大きいです',wrong:['작아요','높아요','넓어요']},
+{cat:'形容詞',q:'「小さい」',kr:'작아요',pron:'チャガヨ',jp:'小さいです',wrong:['커요','낮아요','좁아요']},
+{cat:'形容詞',q:'「長い」',kr:'길어요',pron:'キロヨ',jp:'長いです',wrong:['짧아요','두꺼워요','얇아요']},
+{cat:'形容詞',q:'「短い」',kr:'짧아요',pron:'チャルバヨ',jp:'短いです',wrong:['길어요','높아요','작아요']},
+{cat:'形容詞',q:'「重い」',kr:'무거워요',pron:'ムゴウォヨ',jp:'重いです',wrong:['가벼워요','커요','두꺼워요']},
+{cat:'形容詞',q:'「軽い」',kr:'가벼워요',pron:'カビョウォヨ',jp:'軽いです',wrong:['무거워요','작아요','얇아요']},
+{cat:'形容詞',q:'「難しいです」',kr:'어려워요',pron:'オリョウォヨ',jp:'難しいです',wrong:['쉬워요','간단해요','복잡해요']},
+{cat:'形容詞',q:'「簡単です」',kr:'쉬워요',pron:'シウォヨ',jp:'簡単です・易しいです',wrong:['어려워요','복잡해요','힘들어요']},
+{cat:'形容詞',q:'「きれいです」',kr:'깨끗해요',pron:'ッケックタヘヨ',jp:'きれいです・清潔です',wrong:['더러워요','지저분해요','복잡해요']},
+{cat:'形容詞',q:'「新しいです」',kr:'새로워요',pron:'セロウォヨ',jp:'新しいです',wrong:['오래됐어요','낡았어요','구식이에요']},
+{cat:'形容詞',q:'「面白いです」',kr:'재미있어요',pron:'チェミイッソヨ',jp:'面白いです・楽しいです',wrong:['재미없어요','지루해요','심심해요']},
+
+// ── 動詞 ────────────────────────────────────────────────
+{cat:'動詞',q:'「行きます」',kr:'가요',pron:'カヨ',jp:'行きます',wrong:['와요','있어요','없어요']},
+{cat:'動詞',q:'「来ます」',kr:'와요',pron:'ワヨ',jp:'来ます',wrong:['가요','있어요','봐요']},
+{cat:'動詞',q:'「食べます」',kr:'먹어요',pron:'モゴヨ',jp:'食べます',wrong:['마셔요','봐요','해요']},
+{cat:'動詞',q:'「飲みます」',kr:'마셔요',pron:'マショヨ',jp:'飲みます',wrong:['먹어요','봐요','해요']},
+{cat:'動詞',q:'「見ます」',kr:'봐요',pron:'バヨ',jp:'見ます',wrong:['들어요','먹어요','해요']},
+{cat:'動詞',q:'「聞きます」',kr:'들어요',pron:'トゥロヨ',jp:'聞きます',wrong:['봐요','말해요','읽어요']},
+{cat:'動詞',q:'「話します」',kr:'말해요',pron:'マレヨ',jp:'話します',wrong:['들어요','써요','읽어요']},
+{cat:'動詞',q:'「買います」',kr:'사요',pron:'サヨ',jp:'買います',wrong:['팔아요','줘요','가져요']},
+{cat:'動詞',q:'「売ります」',kr:'팔아요',pron:'パラヨ',jp:'売ります',wrong:['사요','줘요','받아요']},
+{cat:'動詞',q:'「あります・います」',kr:'있어요',pron:'イッソヨ',jp:'あります・います',wrong:['없어요','가요','와요']},
+{cat:'動詞',q:'「ありません・いません」',kr:'없어요',pron:'オプソヨ',jp:'ありません・いません',wrong:['있어요','안 가요','못 해요']},
+{cat:'動詞',q:'「わかります」',kr:'알아요',pron:'アラヨ',jp:'わかります・知っています',wrong:['몰라요','배워요','잊어요']},
+{cat:'動詞',q:'「わかりません」',kr:'몰라요',pron:'モルラヨ',jp:'わかりません',wrong:['알아요','알겠어요','봐요']},
+{cat:'動詞',q:'「好きです（動詞）」',kr:'좋아해요',pron:'チョアヘヨ',jp:'好きです',wrong:['싫어해요','관심 없어요','봐요']},
+{cat:'動詞',q:'「勉強します」',kr:'공부해요',pron:'コンブヘヨ',jp:'勉強します',wrong:['일해요','놀아요','자요']},
+{cat:'動詞',q:'「働きます」',kr:'일해요',pron:'イレヨ',jp:'働きます',wrong:['공부해요','놀아요','자요']},
+{cat:'動詞',q:'「遊びます」',kr:'놀아요',pron:'ノラヨ',jp:'遊びます',wrong:['일해요','공부해요','자요']},
+{cat:'動詞',q:'「寝ます」',kr:'자요',pron:'チャヨ',jp:'寝ます',wrong:['일어나요','놀아요','가요']},
+{cat:'動詞',q:'「起きます」',kr:'일어나요',pron:'イロナヨ',jp:'起きます',wrong:['자요','쉬어요','앉아요']},
+{cat:'動詞',q:'「写真を撮ります」',kr:'사진을 찍어요',pron:'サジヌル チゴヨ',jp:'写真を撮ります',wrong:['사진을 봐요','사진을 올려요','사진을 지워요']},
+{cat:'動詞',q:'「歌います」',kr:'노래해요',pron:'ノレヘヨ',jp:'歌います',wrong:['춤춰요','연주해요','들어요']},
+{cat:'動詞',q:'「踊ります」',kr:'춤춰요',pron:'チュムチュォヨ',jp:'踊ります',wrong:['노래해요','연기해요','운동해요']},
+{cat:'動詞',q:'「運動します」',kr:'운동해요',pron:'ウンドンヘヨ',jp:'運動します',wrong:['공부해요','놀아요','자요']},
+{cat:'動詞',q:'「待ちます」',kr:'기다려요',pron:'キダリョヨ',jp:'待ちます',wrong:['가요','와요','봐요']},
+{cat:'動詞',q:'「探します」',kr:'찾아요',pron:'チャジャヨ',jp:'探します・見つけます',wrong:['잃어버려요','잊어요','봐요']},
+
+// ── 追加・旅行フレーズ ─────────────────────────────────
+{cat:'旅行',q:'「トイレはどこですか？」',kr:'화장실이 어디예요?',pron:'ファジャンシリ オディエヨ？',jp:'トイレはどこですか？',wrong:['출구가 어디예요?','입구가 어디예요?','엘리베이터가 어디예요?']},
+{cat:'旅行',q:'「コンビニ」',kr:'편의점',pron:'ピョニジョム',jp:'コンビニエンスストア',wrong:['슈퍼마켓','마트','백화점']},
+{cat:'旅行',q:'「デパート」',kr:'백화점',pron:'ペクァジョム',jp:'デパート',wrong:['편의점','마트','시장']},
+{cat:'旅行',q:'「市場（市場）」',kr:'시장',pron:'シジャン',jp:'市場',wrong:['마트','백화점','편의점']},
+{cat:'旅行',q:'「ここで写真撮ってもいいですか？」',kr:'여기서 사진 찍어도 돼요?',pron:'ヨギソ サジン チゴド デヨ？',jp:'ここで写真撮ってもいいですか？',wrong:['사진 찍어 주세요','같이 찍어요','사진 있어요?']},
+{cat:'旅行',q:'「シャトルバスはありますか？」',kr:'셔틀버스 있어요?',pron:'ショトゥルポス イッソヨ？',jp:'シャトルバスはありますか？',wrong:['지하철 있어요?','택시 있어요?','자전거 있어요?']},
+{cat:'旅行',q:'「ここから近いですか？」',kr:'여기서 가까워요?',pron:'ヨギソ カッカウォヨ？',jp:'ここから近いですか？',wrong:['걸어서 가요?','택시 타요?','얼마나 걸려요?']},
+{cat:'旅行',q:'「どのくらいかかりますか？」',kr:'얼마나 걸려요?',pron:'オルマナ コルリョヨ？',jp:'どのくらい時間がかかりますか？',wrong:['얼마예요?','멀어요?','가까워요?']},
+{cat:'旅行',q:'「Wi-Fi使えますか？」',kr:'와이파이 돼요?',pron:'ワイパイ デヨ？',jp:'Wi-Fiは使えますか？',wrong:['충전 돼요?','카드 돼요?','영어 해요?']},
+{cat:'旅行',q:'「地図を見せてもらえますか？」',kr:'지도 보여 주세요',pron:'チド ポヨ ジュセヨ',jp:'地図を見せてください',wrong:['지도 있어요?','길을 알려주세요','여기 표시해 주세요']},
+{cat:'旅行',q:'「予約なしで入れますか？」',kr:'예약 없이 들어갈 수 있어요?',pron:'イェヤク オプシ トゥロガル ス イッソヨ？',jp:'予約なしで入れますか？',wrong:['예약 해야 해요?','빈자리 있어요?','몇 명이에요?']},
+{cat:'旅行',q:'「1泊いくらですか？」',kr:'하룻밤에 얼마예요?',pron:'ハルッパメ オルマエヨ？',jp:'1泊いくらですか？',wrong:['한 달에 얼마예요?','일주일에 얼마예요?','한 시간에 얼마예요?']},
+{cat:'旅行',q:'「フロントはどこですか？」',kr:'프런트가 어디예요?',pron:'プロントゥガ オディエヨ？',jp:'フロントはどこですか？',wrong:['화장실이 어디예요?','엘리베이터가 어디예요?','식당이 어디예요?']},
+{cat:'旅行',q:'「荷物を預けられますか？」',kr:'짐을 맡길 수 있어요?',pron:'チムル マッキル ス イッソヨ？',jp:'荷物を預けられますか？',wrong:['짐을 들어줘요?','짐 가져가요?','짐 찾아줘요?']},
+{cat:'旅行',q:'「通貨両替所はどこですか？」',kr:'환전소가 어디예요?',pron:'ファンジョンソガ オディエヨ？',jp:'両替所はどこですか？',wrong:['ATM이 어디예요?','은행이 어디예요?','우체국이 어디예요?']},
+{cat:'旅行',q:'「ウォンに換えてください」',kr:'원으로 바꿔 주세요',pron:'ウォヌロ パックォ ジュセヨ',jp:'ウォンに換えてください',wrong:['엔으로 바꿔 주세요','달러로 바꿔 주세요','유로로 바꿔 주세요']},
+];
+
+// カテゴリ一覧
+const CATEGORIES = [...new Set(QB.map(q => q.cat))];
+
+// ===== DRILL STATE =====
+let drillState = {
+  category: null,
+  queue: [],
+  idx: 0,
+  score: 0,
+  correct: 0,
+  total: 0,
+  streak: 0,
+  maxStreak: 0,
+};
+
+function startDrillMode() {
+  showScreen('drill-select-screen');
+  document.getElementById('dsel-score').textContent = state.totalScore;
+  const idolEl = document.getElementById('dsel-idol');
+  if (idolEl) idolEl.innerHTML = yunaSmallSVG();
+  renderCategoryGrid();
+}
+
+function renderCategoryGrid() {
+  const catIcons = {
+    'あいさつ': '👋', '数字': '🔢', '食べ物': '🍱', '買い物': '🛍️',
+    '交通': '🚇', 'ホテル': '🏨', '観光': '🏯', '感情': '💕',
+    '時間': '🕐', '天気': '☀️', '緊急': '🚨', '家族': '👨‍👩‍👧',
+    'K-POP': '🎤', '日常会話': '💬', '文法': '📚', '形容詞': '🎨',
+    '動詞': '⚡', '旅行': '✈️',
+  };
+  const grid = document.getElementById('category-grid');
+  grid.innerHTML = '';
+
+  // All random card
+  const allCard = document.createElement('div');
+  allCard.className = 'cat-card';
+  allCard.style.cssText = 'background:linear-gradient(135deg,rgba(255,107,157,0.15),rgba(155,89,182,0.15));border-color:rgba(255,107,157,0.4);grid-column:1/-1;';
+  allCard.innerHTML = `<div class="cat-icon">🌟</div><div class="cat-name" style="color:var(--pink)">ランダム全問</div><div class="cat-count">${QB.length}問以上</div>`;
+  allCard.onclick = () => launchDrill(null);
+  grid.appendChild(allCard);
+
+  CATEGORIES.forEach(cat => {
+    const count = QB.filter(q => q.cat === cat).length;
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+    card.innerHTML = `<div class="cat-icon">${catIcons[cat] || '📝'}</div><div class="cat-name">${cat}</div><div class="cat-count">${count}問</div>`;
+    card.onclick = () => launchDrill(cat);
+    grid.appendChild(card);
+  });
+}
+
+function launchDrill(category) {
+  drillState.category = category;
+  drillState.score = 0;
+  drillState.correct = 0;
+  drillState.total = 0;
+  drillState.streak = 0;
+  drillState.maxStreak = 0;
+  drillState.idx = 0;
+
+  let pool = category ? QB.filter(q => q.cat === category) : [...QB];
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  drillState.queue = pool;
+
+  const name = category ? `⚡ ${category} 特訓` : '⚡ ランダム全問';
+  document.getElementById('drill-category-name').textContent = name;
+  document.getElementById('drill-score').textContent = state.totalScore;
+  showScreen('drill-screen');
+  renderDrillQuestion();
+}
+
+function renderDrillQuestion() {
+  if (drillState.idx >= drillState.queue.length) {
+    // Cycle through again (shuffle)
+    drillState.idx = 0;
+    let pool = [...drillState.queue];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    drillState.queue = pool;
+  }
+
+  const q = drillState.queue[drillState.idx];
+  const total = drillState.queue.length;
+  const pct = (drillState.idx / total) * 100;
+
+  document.getElementById('drill-progress-fill').style.width = pct + '%';
+  document.getElementById('drill-progress-text').textContent =
+    `問題 ${drillState.total + 1} | 正解率 ${drillState.total > 0 ? Math.round(drillState.correct/drillState.total*100) : 0}%`;
+
+  const body = document.getElementById('drill-body');
+  body.innerHTML = '';
+
+  // Streak bar
+  if (drillState.streak >= 3) {
+    const sb = document.createElement('div');
+    sb.className = 'streak-bar';
+    sb.innerHTML = `<span class="streak-chip">🔥 ${drillState.streak}連続正解！</span>`;
+    body.appendChild(sb);
+  }
+
+  // Idol comment
+  const idolRow = document.createElement('div');
+  idolRow.className = 'dialogue-box npc';
+  const drillComments = [
+    '問題！韓国語で何という？✨',
+    '正確に覚えてるかチェックだよ！💕',
+    '集中して！もう少しで完璧✨',
+    '这个很难哦〜！（間違えたw）頑張れ！🔥',
+    '한번 더！（もう一回！）いけるいける💪',
+  ];
+  const comment = drillComments[drillState.total % drillComments.length];
+  idolRow.innerHTML = `<div class="dialogue-avatar">${yunaSmallSVG()}</div><div class="dialogue-content"><div class="dialogue-speaker">ユナ</div><div class="dialogue-text-box">${comment}</div></div>`;
+  body.appendChild(idolRow);
+
+  // Question card
+  const qCard = document.createElement('div');
+  qCard.className = 'quiz-card';
+
+  const header = document.createElement('div');
+  header.className = 'quiz-header';
+  header.innerHTML = `<span class="quiz-badge">${q.cat}</span><span style="color:rgba(240,230,255,0.5);font-size:12px;margin-left:auto">${drillState.total + 1}問目</span>`;
+  qCard.appendChild(header);
+
+  const qText = document.createElement('div');
+  qText.className = 'quiz-question';
+  qText.innerHTML = `<span class="q-korean">${q.kr}</span><span style="color:rgba(240,230,255,0.65);font-size:13px">[ ${q.pron} ]</span><br><span style="color:rgba(240,230,255,0.55);font-size:14px">👆 この韓国語の意味は？</span>`;
+  qCard.appendChild(qText);
+
+  // Build choices: correct answer + 3 wrong answers picked from other questions' jp (all Japanese)
+  // Prefer same category for plausible distractors, fallback to any category
+  const sameCat = QB.filter(o => o !== q && o.cat === q.cat && o.jp !== q.jp).map(o => o.jp);
+  const otherCat = QB.filter(o => o !== q && o.cat !== q.cat && o.jp !== q.jp).map(o => o.jp);
+  const pool = [...sameCat.sort(() => Math.random() - 0.5), ...otherCat.sort(() => Math.random() - 0.5)];
+  const seen = new Set([q.jp]);
+  const wrongAnswers = [];
+  for (const w of pool) {
+    if (!seen.has(w)) { seen.add(w); wrongAnswers.push(w); }
+    if (wrongAnswers.length === 3) break;
+  }
+  const choices = [
+    { text: q.jp, isCorrect: true },
+    ...wrongAnswers.map(w => ({ text: w, isCorrect: false })),
+  ];
+  for (let i = choices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [choices[i], choices[j]] = [choices[j], choices[i]];
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'choices-grid';
+  const feedback = document.createElement('div');
+  feedback.className = 'feedback-box';
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn-next';
+  nextBtn.textContent = '次の問題 ▶';
+  nextBtn.onclick = () => {
+    drillState.idx++;
+    renderDrillQuestion();
+    document.getElementById('drill-body').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = choice.text;
+    btn.onclick = () => {
+      grid.querySelectorAll('.choice-btn').forEach(b => {
+        b.disabled = true;
+        const matchedChoice = choices.find(c => b.textContent === c.text);
+        if (matchedChoice && matchedChoice.isCorrect) b.classList.add('correct');
+      });
+
+      drillState.total++;
+
+      if (choice.isCorrect) {
+        btn.classList.add('correct');
+        drillState.correct++;
+        drillState.streak++;
+        drillState.maxStreak = Math.max(drillState.maxStreak, drillState.streak);
+        const pts = drillState.streak >= 3 ? 15 : 10;
+        drillState.score += pts;
+        state.totalScore += pts;
+        addPopularity(drillState.streak >= 3 ? 3 : 1); // saveState called inside
+        document.getElementById('drill-score').textContent = state.totalScore;
+        document.getElementById('total-score').textContent = state.totalScore;
+
+        const streakMsg = drillState.streak >= 5 ? `🔥${drillState.streak}連続！+${pts}pt` :
+                          drillState.streak >= 3 ? `🔥 コンボ！+${pts}pt` : `+${pts}pt`;
+        feedback.className = 'feedback-box correct';
+        feedback.innerHTML = `<div class="feedback-title">✅ 정답！${streakMsg}</div><strong>${q.kr}</strong>（${q.pron}）＝「${q.jp}」`;
+      } else {
+        btn.classList.add('wrong');
+        drillState.streak = 0;
+        feedback.className = 'feedback-box wrong';
+        feedback.innerHTML = `<div class="feedback-title">❌ 不正解</div>正解は「<strong>${q.jp}</strong>」→ <strong>${q.kr}</strong>（${q.pron}）`;
+      }
+      nextBtn.classList.add('visible');
+    };
+    grid.appendChild(btn);
+  });
+
+  qCard.appendChild(grid);
+  qCard.appendChild(feedback);
+  qCard.appendChild(nextBtn);
+  body.appendChild(qCard);
+}
+
+// ===== STATE =====
+const POP_LEVELS = [
+  { min: 0,   label: '신인',        labelJp: '新人アイドル',   color: '#aaa' },
+  { min: 30,  label: '루키',        labelJp: 'ルーキー',       color: '#4fc3f7' },
+  { min: 80,  label: '떠오르는 별', labelJp: '新星',           color: '#81c784' },
+  { min: 160, label: '인기 아이돌', labelJp: '人気アイドル',   color: '#ff80ab' },
+  { min: 300, label: '전설',        labelJp: '伝説のアイドル', color: '#ffd54f' },
+];
+
+function getPopLevel(pop) {
+  let lv = POP_LEVELS[0];
+  for (const l of POP_LEVELS) { if (pop >= l.min) lv = l; }
+  return lv;
+}
+
+function getPopProgress(pop) {
+  const idx = POP_LEVELS.findIndex(l => pop < l.min);
+  if (idx <= 0) return idx === 0 ? 0 : 100;
+  const prev = POP_LEVELS[idx - 1];
+  const next = POP_LEVELS[idx];
+  return Math.round(((pop - prev.min) / (next.min - prev.min)) * 100);
+}
+
+const SAVE_KEY = 'korea_tour_save_v1';
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (saved) {
+      const s = JSON.parse(saved);
+      return {
+        totalScore: s.totalScore || 0,
+        completedLocations: s.completedLocations || [],
+        currentLocation: null,
+        currentStep: 0,
+        sessionScore: 0,
+        sessionCorrect: 0,
+        sessionTotal: 0,
+        popularity: s.popularity || 0,
+      };
+    }
+  } catch(e) {}
+  return null;
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      totalScore: state.totalScore,
+      completedLocations: state.completedLocations,
+      popularity: state.popularity,
+    }));
+  } catch(e) {}
+}
+
+let state = loadState() || {
+  totalScore: 0,
+  completedLocations: [],
+  currentLocation: null,
+  currentStep: 0,
+  sessionScore: 0,
+  sessionCorrect: 0,
+  sessionTotal: 0,
+  popularity: 0,
+};
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showMap() {
+  updateMapUnlock();
+  renderMap();
+  updatePopUI();
+  showScreen('map-screen');
+  updateMapSpeech();
+}
+
+function updatePopUI() {
+  const pop = state.popularity;
+  const lv = getPopLevel(pop);
+  const pct = getPopProgress(pop);
+  const badge = document.getElementById('pop-level-badge');
+  const label = document.getElementById('pop-label');
+  const fill = document.getElementById('pop-bar-fill');
+  const banner = document.getElementById('conquer-banner');
+  if (badge) { badge.textContent = lv.labelJp; badge.style.color = lv.color; }
+  if (label) label.textContent = `人気度 ${pop}pt`;
+  if (fill) fill.style.width = pct + '%';
+  const allDone = state.completedLocations.length >= locations.length;
+  if (banner) banner.style.display = allDone ? 'flex' : 'none';
+}
+
+function addPopularity(pts) {
+  state.popularity += pts;
+  updatePopUI();
+  saveState();
+}
+
+function updateMapSpeech() {
+  const lv = getPopLevel(state.popularity).min;
+  let speech;
+  if (lv >= 300) speech = '伝説のアイドルガイドだよ！みんなに韓国語を伝えよう🌟';
+  else if (lv >= 160) speech = '人気アイドル！韓国語マスターまであと少し💖';
+  else if (lv >= 80) speech = '新星として注目されてるよ！もっと覚えよう✨';
+  else if (lv >= 30) speech = 'ルーキーとして成長中！どんどん挑戦しよう💪';
+  else speech = 'どこに行く？観光地をクリックして韓国語を覚えよう〜！화이팅🔥';
+  const el = document.getElementById('map-speech');
+  if (el) el.textContent = speech;
+}
+
+function updateMapUnlock() {
+  // Unlock next location after completing previous
+  locations.forEach((loc, i) => {
+    if (i === 0) { loc.locked = false; return; }
+    if (state.completedLocations.includes(locations[i-1].id)) {
+      loc.locked = false;
+    }
+  });
+}
+
+function renderMap() {
+  const grid = document.getElementById('locations-grid');
+  grid.innerHTML = '';
+  locations.forEach(loc => {
+    const completed = state.completedLocations.includes(loc.id);
+    const locked = loc.locked && !completed;
+    const progress = completed ? 100 : 0;
+
+    const card = document.createElement('div');
+    card.className = `location-card ${locked ? 'locked' : ''} ${completed ? 'completed' : ''}`;
+    card.innerHTML = `
+      <div class="loc-banner">
+        <div class="loc-banner-overlay" style="background: linear-gradient(135deg, ${loc.color[0]}, ${loc.color[1]})"></div>
+        <span class="loc-banner-emoji">${loc.emoji}</span>
+        ${locked ? '<div class="lock-icon">🔒</div>' : ''}
+        ${completed ? '<div class="complete-badge">⭐</div>' : ''}
+      </div>
+      <div class="loc-info">
+        <div class="loc-name-kr">${loc.name}</div>
+        <div class="loc-name-jp">${loc.nameJp}</div>
+        <div class="loc-tags">${loc.tags.map(t => `<span class="loc-tag">${t}</span>`).join('')}</div>
+        <div class="loc-progress">
+          <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+          <span class="loc-status">${completed ? '✅ クリア済み' : locked ? '🔒 未解放' : '▶ 挑戦する'}</span>
+        </div>
+      </div>
+    `;
+    if (!locked) card.onclick = () => startLesson(loc);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('total-score').textContent = state.totalScore;
+}
+
+// ===== LESSON =====
+function startLesson(loc) {
+  state.currentLocation = loc;
+  state.currentStep = 0;
+  state.sessionScore = 0;
+  state.sessionCorrect = 0;
+  state.sessionTotal = 0;
+
+  document.getElementById('lesson-loc-name').textContent = `${loc.emoji} ${loc.name}`;
+  document.getElementById('lesson-loc-sub').textContent = loc.nameJp;
+  document.getElementById('lesson-score').textContent = state.totalScore;
+
+  showScreen('lesson-screen');
+  renderStep();
+}
+
+function renderStep() {
+  const loc = state.currentLocation;
+  const step = loc.lessons[state.currentStep];
+  const total = loc.lessons.length;
+  const progress = (state.currentStep / total) * 100;
+
+  document.getElementById('lesson-progress-fill').style.width = progress + '%';
+
+  const body = document.getElementById('lesson-body');
+  body.innerHTML = '';
+
+  // Step indicator
+  const dots = document.createElement('div');
+  dots.className = 'step-indicator';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = `step-dot ${i < state.currentStep ? 'done' : i === state.currentStep ? 'active' : ''}`;
+    dots.appendChild(d);
+  }
+  body.appendChild(dots);
+
+  // Idol speech
+  const dialogueHeader = document.createElement('div');
+  dialogueHeader.className = 'dialogue-box npc';
+  dialogueHeader.innerHTML = `
+    <div class="dialogue-avatar">${yunaSmallSVG()}</div>
+    <div class="dialogue-content">
+      <div class="dialogue-speaker">ユナ</div>
+      <div class="dialogue-text-box">${getIdolComment(state.currentStep, loc)}</div>
+    </div>
+  `;
+  body.appendChild(dialogueHeader);
+
+  if (step.type === 'phrase') renderPhrase(step, body);
+  else if (step.type === 'dialogue') renderDialogue(step, body);
+  else if (step.type === 'quiz') renderQuiz(step, body);
+}
+
+function getIdolComment(stepIdx, loc) {
+  const comments = [
+    `まずは基本フレーズから覚えよう！${loc.emoji}`,
+    `실제 대화（実際の会話）を見てみよう！`,
+    `じゃあクイズ！正解できるかな？🌟`,
+    `もう1問！完璧にマスターしよう💪`,
+  ];
+  return comments[Math.min(stepIdx, comments.length - 1)];
+}
+
+function renderPhrase(step, body) {
+  const scene = document.createElement('div');
+  scene.className = 'scene-card';
+  scene.innerHTML = `
+    <div class="scene-situation">📍 ${step.situation}</div>
+    <div class="scene-location-banner">${state.currentLocation.emoji}</div>
+  `;
+  body.appendChild(scene);
+
+  const card = document.createElement('div');
+  card.className = 'phrase-card';
+  card.innerHTML = `
+    <div class="phrase-kr">${step.korean}</div>
+    <div class="phrase-pron">[ ${step.pronunciation} ]</div>
+    <div class="phrase-jp">${step.japanese}</div>
+    <div class="phrase-example" style="white-space:pre-line">${step.example}</div>
+  `;
+  body.appendChild(card);
+
+  const btn = document.createElement('button');
+  btn.className = 'btn-got-it';
+  btn.textContent = 'わかった！次へ ▶';
+  btn.onclick = nextStep;
+  body.appendChild(btn);
+}
+
+function renderDialogue(step, body) {
+  const scene = document.createElement('div');
+  scene.className = 'scene-card';
+  scene.innerHTML = `<div class="scene-situation">💬 ${step.situation}</div>`;
+  body.appendChild(scene);
+
+  // NPC dialogue
+  const npcBox = document.createElement('div');
+  npcBox.className = 'dialogue-box npc';
+  npcBox.innerHTML = `
+    <div class="dialogue-avatar">${yunaSmallSVG()}</div>
+    <div class="dialogue-content">
+      <div class="dialogue-speaker">${step.npc.speaker}</div>
+      <div class="dialogue-text-box">
+        <div class="korean-text">${step.npc.korean}</div>
+        <div class="pronunciation">[ ${step.npc.pronunciation} ]</div>
+        <div class="japanese-text">「${step.npc.japanese}」</div>
+      </div>
+    </div>
+  `;
+  body.appendChild(npcBox);
+
+  // Player dialogue
+  const playerBox = document.createElement('div');
+  playerBox.className = 'dialogue-box player';
+  playerBox.innerHTML = `
+    <div class="dialogue-avatar">🧑‍💻</div>
+    <div class="dialogue-content">
+      <div class="dialogue-speaker" style="text-align:right">${step.player.speaker}</div>
+      <div class="dialogue-text-box">
+        <div class="korean-text">${step.player.korean}</div>
+        <div class="pronunciation">[ ${step.player.pronunciation} ]</div>
+        <div class="japanese-text">「${step.player.japanese}」</div>
+      </div>
+    </div>
+  `;
+  body.appendChild(playerBox);
+
+  const btn = document.createElement('button');
+  btn.className = 'btn-got-it';
+  btn.textContent = 'フレーズを覚えた！次へ ▶';
+  btn.onclick = nextStep;
+  body.appendChild(btn);
+}
+
+function renderQuiz(step, body) {
+  state.sessionTotal++;
+
+  const quiz = document.createElement('div');
+  quiz.className = 'quiz-card';
+
+  const header = document.createElement('div');
+  header.className = 'quiz-header';
+  header.innerHTML = `<span class="quiz-badge">クイズ</span> <span style="color:rgba(240,230,255,0.6);font-size:13px">正しい答えを選んでね</span>`;
+  quiz.appendChild(header);
+
+  const q = document.createElement('div');
+  q.className = 'quiz-question';
+  q.innerHTML = `<span style="font-size:18px;font-weight:700;line-height:1.6;display:block;margin-bottom:4px">${step.question}</span><span style="color:rgba(240,230,255,0.5);font-size:13px">👆 正しい韓国語を選んでね</span>`;
+  quiz.appendChild(q);
+
+  const grid = document.createElement('div');
+  grid.className = 'choices-grid';
+
+  const feedback = document.createElement('div');
+  feedback.className = 'feedback-box';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn-next';
+  nextBtn.textContent = '次へ ▶';
+  nextBtn.onclick = nextStep;
+
+  step.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = choice.text;
+    btn.onclick = () => {
+      grid.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+      if (choice.correct) {
+        btn.classList.add('correct');
+        feedback.className = 'feedback-box correct';
+        feedback.innerHTML = `<div class="feedback-title">✅ 정답！（チョンダプ）正解！</div>${choice.feedback}`;
+        state.sessionScore += 10;
+        state.sessionCorrect++;
+        state.totalScore += 10;
+        addPopularity(2); // saveState called inside
+        document.getElementById('lesson-score').textContent = state.totalScore;
+      } else {
+        btn.classList.add('wrong');
+        grid.querySelectorAll('.choice-btn').forEach(b => {
+          const idx = step.choices.indexOf(step.choices.find(c => b.textContent === c.text));
+          // highlight correct
+        });
+        // Show correct answer
+        grid.querySelectorAll('.choice-btn').forEach(b => {
+          const matchedChoice = step.choices.find(c => b.textContent === c.text);
+          if (matchedChoice && matchedChoice.correct) b.classList.add('correct');
+        });
+        feedback.className = 'feedback-box wrong';
+        feedback.innerHTML = `<div class="feedback-title">❌ 惜しい！</div>${choice.feedback}`;
+      }
+      nextBtn.classList.add('visible');
+    };
+    grid.appendChild(btn);
+  });
+
+  quiz.appendChild(grid);
+  quiz.appendChild(feedback);
+  quiz.appendChild(nextBtn);
+  body.appendChild(quiz);
+}
+
+function nextStep() {
+  const loc = state.currentLocation;
+  state.currentStep++;
+
+  if (state.currentStep >= loc.lessons.length) {
+    // Lesson complete
+    if (!state.completedLocations.includes(loc.id)) {
+      state.completedLocations.push(loc.id);
+      saveState();
+    }
+    showResult();
+  } else {
+    renderStep();
+    window.scrollTo(0, 0);
+  }
+}
+
+// ===== RESULT =====
+function showResult() {
+  const loc = state.currentLocation;
+  const accuracy = state.sessionTotal > 0 ? Math.round((state.sessionCorrect / state.sessionTotal) * 100) : 100;
+
+  const titles = [
+    { min: 90, title: '🏆 完璧！！', comment: `${accuracy}%正解！ユナも一緒に踊り出したいくらい嬉しい！💃 ${loc.idolComment}` },
+    { min: 70, title: '⭐ よくできました！', comment: `아주 잘했어요（アジュ チャレッソヨ）！すごく上手！もう一度復習するともっと完璧に！${loc.idolComment}` },
+    { min: 0, title: '💪 また挑戦しよう！', comment: `괜찮아요（ケンチャナヨ）！大丈夫！練習あるのみ！もう一度やってみよう✨` },
+  ];
+
+  const result = titles.find(t => accuracy >= t.min);
+  document.getElementById('result-title').textContent = result.title;
+  document.getElementById('result-comment').textContent = result.comment;
+  document.getElementById('res-score').textContent = `+${state.sessionScore}`;
+  document.getElementById('res-correct').textContent = `${state.sessionCorrect}/${state.sessionTotal}`;
+
+  // Vocab list
+  const vocabList = document.getElementById('result-vocab-list');
+  vocabList.innerHTML = '';
+  const keyPhrases = loc.lessons
+    .filter(l => l.type === 'phrase' || l.type === 'dialogue')
+    .slice(0, 3);
+
+  const phrasesToShow = [
+    ...loc.lessons.filter(l => l.type === 'phrase').map(l => ({ kr: l.korean, jp: l.japanese })),
+    ...loc.lessons.filter(l => l.type === 'dialogue').map(l => ({ kr: l.npc.korean, jp: l.npc.japanese })),
+  ].slice(0, 4);
+
+  phrasesToShow.forEach(p => {
+    vocabList.innerHTML += `
+      <div class="vocab-item">
+        <span class="vocab-kr">${p.kr}</span>
+        <span class="vocab-jp">${p.jp}</span>
+      </div>
+    `;
+  });
+
+  showScreen('result-screen');
+  spawnConfetti();
+}
+
+// ===== CONFETTI =====
+function spawnConfetti() {
+  const colors = ['#FF6B9D', '#9B59B6', '#3498DB', '#F39C12', '#2ecc71', '#fff'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    const size = Math.random() * 10 + 5;
+    el.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      left: ${Math.random() * 100}vw;
+      top: -20px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+      animation: fall ${Math.random() * 2 + 1.5}s ${Math.random() * 2}s linear forwards;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(${Math.random() * 720}deg); opacity: 0; }
+  }
+`;
+document.head.appendChild(style);
+
+// ===== SVG CHARACTER =====
+function yunaSVG(w, h) {
+  // Cute anime-style idol girl with pink twin-tail hair
+  const scale = w / 120;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 120 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="skinGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFE4C8"/>
+      <stop offset="100%" stop-color="#F5C5A0"/>
+    </radialGradient>
+    <radialGradient id="hairGrad" cx="40%" cy="20%" r="70%">
+      <stop offset="0%" stop-color="#FF8EC5"/>
+      <stop offset="100%" stop-color="#C9339E"/>
+    </radialGradient>
+    <radialGradient id="hairGrad2" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#FF70B8"/>
+      <stop offset="100%" stop-color="#A02080"/>
+    </radialGradient>
+    <radialGradient id="dressGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FF9FCC"/>
+      <stop offset="100%" stop-color="#E040A0"/>
+    </radialGradient>
+    <radialGradient id="eyeGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#9B59B6"/>
+      <stop offset="100%" stop-color="#5B0A8C"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Body / Dress -->
+  <path d="M30 110 Q28 130 25 148 L95 148 Q92 130 90 110 Q75 105 60 105 Q45 105 30 110Z" fill="url(#dressGrad)"/>
+  <!-- Dress detail -->
+  <path d="M38 120 Q60 116 82 120 Q80 132 60 134 Q40 132 38 120Z" fill="#FF70B8" opacity="0.5"/>
+  <!-- Dress bow -->
+  <path d="M52 113 Q60 108 68 113 Q63 118 60 116 Q57 118 52 113Z" fill="#FFB3DC"/>
+  <circle cx="60" cy="114" r="3" fill="#FF4DA6"/>
+  <!-- Collar / Neckline -->
+  <path d="M48 105 Q60 102 72 105 L70 110 Q60 107 50 110Z" fill="#FFB3DC"/>
+
+  <!-- Neck -->
+  <rect x="54" y="92" width="12" height="14" rx="5" fill="url(#skinGrad)"/>
+
+  <!-- Hair back left tail -->
+  <path d="M22 60 Q8 80 12 115 Q18 120 22 110 Q20 88 30 72Z" fill="url(#hairGrad2)"/>
+  <!-- Hair back right tail -->
+  <path d="M98 60 Q112 80 108 115 Q102 120 98 110 Q100 88 90 72Z" fill="url(#hairGrad2)"/>
+
+  <!-- Head -->
+  <ellipse cx="60" cy="62" rx="30" ry="32" fill="url(#skinGrad)"/>
+
+  <!-- Hair top -->
+  <path d="M30 50 Q32 20 60 16 Q88 20 90 50 Q80 38 60 36 Q40 38 30 50Z" fill="url(#hairGrad)"/>
+  <!-- Hair sides -->
+  <path d="M30 50 Q22 58 24 72 Q30 68 34 62 Q32 56 30 50Z" fill="url(#hairGrad)"/>
+  <path d="M90 50 Q98 58 96 72 Q90 68 86 62 Q88 56 90 50Z" fill="url(#hairGrad)"/>
+  <!-- Twin tail left -->
+  <path d="M26 70 Q10 82 14 108 Q20 112 24 100 Q22 88 32 78Z" fill="url(#hairGrad)" filter="url(#glow)"/>
+  <!-- Twin tail right -->
+  <path d="M94 70 Q110 82 106 108 Q100 112 96 100 Q98 88 88 78Z" fill="url(#hairGrad)" filter="url(#glow)"/>
+  <!-- Hair ribbon left -->
+  <ellipse cx="26" cy="71" rx="7" ry="5" fill="#FF4DA6" transform="rotate(-20,26,71)"/>
+  <ellipse cx="26" cy="71" rx="7" ry="5" fill="#FFB3DC" opacity="0.5" transform="rotate(20,26,71)"/>
+  <circle cx="26" cy="71" r="3" fill="#FF4DA6"/>
+  <!-- Hair ribbon right -->
+  <ellipse cx="94" cy="71" rx="7" ry="5" fill="#FF4DA6" transform="rotate(20,94,71)"/>
+  <ellipse cx="94" cy="71" rx="7" ry="5" fill="#FFB3DC" opacity="0.5" transform="rotate(-20,94,71)"/>
+  <circle cx="94" cy="71" r="3" fill="#FF4DA6"/>
+
+  <!-- Ear -->
+  <ellipse cx="30" cy="66" rx="5" ry="6" fill="url(#skinGrad)"/>
+  <ellipse cx="90" cy="66" rx="5" ry="6" fill="url(#skinGrad)"/>
+  <ellipse cx="30" cy="66" rx="3" ry="4" fill="#F0B090" opacity="0.5"/>
+  <ellipse cx="90" cy="66" rx="3" ry="4" fill="#F0B090" opacity="0.5"/>
+  <!-- Earring -->
+  <circle cx="30" cy="73" r="2.5" fill="#FF4DA6"/>
+  <circle cx="90" cy="73" r="2.5" fill="#FF4DA6"/>
+  <circle cx="30" cy="73" r="1.5" fill="#FFB3DC"/>
+  <circle cx="90" cy="73" r="1.5" fill="#FFB3DC"/>
+
+  <!-- Eyes -->
+  <!-- Left eye white -->
+  <ellipse cx="48" cy="64" rx="9" ry="10" fill="white"/>
+  <!-- Right eye white -->
+  <ellipse cx="72" cy="64" rx="9" ry="10" fill="white"/>
+  <!-- Left iris -->
+  <ellipse cx="48" cy="65" rx="7" ry="8" fill="url(#eyeGrad)"/>
+  <!-- Right iris -->
+  <ellipse cx="72" cy="65" rx="7" ry="8" fill="url(#eyeGrad)"/>
+  <!-- Pupils -->
+  <ellipse cx="49" cy="66" rx="4" ry="5" fill="#1a0040"/>
+  <ellipse cx="73" cy="66" rx="4" ry="5" fill="#1a0040"/>
+  <!-- Eye shine -->
+  <ellipse cx="51" cy="63" rx="2.5" ry="2.5" fill="white" opacity="0.9"/>
+  <ellipse cx="75" cy="63" rx="2.5" ry="2.5" fill="white" opacity="0.9"/>
+  <ellipse cx="46" cy="68" rx="1.2" ry="1.2" fill="white" opacity="0.6"/>
+  <ellipse cx="70" cy="68" rx="1.2" ry="1.2" fill="white" opacity="0.6"/>
+  <!-- Eyelashes top -->
+  <path d="M39 57 Q44 53 48 55" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M48 55 Q52 53 57 57" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M63 57 Q68 53 72 55" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M72 55 Q76 53 81 57" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <!-- Lower lashes -->
+  <path d="M40 71 Q43 75 48 73" stroke="#1a0040" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <path d="M63 71 Q68 75 80 71" stroke="#1a0040" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <!-- Eyebrows -->
+  <path d="M40 54 Q48 50 56 54" stroke="#C9339E" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M64 54 Q72 50 80 54" stroke="#C9339E" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Nose (small) -->
+  <path d="M58 74 Q60 76 62 74" stroke="#D4956A" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+
+  <!-- Mouth / smile -->
+  <path d="M51 82 Q60 89 69 82" stroke="#E8607A" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M53 83 Q60 88 67 83 Q60 87 53 83Z" fill="#FF8FAA" opacity="0.6"/>
+  <!-- Lips highlight -->
+  <path d="M55 82 Q60 80 65 82" stroke="white" stroke-width="0.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+
+  <!-- Blush cheeks -->
+  <ellipse cx="38" cy="76" rx="8" ry="5" fill="#FFB3C1" opacity="0.45"/>
+  <ellipse cx="82" cy="76" rx="8" ry="5" fill="#FFB3C1" opacity="0.45"/>
+
+  <!-- Arms -->
+  <path d="M32 108 Q20 115 18 135 Q22 138 26 134 Q28 118 38 112Z" fill="url(#skinGrad)"/>
+  <path d="M88 108 Q100 115 102 135 Q98 138 94 134 Q92 118 82 112Z" fill="url(#skinGrad)"/>
+  <!-- Sleeve -->
+  <path d="M30 108 Q22 116 20 126 Q28 122 36 114Z" fill="url(#dressGrad)"/>
+  <path d="M90 108 Q98 116 100 126 Q92 122 84 114Z" fill="url(#dressGrad)"/>
+  <!-- Microphone in right hand -->
+  <rect x="96" y="128" width="6" height="18" rx="3" fill="#9B59B6"/>
+  <ellipse cx="99" cy="127" rx="5" ry="5" fill="#C9A0E0"/>
+  <rect x="97" y="128" width="4" height="3" fill="#7D3BA6"/>
+
+  <!-- Star sparkles -->
+  <path d="M105 20 L106.5 24 L110 24 L107.2 26.5 L108.5 30 L105 27.5 L101.5 30 L102.8 26.5 L100 24 L103.5 24Z" fill="#FFD700" opacity="0.9"/>
+  <path d="M15 35 L16 37.5 L18.5 37.5 L16.5 39 L17.5 41 L15 39.5 L12.5 41 L13.5 39 L11.5 37.5 L14 37.5Z" fill="#FF70B8" opacity="0.8"/>
+  <circle cx="108" cy="50" r="2" fill="#FFD700" opacity="0.7"/>
+  <circle cx="12" cy="58" r="1.5" fill="#FF9FCC" opacity="0.7"/>
+</svg>`;
+}
+
+function yunaSmallSVG() {
+  // Face-focused crop for small sizes
+  return `<svg width="56" height="70" viewBox="25 18 70 85" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="skinGradS" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFE4C8"/>
+      <stop offset="100%" stop-color="#F5C5A0"/>
+    </radialGradient>
+    <radialGradient id="hairGradS" cx="40%" cy="20%" r="70%">
+      <stop offset="0%" stop-color="#FF8EC5"/>
+      <stop offset="100%" stop-color="#C9339E"/>
+    </radialGradient>
+    <radialGradient id="hairGrad2S" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#FF70B8"/>
+      <stop offset="100%" stop-color="#A02080"/>
+    </radialGradient>
+    <radialGradient id="dressGradS" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FF9FCC"/>
+      <stop offset="100%" stop-color="#E040A0"/>
+    </radialGradient>
+    <radialGradient id="eyeGradS" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#9B59B6"/>
+      <stop offset="100%" stop-color="#5B0A8C"/>
+    </radialGradient>
+  </defs>
+  <path d="M30 110 Q28 130 25 148 L95 148 Q92 130 90 110 Q75 105 60 105 Q45 105 30 110Z" fill="url(#dressGradS)"/>
+  <path d="M52 113 Q60 108 68 113 Q63 118 60 116 Q57 118 52 113Z" fill="#FFB3DC"/>
+  <circle cx="60" cy="114" r="3" fill="#FF4DA6"/>
+  <path d="M48 105 Q60 102 72 105 L70 110 Q60 107 50 110Z" fill="#FFB3DC"/>
+  <rect x="54" y="92" width="12" height="14" rx="5" fill="url(#skinGradS)"/>
+  <path d="M22 60 Q8 80 12 115 Q18 120 22 110 Q20 88 30 72Z" fill="url(#hairGrad2S)"/>
+  <path d="M98 60 Q112 80 108 115 Q102 120 98 110 Q100 88 90 72Z" fill="url(#hairGrad2S)"/>
+  <ellipse cx="60" cy="62" rx="30" ry="32" fill="url(#skinGradS)"/>
+  <path d="M30 50 Q32 20 60 16 Q88 20 90 50 Q80 38 60 36 Q40 38 30 50Z" fill="url(#hairGradS)"/>
+  <path d="M30 50 Q22 58 24 72 Q30 68 34 62 Q32 56 30 50Z" fill="url(#hairGradS)"/>
+  <path d="M90 50 Q98 58 96 72 Q90 68 86 62 Q88 56 90 50Z" fill="url(#hairGradS)"/>
+  <path d="M26 70 Q10 82 14 108 Q20 112 24 100 Q22 88 32 78Z" fill="url(#hairGradS)"/>
+  <path d="M94 70 Q110 82 106 108 Q100 112 96 100 Q98 88 88 78Z" fill="url(#hairGradS)"/>
+  <ellipse cx="26" cy="71" rx="7" ry="5" fill="#FF4DA6" transform="rotate(-20,26,71)"/>
+  <ellipse cx="26" cy="71" rx="7" ry="5" fill="#FFB3DC" opacity="0.5" transform="rotate(20,26,71)"/>
+  <circle cx="26" cy="71" r="3" fill="#FF4DA6"/>
+  <ellipse cx="94" cy="71" rx="7" ry="5" fill="#FF4DA6" transform="rotate(20,94,71)"/>
+  <ellipse cx="94" cy="71" rx="7" ry="5" fill="#FFB3DC" opacity="0.5" transform="rotate(-20,94,71)"/>
+  <circle cx="94" cy="71" r="3" fill="#FF4DA6"/>
+  <ellipse cx="30" cy="66" rx="5" ry="6" fill="url(#skinGradS)"/>
+  <ellipse cx="90" cy="66" rx="5" ry="6" fill="url(#skinGradS)"/>
+  <circle cx="30" cy="73" r="2.5" fill="#FF4DA6"/>
+  <circle cx="90" cy="73" r="2.5" fill="#FF4DA6"/>
+  <ellipse cx="48" cy="64" rx="9" ry="10" fill="white"/>
+  <ellipse cx="72" cy="64" rx="9" ry="10" fill="white"/>
+  <ellipse cx="48" cy="65" rx="7" ry="8" fill="url(#eyeGradS)"/>
+  <ellipse cx="72" cy="65" rx="7" ry="8" fill="url(#eyeGradS)"/>
+  <ellipse cx="49" cy="66" rx="4" ry="5" fill="#1a0040"/>
+  <ellipse cx="73" cy="66" rx="4" ry="5" fill="#1a0040"/>
+  <ellipse cx="51" cy="63" rx="2.5" ry="2.5" fill="white" opacity="0.9"/>
+  <ellipse cx="75" cy="63" rx="2.5" ry="2.5" fill="white" opacity="0.9"/>
+  <path d="M39 57 Q44 53 48 55" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M48 55 Q52 53 57 57" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M63 57 Q68 53 72 55" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M72 55 Q76 53 81 57" stroke="#1a0040" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M40 54 Q48 50 56 54" stroke="#C9339E" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M64 54 Q72 50 80 54" stroke="#C9339E" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M58 74 Q60 76 62 74" stroke="#D4956A" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <path d="M51 82 Q60 89 69 82" stroke="#E8607A" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M53 83 Q60 88 67 83 Q60 87 53 83Z" fill="#FF8FAA" opacity="0.6"/>
+  <ellipse cx="38" cy="76" rx="8" ry="5" fill="#FFB3C1" opacity="0.45"/>
+  <ellipse cx="82" cy="76" rx="8" ry="5" fill="#FFB3C1" opacity="0.45"/>
+</svg>`;
+}
+
+function initIdolAvatars() {
+  const large = document.getElementById('title-idol');
+  if (large) large.innerHTML = yunaSVG(180, 220);
+  const small = document.getElementById('map-idol');
+  if (small) small.innerHTML = yunaSVG(56, 70);
+  const result = document.getElementById('result-idol');
+  if (result) result.innerHTML = yunaSVG(150, 185);
+}
+
+// ===== INIT =====
+updateMapUnlock();
+initIdolAvatars();
+</script>
+</body>
+</html>
