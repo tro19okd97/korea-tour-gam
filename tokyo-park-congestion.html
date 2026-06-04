@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>東京公園 混雑予想マップ</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background: #f0f4f8; height: 100vh; display: flex; flex-direction: column; }
+
+  header {
+    background: linear-gradient(135deg, #1a5276, #2e86c1);
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+  }
+  header h1 { font-size: 1.1rem; font-weight: 700; }
+  header span { font-size: 0.75rem; opacity: 0.85; margin-left: 4px; }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* ===== LEFT CONTROL PANEL ===== */
+  .control-panel {
+    width: 260px;
+    min-width: 260px;
+    background: white;
+    padding: 16px;
+    overflow-y: auto;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #5d6d7e;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .day-buttons { display: flex; gap: 4px; }
+  .day-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border: 2px solid #d5dbdb;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #5d6d7e;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .day-btn:hover { border-color: #2e86c1; color: #2e86c1; }
+  .day-btn.active { background: #2e86c1; border-color: #2e86c1; color: white; }
+
+  .hour-display {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a5276;
+    letter-spacing: 0.05em;
+  }
+  .hour-display span { font-size: 1rem; font-weight: 400; color: #7f8c8d; }
+  .slider-wrap { padding: 4px 0; }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #2e86c1 0%, #2e86c1 var(--pct), #d5dbdb var(--pct), #d5dbdb 100%);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #2e86c1;
+    border: 3px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  .hour-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: #aab7b8; margin-top: 4px; }
+
+  /* Legend */
+  .legend { background: #f8f9fa; border-radius: 10px; padding: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.8rem; }
+  .legend-item:last-child { margin-bottom: 0; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(0,0,0,0.15); }
+
+  /* Park list */
+  .park-list { display: flex; flex-direction: column; gap: 6px; }
+  .park-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: background 0.12s;
+    border: 2px solid transparent;
+  }
+  .park-item:hover { background: #eaf4fb; border-color: #aed6f1; }
+  .park-item.selected { background: #eaf4fb; border-color: #2e86c1; }
+  .park-badge { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .park-name { font-size: 0.8rem; font-weight: 600; color: #2c3e50; flex: 1; }
+  .park-level { font-size: 0.7rem; color: #7f8c8d; }
+
+  /* ===== MAP ===== */
+  #map { flex: 1; z-index: 1; }
+
+  /* ===== DETAIL PANEL ===== */
+  .detail-panel {
+    width: 300px;
+    min-width: 300px;
+    background: white;
+    overflow-y: auto;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.08);
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+  }
+  .detail-panel.open { display: flex; }
+  .detail-header {
+    padding: 16px;
+    border-bottom: 1px solid #eaecee;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .detail-header h2 { font-size: 1rem; color: #1a5276; margin-bottom: 4px; }
+  .detail-header p { font-size: 0.72rem; color: #7f8c8d; }
+  .close-btn {
+    background: none; border: none; font-size: 1.3rem; color: #aab7b8;
+    cursor: pointer; line-height: 1; padding: 0 0 0 8px;
+  }
+  .close-btn:hover { color: #2c3e50; }
+  .detail-body { padding: 16px; flex: 1; }
+
+  .congestion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .info-card { background: #f8f9fa; border-radius: 8px; padding: 10px; }
+  .info-card .label { font-size: 0.65rem; color: #7f8c8d; margin-bottom: 2px; }
+  .info-card .value { font-size: 0.95rem; font-weight: 700; color: #2c3e50; }
+
+  .chart-title { font-size: 0.72rem; font-weight: 700; color: #5d6d7e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; height: 100%; }
+  .bar-wrap { position: relative; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; transition: height 0.3s; cursor: pointer; }
+  .bar:hover { opacity: 0.8; }
+  .bar-label { font-size: 0.55rem; color: #aab7b8; margin-top: 3px; white-space: nowrap; }
+  .bar-cur-marker { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid #1a5276; }
+
+  .detail-meta { margin-top: 14px; font-size: 0.72rem; color: #aab7b8; line-height: 1.6; }
+
+  /* Color vars */
+  .c1 { background: #3498db; }
+  .c2 { background: #27ae60; }
+  .c3 { background: #f39c12; }
+  .c4 { background: #e74c3c; }
+  .t1 { color: #2471a3; background: #d6eaf8; }
+  .t2 { color: #1e8449; background: #d5f5e3; }
+  .t3 { color: #b7770d; background: #fdebd0; }
+  .t4 { color: #cb4335; background: #fadbd8; }
+
+  @media (max-width: 768px) {
+    .control-panel { width: 200px; min-width: 200px; }
+    .detail-panel { width: 240px; min-width: 240px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </svg>
+  <h1>東京公園 混雑予想マップ <span>MVP版 — 統計データベース</span></h1>
+</header>
+
+<div class="main">
+  <!-- LEFT PANEL -->
+  <div class="control-panel">
+    <div>
+      <div class="section-title">曜日を選択</div>
+      <div class="day-buttons">
+        <button class="day-btn active" data-day="Weekday">平日</button>
+        <button class="day-btn" data-day="Saturday">土曜</button>
+        <button class="day-btn" data-day="Sunday">日祝</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">時間帯</div>
+      <div class="hour-display" id="hour-display">12:00 <span>〜 13:00</span></div>
+      <div class="slider-wrap">
+        <input type="range" id="hour-slider" min="9" max="21" value="12" step="1" style="--pct: 25%">
+      </div>
+      <div class="hour-labels"><span>9時</span><span>13時</span><span>17時</span><span>21時</span></div>
+    </div>
+
+    <div>
+      <div class="section-title">混雑レベル</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot c1"></div><div><strong>空いている</strong> — 0.005未満</div></div>
+        <div class="legend-item"><div class="legend-dot c2"></div><div><strong>普通</strong> — 0.005〜0.015</div></div>
+        <div class="legend-item"><div class="legend-dot c3"></div><div><strong>やや混雑</strong> — 0.015〜0.030</div></div>
+        <div class="legend-item"><div class="legend-dot c4"></div><div><strong>大混雑</strong> — 0.030以上</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">公園一覧</div>
+      <div class="park-list" id="park-list"></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <h2 id="dp-name">—</h2>
+        <p id="dp-ward">—</p>
+      </div>
+      <button class="close-btn" id="close-detail">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="congestion-badge" id="dp-badge">—</div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="label">予測人数</div>
+          <div class="value" id="dp-people">—</div>
+        </div>
+        <div class="info-card">
+          <div class="label">人口密度</div>
+          <div class="value" id="dp-density">—</div>
+        </div>
+        <div class="info-card">
+          <div class="label">公園面積</div>
+          <div class="value" id="dp-area">—</div>
+        </div>
+        <div class="info-card">
+          <div class="label">選択日時</div>
+          <div class="value" id="dp-time">—</div>
+        </div>
+      </div>
+      <div class="chart-title">1日の混雑推移（9時〜21時）</div>
+      <div class="bar-chart" id="dp-chart"></div>
+      <div class="detail-meta" id="dp-meta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== PARK MASTER DATA ==========
+// usableRatio: 池・建物・樹林など人が立入れない領域を除いた実効面積の割合
+const PARKS = [
+  { id: 1, name: '代々木公園',     ward: '渋谷区',          lat: 35.6714, lng: 139.6940, area: 540000, usableRatio: 0.55, avgVisitors: { Weekday: 14000, Saturday: 32000, Sunday: 26000 } },
+  { id: 2, name: '上野恩賜公園',   ward: '台東区',          lat: 35.7145, lng: 139.7735, area: 530000, usableRatio: 0.45, avgVisitors: { Weekday: 22000, Saturday: 48000, Sunday: 40000 } },
+  { id: 3, name: '井の頭恩賜公園', ward: '武蔵野市/三鷹市', lat: 35.6993, lng: 139.5758, area: 383000, usableRatio: 0.35, avgVisitors: { Weekday: 10000, Saturday: 28000, Sunday: 22000 } },
+  { id: 4, name: '日比谷公園',     ward: '千代田区',        lat: 35.6730, lng: 139.7577, area: 161000, usableRatio: 0.70, avgVisitors: { Weekday: 15000, Saturday: 18000, Sunday: 14000 } },
+  { id: 5, name: '芝公園',         ward: '港区',            lat: 35.6561, lng: 139.7454, area: 260000, usableRatio: 0.45, avgVisitors: { Weekday: 9000,  Saturday: 14000, Sunday: 11000 } },
+];
+
+// Hour distribution coefficients (9〜21, 13 hours, must sum to ~1)
+const HOUR_DIST = {
+  Weekday: [0.04, 0.06, 0.09, 0.11, 0.12, 0.11, 0.10, 0.09, 0.08, 0.07, 0.06, 0.04, 0.03],
+  Saturday:[0.03, 0.05, 0.08, 0.11, 0.13, 0.13, 0.12, 0.11, 0.09, 0.07, 0.05, 0.02, 0.01],
+  Sunday:  [0.04, 0.06, 0.09, 0.12, 0.13, 0.13, 0.11, 0.10, 0.09, 0.06, 0.04, 0.02, 0.01],
+};
+const HOURS = [9,10,11,12,13,14,15,16,17,18,19,20,21];
+
+function getCongestionLevel(density) {
+  if (density < 0.005) return 1;
+  if (density < 0.015) return 2;
+  if (density < 0.030) return 3;
+  return 4;
+}
+
+function getParkData(park, dayType, hour) {
+  const hi = HOURS.indexOf(hour);
+  const coeff = HOUR_DIST[dayType][hi];
+  const predicted = Math.round(park.avgVisitors[dayType] * coeff);
+  const usableArea = park.area * park.usableRatio;
+  const density = predicted / usableArea;
+  const level = getCongestionLevel(density);
+  return { predicted, density, usableArea, level };
+}
+
+const LEVEL_INFO = {
+  1: { label: '空いている', color: '#3498db', cls: 't1', hex: '#3498db' },
+  2: { label: '普通',       color: '#27ae60', cls: 't2', hex: '#27ae60' },
+  3: { label: 'やや混雑',   color: '#f39c12', cls: 't3', hex: '#f39c12' },
+  4: { label: '大混雑',     color: '#e74c3c', cls: 't4', hex: '#e74c3c' },
+};
+const DAY_LABEL = { Weekday: '平日', Saturday: '土曜日', Sunday: '日祝日' };
+
+// ========== STATE ==========
+let selectedDay = 'Weekday';
+let selectedHour = 12;
+let selectedParkId = null;
+let markers = {};
+
+// ========== MAP INIT ==========
+const map = L.map('map', { center: [35.685, 139.70], zoom: 12, zoomControl: true });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 19,
+}).addTo(map);
+
+function makeIcon(level) {
+  const color = LEVEL_INFO[level].hex;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/></filter>
+    <path d="M18 2C10.3 2 4 8.3 4 16c0 10 14 26 14 26S32 26 32 16C32 8.3 25.7 2 18 2z" fill="${color}" filter="url(#s)"/>
+    <circle cx="18" cy="16" r="7" fill="white" opacity="0.9"/>
+    <text x="18" y="20" text-anchor="middle" font-size="10" font-weight="bold" fill="${color}">${level}</text>
+  </svg>`;
+  return L.divIcon({
+    html: svg, iconSize: [36, 44], iconAnchor: [18, 44], popupAnchor: [0, -44], className: '',
+  });
+}
+
+// ========== RENDER ==========
+function render() {
+  updateSliderStyle();
+  updateHourDisplay();
+  renderMarkers();
+  renderParkList();
+  if (selectedParkId) renderDetail(selectedParkId);
+}
+
+function updateSliderStyle() {
+  const slider = document.getElementById('hour-slider');
+  const pct = ((selectedHour - 9) / (21 - 9)) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+}
+
+function updateHourDisplay() {
+  const next = selectedHour < 21 ? selectedHour + 1 : 21;
+  document.getElementById('hour-display').innerHTML = `${selectedHour}:00 <span>〜 ${next}:00</span>`;
+}
+
+function renderMarkers() {
+  PARKS.forEach(park => {
+    const { level } = getParkData(park, selectedDay, selectedHour);
+    const icon = makeIcon(level);
+    if (markers[park.id]) {
+      markers[park.id].setIcon(icon);
+    } else {
+      const m = L.marker([park.lat, park.lng], { icon }).addTo(map);
+      m.on('click', () => selectPark(park.id));
+      markers[park.id] = m;
+    }
+  });
+}
+
+function renderParkList() {
+  const container = document.getElementById('park-list');
+  container.innerHTML = '';
+  PARKS.forEach(park => {
+    const { level, predicted } = getParkData(park, selectedDay, selectedHour);
+    const li = LEVEL_INFO[level];
+    const div = document.createElement('div');
+    div.className = 'park-item' + (selectedParkId === park.id ? ' selected' : '');
+    div.innerHTML = `
+      <div class="park-badge" style="background:${li.hex}"></div>
+      <div class="park-name">${park.name}</div>
+      <div class="park-level">${li.label}</div>
+    `;
+    div.onclick = () => selectPark(park.id);
+    container.appendChild(div);
+  });
+}
+
+function selectPark(parkId) {
+  selectedParkId = parkId;
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('open');
+  renderDetail(parkId);
+  renderParkList();
+
+  const park = PARKS.find(p => p.id === parkId);
+  map.setView([park.lat, park.lng], 14, { animate: true });
+}
+
+function renderDetail(parkId) {
+  const park = PARKS.find(p => p.id === parkId);
+  const { level, predicted, density, usableArea } = getParkData(park, selectedDay, selectedHour);
+  const li = LEVEL_INFO[level];
+
+  document.getElementById('dp-name').textContent = park.name;
+  document.getElementById('dp-ward').textContent = `${park.ward}  ／  ${DAY_LABEL[selectedDay]} ${selectedHour}:00`;
+
+  const badge = document.getElementById('dp-badge');
+  badge.className = `congestion-badge ${li.cls}`;
+  badge.innerHTML = `<span style="width:10px;height:10px;border-radius:50%;background:${li.hex};display:inline-block"></span> レベル${level}：${li.label}`;
+
+  document.getElementById('dp-people').textContent = predicted.toLocaleString() + ' 人';
+  document.getElementById('dp-density').textContent = density.toFixed(5) + ' 人/㎡';
+  document.getElementById('dp-area').textContent = Math.round(usableArea / 10000 * 10) / 10 + ' ha';
+  document.getElementById('dp-time').textContent = `${DAY_LABEL[selectedDay]} ${selectedHour}:00`;
+
+  // bar chart
+  const allData = HOURS.map(h => getParkData(park, selectedDay, h));
+  const maxPeople = Math.max(...allData.map(d => d.predicted));
+  const chart = document.getElementById('dp-chart');
+  chart.innerHTML = '';
+  const chartH = 72;
+  allData.forEach((d, i) => {
+    const h = HOURS[i];
+    const barH = maxPeople > 0 ? Math.max(3, Math.round((d.predicted / maxPeople) * chartH)) : 3;
+    const barColor = LEVEL_INFO[d.level].hex;
+    const isCurrent = h === selectedHour;
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <div class="bar-wrap" style="height:${chartH}px;">
+        ${isCurrent ? '<div class="bar-cur-marker"></div>' : ''}
+        <div class="bar" style="height:${barH}px;background:${barColor};${isCurrent?'outline:2px solid #1a5276;outline-offset:1px;':''}" title="${h}時: ${d.predicted.toLocaleString()}人"></div>
+      </div>
+      <div class="bar-label">${h}</div>
+    `;
+    col.querySelector('.bar').addEventListener('click', () => {
+      selectedHour = h;
+      document.getElementById('hour-slider').value = h;
+      render();
+    });
+    chart.appendChild(col);
+  });
+
+  document.getElementById('dp-meta').innerHTML =
+    `※ 統計データをもとにした傾向予測です。実際の混雑状況と異なる場合があります。<br>総面積: ${park.area.toLocaleString()} ㎡ ／ 有効面積: ${Math.round(park.area * park.usableRatio).toLocaleString()} ㎡（${Math.round(park.usableRatio*100)}%）`;
+}
+
+// ========== EVENT LISTENERS ==========
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDay = btn.dataset.day;
+    render();
+  });
+});
+
+document.getElementById('hour-slider').addEventListener('input', e => {
+  selectedHour = parseInt(e.target.value);
+  render();
+});
+
+document.getElementById('close-detail').addEventListener('click', () => {
+  document.getElementById('detail-panel').classList.remove('open');
+  selectedParkId = null;
+  renderParkList();
+});
+
+// ========== INIT ==========
+render();
+</script>
+</body>
+</html>
