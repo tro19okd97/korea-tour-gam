@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>French Word Adventure</title>
+    <script>
+// Total words: 1491
+// A1: 459 words
+// A2: 349 words
+// B1: 386 words
+// B2: 297 words
+// French Word Adventure — DELF A1-B2 Vocabulary Database
+// Total: 1491 words across 12 French cities
+// Format: [id, level, city, english, french, category]
+
+const WORD_DATA = [
+  ["a1_par_001","A1","Paris","Hello / Good morning","Bonjour","greetings"],
+  ["a1_par_002","A1","Paris","Good evening","Bonsoir","greetings"],
+  ["a1_par_003","A1","Paris","Hi (informal)","Salut","greetings"],
+  ["a1_par_004","A1","Paris","Goodbye","Au revoir","greetings"],
+  ["a1_par_005","A1","Paris","See you soon","À bientôt","greetings"],
+  ["a1_par_006","A1","Paris","See you tomorrow","À demain","greetings"],
+  ["a1_par_007","A1","Paris","Good night","Bonne nuit","greetings"],
+  ["a1_par_008","A1","Paris","Thank you","Merci","greetings"],
+  ["a1_par_009","A1","Paris","Thank you very much","Merci beaucoup","greetings"],
+  ["a1_par_010","A1","Paris","You're welcome","De rien","greetings"],
+  ["a1_par_011","A1","Paris","Please","S'il vous plaît","greetings"],
+  ["a1_par_012","A1","Paris","Please (informal)","S'il te plaît","greetings"],
+  ["a1_par_013","A1","Paris","Excuse me","Excusez-moi","greetings"],
+  ["a1_par_014","A1","Paris","Sorry / Pardon","Pardon","greetings"],
+  ["a1_par_015","A1","Paris","Yes","Oui","greetings"],
+  ["a1_par_016","A1","Paris","No","Non","greetings"],
+  ["a1_par_017","A1","Paris","OK / Agreed","D'accord","greetings"],
+  ["a1_par_018","A1","Paris","Maybe / Perhaps","Peut-être","greetings"],
+  ["a1_par_019","A1","Paris","Of course","Bien sûr","greetings"],
+  ["a1_par_020","A1","Paris","I don't understand","Je ne comprends pas","greetings"],
+  ["a1_par_021","A1","Paris","Repeat, please","Répétez, s'il vous plaît","greetings"],
+  ["a1_par_022","A1","Paris","How are you? (formal)","Comment allez-vous ?","greetings"],
+  ["a1_par_023","A1","Paris","How are you? (informal)","Comment vas-tu ?","greetings"],
+  ["a1_par_024","A1","Paris","Fine, thanks","Ça va bien, merci","greetings"],
+  ["a1_par_025","A1","Paris","And you?","Et vous ?","greetings"],
+  ["a1_par_026","A1","Paris","My name is...","Je m'appelle...","greetings"],
+  ["a1_par_027","A1","Paris","What is your name?","Comment vous appelez-vous ?","greetings"],
+  ["a1_par_028","A1","Paris","Nice to meet you","Enchanté(e)","greetings"],
+  ["a1_par_029","A1","Paris","Where are you from?","D'où venez-vous ?","greetings"],
+  ["a1_par_030","A1","Paris","I am from...","Je viens de...","greetings"],
+  ["a1_par_031","A1","Paris","I don't speak French well","Je ne parle pas bien français","greetings"],
+  ["a1_par_032","A1","Paris","Do you speak English?","Parlez-vous anglais ?","greetings"],
+  ["a1_par_033","A1","Paris","A little","Un peu","greetings"],
+  ["a1_par_034","A1","Paris","I don't know","Je ne sais pas","greetings"],
+  ["a1_par_035","A1","Paris","Help!","Au secours !","greetings"],
+  ["a1_par_036","A1","Paris","Welcome!","Bienvenue !","greetings"],
+  ["a1_par_037","A1","Paris","Zero","Zéro","numbers"],
+  ["a1_par_038","A1","Paris","One","Un","numbers"],
+  ["a1_par_039","A1","Paris","Two","Deux","numbers"],
+  ["a1_par_040","A1","Paris","Three","Trois","numbers"],
+  ["a1_par_041","A1","Paris","Four","Quatre","numbers"],
+  ["a1_par_042","A1","Paris","Five","Cinq","numbers"],
+  ["a1_par_043","A1","Paris","Six","Six","numbers"],
+  ["a1_par_044","A1","Paris","Seven","Sept","numbers"],
+  ["a1_par_045","A1","Paris","Eight","Huit","numbers"],
+  ["a1_par_046","A1","Paris","Nine","Neuf","numbers"],
+  ["a1_par_047","A1","Paris","Ten","Dix","numbers"],
+  ["a1_par_048","A1","Paris","Eleven","Onze","numbers"],
+  ["a1_par_049","A1","Paris","Twelve","Douze","numbers"],
+  ["a1_par_050","A1","Paris","Thirteen","Treize","numbers"],
+  ["a1_par_051","A1","Paris","Fourteen","Quatorze","numbers"],
+  ["a1_par_052","A1","Paris","Fifteen","Quinze","numbers"],
+  ["a1_par_053","A1","Paris","Sixteen","Seize","numbers"],
+  ["a1_par_054","A1","Paris","Seventeen","Dix-sept","numbers"],
+  ["a1_par_055","A1","Paris","Eighteen","Dix-huit","numbers"],
+  ["a1_par_056","A1","Paris","Nineteen","Dix-neuf","numbers"],
+  ["a1_par_057","A1","Paris","Twenty","Vingt","numbers"],
+  ["a1_par_058","A1","Paris","Twenty-one","Vingt et un","numbers"],
+  ["a1_par_059","A1","Paris","Thirty","Trente","numbers"],
+  ["a1_par_060","A1","Paris","Forty","Quarante","numbers"],
+  ["a1_par_061","A1","Paris","Fifty","Cinquante","numbers"],
+  ["a1_par_062","A1","Paris","Sixty","Soixante","numbers"],
+  ["a1_par_063","A1","Paris","Seventy","Soixante-dix","numbers"],
+  ["a1_par_064","A1","Paris","Eighty","Quatre-vingts","numbers"],
+  ["a1_par_065","A1","Paris","Ninety","Quatre-vingt-dix","numbers"],
+  ["a1_par_066","A1","Paris","One hundred","Cent","numbers"],
+  ["a1_par_067","A1","Paris","One thousand","Mille","numbers"],
+  ["a1_par_068","A1","Paris","First","Premier / Première","numbers"],
+  ["a1_par_069","A1","Paris","Second","Deuxième","numbers"],
+  ["a1_par_070","A1","Paris","Third","Troisième","numbers"],
+  ["a1_par_071","A1","Paris","Last","Dernier / Dernière","numbers"],
+  ["a1_par_072","A1","Paris","Red","Rouge","colors"],
+  ["a1_par_073","A1","Paris","Blue","Bleu","colors"],
+  ["a1_par_074","A1","Paris","Green","Vert","colors"],
+  ["a1_par_075","A1","Paris","Yellow","Jaune","colors"],
+  ["a1_par_076","A1","Paris","Orange","Orange","colors"],
+  ["a1_par_077","A1","Paris","Black","Noir","colors"],
+  ["a1_par_078","A1","Paris","White","Blanc","colors"],
+  ["a1_par_079","A1","Paris","Grey / Gray","Gris","colors"],
+  ["a1_par_080","A1","Paris","Pink","Rose","colors"],
+  ["a1_par_081","A1","Paris","Purple","Violet","colors"],
+  ["a1_par_082","A1","Paris","Brown","Marron","colors"],
+  ["a1_par_083","A1","Paris","Beige","Beige","colors"],
+  ["a1_par_084","A1","Paris","Dark","Foncé","colors"],
+  ["a1_par_085","A1","Paris","Light","Clair","colors"],
+  ["a1_par_086","A1","Paris","Light blue","Bleu clair","colors"],
+  ["a1_par_087","A1","Paris","Dark green","Vert foncé","colors"],
+  ["a1_par_088","A1","Paris","Father","Le père","family"],
+  ["a1_par_089","A1","Paris","Mother","La mère","family"],
+  ["a1_par_090","A1","Paris","Parents","Les parents","family"],
+  ["a1_par_091","A1","Paris","Brother","Le frère","family"],
+  ["a1_par_092","A1","Paris","Sister","La sœur","family"],
+  ["a1_par_093","A1","Paris","Son","Le fils","family"],
+  ["a1_par_094","A1","Paris","Daughter","La fille","family"],
+  ["a1_par_095","A1","Paris","Grandfather","Le grand-père","family"],
+  ["a1_par_096","A1","Paris","Grandmother","La grand-mère","family"],
+  ["a1_par_097","A1","Paris","Grandparents","Les grands-parents","family"],
+  ["a1_par_098","A1","Paris","Uncle","L'oncle","family"],
+  ["a1_par_099","A1","Paris","Aunt","La tante","family"],
+  ["a1_par_100","A1","Paris","Cousin (m)","Le cousin","family"],
+  ["a1_par_101","A1","Paris","Cousin (f)","La cousine","family"],
+  ["a1_par_102","A1","Paris","Husband","Le mari","family"],
+  ["a1_par_103","A1","Paris","Wife","La femme","family"],
+  ["a1_par_104","A1","Paris","Child","L'enfant","family"],
+  ["a1_par_105","A1","Paris","Baby","Le bébé","family"],
+  ["a1_par_106","A1","Paris","Friend (m)","L'ami","family"],
+  ["a1_par_107","A1","Paris","Friend (f)","L'amie","family"],
+  ["a1_par_108","A1","Paris","Boyfriend","Le petit ami","family"],
+  ["a1_par_109","A1","Paris","Girlfriend","La petite amie","family"],
+  ["a1_par_110","A1","Paris","Family","La famille","family"],
+  ["a1_par_111","A1","Paris","Married","Marié(e)","family"],
+  ["a1_par_112","A1","Paris","Single","Célibataire","family"],
+  ["a1_par_113","A1","Paris","Name","Le prénom","family"],
+  ["a1_par_114","A1","Paris","Family name","Le nom de famille","family"],
+  ["a1_par_115","A1","Paris","Age","L'âge","family"],
+  ["a1_par_116","A1","Paris","Birthday","L'anniversaire","family"],
+  ["a1_par_117","A1","Paris","How old are you?","Quel âge avez-vous ?","family"],
+  ["a1_par_118","A1","Paris","Head","La tête","body"],
+  ["a1_par_119","A1","Paris","Hand","La main","body"],
+  ["a1_par_120","A1","Paris","Foot","Le pied","body"],
+  ["a1_par_121","A1","Paris","Arm","Le bras","body"],
+  ["a1_par_122","A1","Paris","Leg","La jambe","body"],
+  ["a1_par_123","A1","Paris","Eye","L'œil","body"],
+  ["a1_par_124","A1","Paris","Eyes","Les yeux","body"],
+  ["a1_par_125","A1","Paris","Ear","L'oreille","body"],
+  ["a1_par_126","A1","Paris","Nose","Le nez","body"],
+  ["a1_par_127","A1","Paris","Mouth","La bouche","body"],
+  ["a1_par_128","A1","Paris","Tooth","La dent","body"],
+  ["a1_par_129","A1","Paris","Hair","Les cheveux","body"],
+  ["a1_par_130","A1","Paris","Back","Le dos","body"],
+  ["a1_par_131","A1","Paris","Stomach","Le ventre","body"],
+  ["a1_par_132","A1","Paris","Heart","Le cœur","body"],
+  ["a1_par_133","A1","Paris","Shoulder","L'épaule","body"],
+  ["a1_par_134","A1","Paris","Knee","Le genou","body"],
+  ["a1_par_135","A1","Paris","Finger","Le doigt","body"],
+  ["a1_par_136","A1","Paris","Face","Le visage","body"],
+  ["a1_par_137","A1","Paris","Neck","Le cou","body"],
+  ["a1_par_138","A1","Paris","Chest","La poitrine","body"],
+  ["a1_par_139","A1","Paris","Skin","La peau","body"],
+  ["a1_par_140","A1","Paris","Bread","Le pain","food"],
+  ["a1_par_141","A1","Paris","Water","L'eau","food"],
+  ["a1_par_142","A1","Paris","Coffee","Le café","food"],
+  ["a1_par_143","A1","Paris","Tea","Le thé","food"],
+  ["a1_par_144","A1","Paris","Milk","Le lait","food"],
+  ["a1_par_145","A1","Paris","Juice","Le jus","food"],
+  ["a1_par_146","A1","Paris","Wine","Le vin","food"],
+  ["a1_par_147","A1","Paris","Beer","La bière","food"],
+  ["a1_par_148","A1","Paris","Cheese","Le fromage","food"],
+  ["a1_par_149","A1","Paris","Meat","La viande","food"],
+  ["a1_par_150","A1","Paris","Fish","Le poisson","food"],
+  ["a1_par_151","A1","Paris","Vegetable","Le légume","food"],
+  ["a1_par_152","A1","Paris","Fruit","Le fruit","food"],
+  ["a1_par_153","A1","Paris","Sugar","Le sucre","food"],
+  ["a1_par_154","A1","Paris","Salt","Le sel","food"],
+  ["a1_par_155","A1","Paris","Butter","Le beurre","food"],
+  ["a1_par_156","A1","Paris","Egg","L'œuf","food"],
+  ["a1_par_157","A1","Paris","Rice","Le riz","food"],
+  ["a1_par_158","A1","Paris","Soup","La soupe","food"],
+  ["a1_par_159","A1","Paris","Salad","La salade","food"],
+  ["a1_par_160","A1","Paris","Chicken","Le poulet","food"],
+  ["a1_par_161","A1","Paris","Beef","Le bœuf","food"],
+  ["a1_par_162","A1","Paris","Pork","Le porc","food"],
+  ["a1_par_163","A1","Paris","Tomato","La tomate","food"],
+  ["a1_par_164","A1","Paris","Potato","La pomme de terre","food"],
+  ["a1_par_165","A1","Paris","Onion","L'oignon","food"],
+  ["a1_par_166","A1","Paris","Carrot","La carotte","food"],
+  ["a1_par_167","A1","Paris","Apple","La pomme","food"],
+  ["a1_par_168","A1","Paris","Orange","L'orange","food"],
+  ["a1_par_169","A1","Paris","Banana","La banane","food"],
+  ["a1_par_170","A1","Paris","Strawberry","La fraise","food"],
+  ["a1_par_171","A1","Paris","Chocolate","Le chocolat","food"],
+  ["a1_par_172","A1","Paris","Ice cream","La glace","food"],
+  ["a1_par_173","A1","Paris","Cake","Le gâteau","food"],
+  ["a1_par_174","A1","Paris","Cookie / Biscuit","Le biscuit","food"],
+  ["a1_par_175","A1","Paris","Breakfast","Le petit-déjeuner","food"],
+  ["a1_par_176","A1","Paris","Lunch","Le déjeuner","food"],
+  ["a1_par_177","A1","Paris","Dinner","Le dîner","food"],
+  ["a1_par_178","A1","Paris","Meal","Le repas","food"],
+  ["a1_par_179","A1","Paris","Drink","La boisson","food"],
+  ["a1_par_180","A1","Paris","Hot","Chaud","food"],
+  ["a1_par_181","A1","Paris","Cold","Froid","food"],
+  ["a1_par_182","A1","Paris","Hungry","Faim (avoir faim)","food"],
+  ["a1_par_183","A1","Paris","Thirsty","Soif (avoir soif)","food"],
+  ["a1_par_184","A1","Paris","Delicious","Délicieux","food"],
+  ["a1_par_185","A1","Paris","Good","Bon","food"],
+  ["a1_par_186","A1","Paris","Bad","Mauvais","food"],
+  ["a1_par_187","A1","Paris","To be","Être","verbs"],
+  ["a1_par_188","A1","Paris","To have","Avoir","verbs"],
+  ["a1_par_189","A1","Paris","To go","Aller","verbs"],
+  ["a1_par_190","A1","Paris","To do / make","Faire","verbs"],
+  ["a1_par_191","A1","Paris","To come","Venir","verbs"],
+  ["a1_par_192","A1","Paris","To can / be able to","Pouvoir","verbs"],
+  ["a1_par_193","A1","Paris","To want","Vouloir","verbs"],
+  ["a1_par_194","A1","Paris","To must / have to","Devoir","verbs"],
+  ["a1_par_195","A1","Paris","To speak / talk","Parler","verbs"],
+  ["a1_par_196","A1","Paris","To eat","Manger","verbs"],
+  ["a1_par_197","A1","Paris","To drink","Boire","verbs"],
+  ["a1_par_198","A1","Paris","To sleep","Dormir","verbs"],
+  ["a1_par_199","A1","Paris","To live / reside","Habiter","verbs"],
+  ["a1_par_200","A1","Paris","To work","Travailler","verbs"],
+  ["a1_par_201","A1","Paris","To study","Étudier","verbs"],
+  ["a1_par_202","A1","Paris","To read","Lire","verbs"],
+  ["a1_par_203","A1","Paris","To write","Écrire","verbs"],
+  ["a1_par_204","A1","Paris","To listen","Écouter","verbs"],
+  ["a1_par_205","A1","Paris","To look / watch","Regarder","verbs"],
+  ["a1_par_206","A1","Paris","To walk","Marcher","verbs"],
+  ["a1_par_207","A1","Paris","To run","Courir","verbs"],
+  ["a1_par_208","A1","Paris","To sit","S'asseoir","verbs"],
+  ["a1_par_209","A1","Paris","To stand up","Se lever","verbs"],
+  ["a1_par_210","A1","Paris","To open","Ouvrir","verbs"],
+  ["a1_par_211","A1","Paris","To close","Fermer","verbs"],
+  ["a1_par_212","A1","Paris","To buy","Acheter","verbs"],
+  ["a1_par_213","A1","Paris","To pay","Payer","verbs"],
+  ["a1_par_214","A1","Paris","To see","Voir","verbs"],
+  ["a1_par_215","A1","Paris","To know","Savoir","verbs"],
+  ["a1_par_216","A1","Paris","To think","Penser","verbs"],
+  ["a1_par_217","A1","Paris","To love / like","Aimer","verbs"],
+  ["a1_par_218","A1","Paris","To play","Jouer","verbs"],
+  ["a1_par_219","A1","Paris","To sing","Chanter","verbs"],
+  ["a1_par_220","A1","Paris","To dance","Danser","verbs"],
+  ["a1_par_221","A1","Paris","To call (phone)","Appeler","verbs"],
+  ["a1_par_222","A1","Paris","To give","Donner","verbs"],
+  ["a1_par_223","A1","Paris","To take","Prendre","verbs"],
+  ["a1_par_224","A1","Paris","To put","Mettre","verbs"],
+  ["a1_par_225","A1","Paris","To find","Trouver","verbs"],
+  ["a1_par_226","A1","Paris","To understand","Comprendre","verbs"],
+  ["a1_par_227","A1","Paris","To arrive","Arriver","verbs"],
+  ["a1_par_228","A1","Paris","To leave","Partir","verbs"],
+  ["a1_par_229","A1","Paris","To return","Revenir","verbs"],
+  ["a1_par_230","A1","Paris","To enter","Entrer","verbs"],
+  ["a1_par_231","A1","Paris","To exit","Sortir","verbs"],
+  ["a1_par_232","A1","Paris","To help","Aider","verbs"],
+  ["a1_par_233","A1","Paris","To need","Avoir besoin de","verbs"],
+  ["a1_par_234","A1","Paris","To prefer","Préférer","verbs"],
+  ["a1_par_235","A1","Paris","Big / Large","Grand","adjectives"],
+  ["a1_par_236","A1","Paris","Small / Little","Petit","adjectives"],
+  ["a1_par_237","A1","Paris","Beautiful / Handsome","Beau / Belle","adjectives"],
+  ["a1_par_238","A1","Paris","Good","Bon","adjectives"],
+  ["a1_par_239","A1","Paris","Bad","Mauvais","adjectives"],
+  ["a1_par_240","A1","Paris","New","Nouveau / Nouvelle","adjectives"],
+  ["a1_par_241","A1","Paris","Old","Vieux / Vieille","adjectives"],
+  ["a1_par_242","A1","Paris","Young","Jeune","adjectives"],
+  ["a1_par_243","A1","Paris","Hot","Chaud","adjectives"],
+  ["a1_par_244","A1","Paris","Cold","Froid","adjectives"],
+  ["a1_par_245","A1","Paris","Fast / Quick","Rapide","adjectives"],
+  ["a1_par_246","A1","Paris","Slow","Lent","adjectives"],
+  ["a1_par_247","A1","Paris","Easy","Facile","adjectives"],
+  ["a1_par_248","A1","Paris","Difficult / Hard","Difficile","adjectives"],
+  ["a1_par_249","A1","Paris","Happy","Heureux / Heureuse","adjectives"],
+  ["a1_par_250","A1","Paris","Sad","Triste","adjectives"],
+  ["a1_par_251","A1","Paris","Tired","Fatigué(e)","adjectives"],
+  ["a1_par_252","A1","Paris","Sick","Malade","adjectives"],
+  ["a1_par_253","A1","Paris","Tall","Grand","adjectives"],
+  ["a1_par_254","A1","Paris","Short","Petit","adjectives"],
+  ["a1_par_255","A1","Paris","Long","Long","adjectives"],
+  ["a1_par_256","A1","Paris","Short (length)","Court","adjectives"],
+  ["a1_par_257","A1","Paris","Wide","Large","adjectives"],
+  ["a1_par_258","A1","Paris","Narrow","Étroit","adjectives"],
+  ["a1_par_259","A1","Paris","Full","Plein","adjectives"],
+  ["a1_par_260","A1","Paris","Empty","Vide","adjectives"],
+  ["a1_par_261","A1","Paris","Open","Ouvert","adjectives"],
+  ["a1_par_262","A1","Paris","Closed","Fermé","adjectives"],
+  ["a1_par_263","A1","Paris","Free (no charge)","Gratuit","adjectives"],
+  ["a1_par_264","A1","Paris","Expensive","Cher","adjectives"],
+  ["a1_par_265","A1","Paris","Cheap","Bon marché","adjectives"],
+  ["a1_par_266","A1","Paris","Strong","Fort","adjectives"],
+  ["a1_par_267","A1","Paris","Weak","Faible","adjectives"],
+  ["a1_par_268","A1","Paris","Important","Important","adjectives"],
+  ["a1_par_269","A1","Paris","Interesting","Intéressant","adjectives"],
+  ["a1_par_270","A1","Paris","Nice / Kind","Gentil","adjectives"],
+  ["a1_par_271","A1","Paris","Funny","Drôle","adjectives"],
+  ["a1_par_272","A1","Paris","Serious","Sérieux","adjectives"],
+  ["a1_par_273","A1","Paris","Quiet","Calme","adjectives"],
+  ["a1_par_274","A1","Paris","Today","Aujourd'hui","time"],
+  ["a1_par_275","A1","Paris","Yesterday","Hier","time"],
+  ["a1_par_276","A1","Paris","Tomorrow","Demain","time"],
+  ["a1_par_277","A1","Paris","Now","Maintenant","time"],
+  ["a1_par_278","A1","Paris","Later","Plus tard","time"],
+  ["a1_par_279","A1","Paris","Before","Avant","time"],
+  ["a1_par_280","A1","Paris","After","Après","time"],
+  ["a1_par_281","A1","Paris","Morning","Le matin","time"],
+  ["a1_par_282","A1","Paris","Afternoon","L'après-midi","time"],
+  ["a1_par_283","A1","Paris","Evening","Le soir","time"],
+  ["a1_par_284","A1","Paris","Night","La nuit","time"],
+  ["a1_par_285","A1","Paris","Week","La semaine","time"],
+  ["a1_par_286","A1","Paris","Month","Le mois","time"],
+  ["a1_par_287","A1","Paris","Year","L'année","time"],
+  ["a1_par_288","A1","Paris","Hour","L'heure","time"],
+  ["a1_par_289","A1","Paris","Minute","La minute","time"],
+  ["a1_par_290","A1","Paris","Day","Le jour","time"],
+  ["a1_par_291","A1","Paris","Weekend","Le week-end","time"],
+  ["a1_par_292","A1","Paris","Always","Toujours","time"],
+  ["a1_par_293","A1","Paris","Never","Jamais","time"],
+  ["a1_par_294","A1","Paris","Often","Souvent","time"],
+  ["a1_par_295","A1","Paris","Sometimes","Parfois","time"],
+  ["a1_par_296","A1","Paris","Already","Déjà","time"],
+  ["a1_par_297","A1","Paris","Still / Yet","Encore","time"],
+  ["a1_par_298","A1","Paris","Soon","Bientôt","time"],
+  ["a1_par_299","A1","Paris","Late","En retard","time"],
+  ["a1_par_300","A1","Paris","Early","En avance / Tôt","time"],
+  ["a1_par_301","A1","Paris","At... o'clock","À... heures","time"],
+  ["a1_par_302","A1","Paris","What time is it?","Quelle heure est-il ?","time"],
+  ["a1_par_303","A1","Paris","It is 3 o'clock","Il est trois heures","time"],
+  ["a1_par_304","A1","Paris","Monday","Lundi","time"],
+  ["a1_par_305","A1","Paris","Tuesday","Mardi","time"],
+  ["a1_par_306","A1","Paris","Wednesday","Mercredi","time"],
+  ["a1_par_307","A1","Paris","Thursday","Jeudi","time"],
+  ["a1_par_308","A1","Paris","Friday","Vendredi","time"],
+  ["a1_par_309","A1","Paris","Saturday","Samedi","time"],
+  ["a1_par_310","A1","Paris","Sunday","Dimanche","time"],
+  ["a1_par_311","A1","Paris","January","Janvier","time"],
+  ["a1_par_312","A1","Paris","February","Février","time"],
+  ["a1_par_313","A1","Paris","March","Mars","time"],
+  ["a1_par_314","A1","Paris","April","Avril","time"],
+  ["a1_par_315","A1","Paris","May","Mai","time"],
+  ["a1_par_316","A1","Paris","June","Juin","time"],
+  ["a1_par_317","A1","Paris","July","Juillet","time"],
+  ["a1_par_318","A1","Paris","August","Août","time"],
+  ["a1_par_319","A1","Paris","September","Septembre","time"],
+  ["a1_par_320","A1","Paris","October","Octobre","time"],
+  ["a1_par_321","A1","Paris","November","Novembre","time"],
+  ["a1_par_322","A1","Paris","December","Décembre","time"],
+  ["a1_par_323","A1","Paris","Spring","Le printemps","time"],
+  ["a1_par_324","A1","Paris","Summer","L'été","time"],
+  ["a1_par_325","A1","Paris","Autumn / Fall","L'automne","time"],
+  ["a1_par_326","A1","Paris","Winter","L'hiver","time"],
+  ["a1_ver_327","A1","Versailles","House","La maison","house"],
+  ["a1_ver_328","A1","Versailles","Apartment","L'appartement","house"],
+  ["a1_ver_329","A1","Versailles","Bedroom","La chambre","house"],
+  ["a1_ver_330","A1","Versailles","Kitchen","La cuisine","house"],
+  ["a1_ver_331","A1","Versailles","Bathroom","La salle de bains","house"],
+  ["a1_ver_332","A1","Versailles","Living room","Le salon","house"],
+  ["a1_ver_333","A1","Versailles","Garden / Yard","Le jardin","house"],
+  ["a1_ver_334","A1","Versailles","Door","La porte","house"],
+  ["a1_ver_335","A1","Versailles","Window","La fenêtre","house"],
+  ["a1_ver_336","A1","Versailles","Table","La table","house"],
+  ["a1_ver_337","A1","Versailles","Chair","La chaise","house"],
+  ["a1_ver_338","A1","Versailles","Bed","Le lit","house"],
+  ["a1_ver_339","A1","Versailles","Sofa / Couch","Le canapé","house"],
+  ["a1_ver_340","A1","Versailles","Lamp","La lampe","house"],
+  ["a1_ver_341","A1","Versailles","Mirror","Le miroir","house"],
+  ["a1_ver_342","A1","Versailles","Carpet","Le tapis","house"],
+  ["a1_ver_343","A1","Versailles","Curtain","Le rideau","house"],
+  ["a1_ver_344","A1","Versailles","Shelf","L'étagère","house"],
+  ["a1_ver_345","A1","Versailles","Wardrobe","L'armoire","house"],
+  ["a1_ver_346","A1","Versailles","Fridge","Le réfrigérateur","house"],
+  ["a1_ver_347","A1","Versailles","Oven","Le four","house"],
+  ["a1_ver_348","A1","Versailles","Washing machine","La machine à laver","house"],
+  ["a1_ver_349","A1","Versailles","Stairs","L'escalier","house"],
+  ["a1_ver_350","A1","Versailles","Floor","Le sol","house"],
+  ["a1_ver_351","A1","Versailles","Ceiling","Le plafond","house"],
+  ["a1_ver_352","A1","Versailles","Wall","Le mur","house"],
+  ["a1_ver_353","A1","Versailles","Roof","Le toit","house"],
+  ["a1_ver_354","A1","Versailles","Key","La clé","house"],
+  ["a1_ver_355","A1","Versailles","Address","L'adresse","house"],
+  ["a1_ver_356","A1","Versailles","Flat (British) / Apartment","L'appartement","house"],
+  ["a1_ver_357","A1","Versailles","Neighbour","Le voisin / La voisine","house"],
+  ["a1_ver_358","A1","Versailles","Building","Le bâtiment","house"],
+  ["a1_ver_359","A1","Versailles","Floor (level)","L'étage","house"],
+  ["a1_ver_360","A1","Versailles","Ground floor","Le rez-de-chaussée","house"],
+  ["a1_ver_361","A1","Versailles","Lift / Elevator","L'ascenseur","house"],
+  ["a1_ver_362","A1","Versailles","School","L'école","school"],
+  ["a1_ver_363","A1","Versailles","Class / Classroom","La classe","school"],
+  ["a1_ver_364","A1","Versailles","Book","Le livre","school"],
+  ["a1_ver_365","A1","Versailles","Notebook / Exercise book","Le cahier","school"],
+  ["a1_ver_366","A1","Versailles","Pen","Le stylo","school"],
+  ["a1_ver_367","A1","Versailles","Pencil","Le crayon","school"],
+  ["a1_ver_368","A1","Versailles","Teacher (m)","Le professeur","school"],
+  ["a1_ver_369","A1","Versailles","Teacher (f)","La professeure","school"],
+  ["a1_ver_370","A1","Versailles","Student (m)","L'élève","school"],
+  ["a1_ver_371","A1","Versailles","Dictionary","Le dictionnaire","school"],
+  ["a1_ver_372","A1","Versailles","Blackboard / Whiteboard","Le tableau","animals"],
+  ["a1_ver_373","A1","Versailles","Bag","Le sac","school"],
+  ["a1_ver_374","A1","Versailles","Homework","Les devoirs","school"],
+  ["a1_ver_375","A1","Versailles","Exam / Test","L'examen","school"],
+  ["a1_ver_376","A1","Versailles","Grade / Mark","La note","school"],
+  ["a1_ver_377","A1","Versailles","University","L'université","school"],
+  ["a1_ver_378","A1","Versailles","High school","Le lycée","school"],
+  ["a1_ver_379","A1","Versailles","Middle school","Le collège","school"],
+  ["a1_ver_380","A1","Versailles","Lesson","La leçon","school"],
+  ["a1_ver_381","A1","Versailles","Subject","La matière","school"],
+  ["a1_ver_382","A1","Versailles","Mathematics","Les mathématiques","school"],
+  ["a1_ver_383","A1","Versailles","French (subject)","Le français","school"],
+  ["a1_ver_384","A1","Versailles","English (subject)","L'anglais","school"],
+  ["a1_ver_385","A1","Versailles","History","L'histoire","school"],
+  ["a1_ver_386","A1","Versailles","Science","Les sciences","school"],
+  ["a1_ver_387","A1","Versailles","Art","L'art","school"],
+  ["a1_ver_388","A1","Versailles","Music","La musique","school"],
+  ["a1_ver_389","A1","Versailles","Sport / P.E.","Le sport","school"],
+  ["a1_ver_390","A1","Versailles","Library","La bibliothèque","school"],
+  ["a1_ver_391","A1","Versailles","Canteen","La cantine","school"],
+  ["a1_ver_392","A1","Versailles","Recess","La récréation","school"],
+  ["a1_ver_393","A1","Versailles","Dress","La robe","clothes"],
+  ["a1_ver_394","A1","Versailles","Trousers / Pants","Le pantalon","clothes"],
+  ["a1_ver_395","A1","Versailles","Shirt","La chemise","clothes"],
+  ["a1_ver_396","A1","Versailles","Coat","Le manteau","clothes"],
+  ["a1_ver_397","A1","Versailles","Shoes","Les chaussures","clothes"],
+  ["a1_ver_398","A1","Versailles","Hat","Le chapeau","clothes"],
+  ["a1_ver_399","A1","Versailles","Jumper / Sweater","Le pull","clothes"],
+  ["a1_ver_400","A1","Versailles","Jacket","La veste","clothes"],
+  ["a1_ver_401","A1","Versailles","Skirt","La jupe","clothes"],
+  ["a1_ver_402","A1","Versailles","T-shirt","Le t-shirt","clothes"],
+  ["a1_ver_403","A1","Versailles","Socks","Les chaussettes","clothes"],
+  ["a1_ver_404","A1","Versailles","Underwear","Les sous-vêtements","clothes"],
+  ["a1_ver_405","A1","Versailles","Tie","La cravate","clothes"],
+  ["a1_ver_406","A1","Versailles","Scarf","L'écharpe","clothes"],
+  ["a1_ver_407","A1","Versailles","Gloves","Les gants","clothes"],
+  ["a1_ver_408","A1","Versailles","Belt","La ceinture","clothes"],
+  ["a1_ver_409","A1","Versailles","Suit","Le costume","clothes"],
+  ["a1_ver_410","A1","Versailles","Boots","Les bottes","clothes"],
+  ["a1_ver_411","A1","Versailles","Sandals","Les sandales","clothes"],
+  ["a1_ver_412","A1","Versailles","Jeans","Le jean","clothes"],
+  ["a1_ver_413","A1","Versailles","Raincoat","L'imperméable","clothes"],
+  ["a1_ver_414","A1","Versailles","Swimsuit","Le maillot de bain","clothes"],
+  ["a1_ver_415","A1","Versailles","Pyjamas","Le pyjama","clothes"],
+  ["a1_ver_416","A1","Versailles","Glasses","Les lunettes","clothes"],
+  ["a1_ver_417","A1","Versailles","Watch","La montre","clothes"],
+  ["a1_ver_418","A1","Versailles","Jewellery","Les bijoux","clothes"],
+  ["a1_ver_419","A1","Versailles","Car","La voiture","transport"],
+  ["a1_ver_420","A1","Versailles","Bus","Le bus","transport"],
+  ["a1_ver_421","A1","Versailles","Train","Le train","transport"],
+  ["a1_ver_422","A1","Versailles","Plane","L'avion","transport"],
+  ["a1_ver_423","A1","Versailles","Bicycle","Le vélo","transport"],
+  ["a1_ver_424","A1","Versailles","Motorcycle","La moto","transport"],
+  ["a1_ver_425","A1","Versailles","Taxi","Le taxi","transport"],
+  ["a1_ver_426","A1","Versailles","Metro / Subway","Le métro","transport"],
+  ["a1_ver_427","A1","Versailles","Boat","Le bateau","transport"],
+  ["a1_ver_428","A1","Versailles","Ticket","Le billet","transport"],
+  ["a1_ver_429","A1","Versailles","Station","La gare","transport"],
+  ["a1_ver_430","A1","Versailles","Airport","L'aéroport","transport"],
+  ["a1_ver_431","A1","Versailles","Stop / Station","L'arrêt","transport"],
+  ["a1_ver_432","A1","Versailles","Road","La route","transport"],
+  ["a1_ver_433","A1","Versailles","Street","La rue","transport"],
+  ["a1_ver_434","A1","Versailles","Motorway / Highway","L'autoroute","school"],
+  ["a1_ver_435","A1","Versailles","Bridge","Le pont","transport"],
+  ["a1_ver_436","A1","Versailles","Parking","Le parking","transport"],
+  ["a1_ver_437","A1","Versailles","Driver","Le conducteur","transport"],
+  ["a1_ver_438","A1","Versailles","Passenger","Le passager","transport"],
+  ["a1_ver_439","A1","Versailles","Platform","Le quai","transport"],
+  ["a1_ver_440","A1","Versailles","Dog","Le chien","animals"],
+  ["a1_ver_441","A1","Versailles","Cat","Le chat","animals"],
+  ["a1_ver_442","A1","Versailles","Bird","L'oiseau","animals"],
+  ["a1_ver_443","A1","Versailles","Horse","Le cheval","animals"],
+  ["a1_ver_444","A1","Versailles","Cow","La vache","animals"],
+  ["a1_ver_445","A1","Versailles","Rabbit","Le lapin","animals"],
+  ["a1_ver_446","A1","Versailles","Mouse","La souris","animals"],
+  ["a1_ver_447","A1","Versailles","Fish","Le poisson","animals"],
+  ["a1_ver_448","A1","Versailles","Elephant","L'éléphant","animals"],
+  ["a1_ver_449","A1","Versailles","Lion","Le lion","animals"],
+  ["a1_ver_450","A1","Versailles","Tiger","Le tigre","animals"],
+  ["a1_ver_451","A1","Versailles","Bear","L'ours","animals"],
+  ["a1_ver_452","A1","Versailles","Monkey","Le singe","animals"],
+  ["a1_ver_453","A1","Versailles","Snake","Le serpent","animals"],
+  ["a1_ver_454","A1","Versailles","Bee","L'abeille","animals"],
+  ["a1_ver_455","A1","Versailles","Butterfly","Le papillon","animals"],
+  ["a1_ver_456","A1","Versailles","Pig","Le cochon","animals"],
+  ["a1_ver_457","A1","Versailles","Sheep","Le mouton","animals"],
+  ["a1_ver_458","A1","Versailles","Duck","Le canard","animals"],
+  ["a1_ver_459","A1","Versailles","Rooster","Le coq","animals"],
+  ["a2_nic_001","A2","Nice","Suitcase","La valise","travel"],
+  ["a2_nic_002","A2","Nice","Passport","Le passeport","travel"],
+  ["a2_nic_003","A2","Nice","Reservation / Booking","La réservation","travel"],
+  ["a2_nic_004","A2","Nice","Hotel","L'hôtel","travel"],
+  ["a2_nic_005","A2","Nice","Room (hotel)","La chambre","travel"],
+  ["a2_nic_006","A2","Nice","Reception","La réception","travel"],
+  ["a2_nic_007","A2","Nice","Check-in","L'enregistrement","travel"],
+  ["a2_nic_008","A2","Nice","Departure","Le départ","travel"],
+  ["a2_nic_009","A2","Nice","Arrival","L'arrivée","travel"],
+  ["a2_nic_010","A2","Nice","Departure gate","La porte d'embarquement","travel"],
+  ["a2_nic_011","A2","Nice","Return ticket","L'aller-retour","travel"],
+  ["a2_nic_012","A2","Nice","Single ticket","L'aller simple","travel"],
+  ["a2_nic_013","A2","Nice","Tourist","Le touriste","travel"],
+  ["a2_nic_014","A2","Nice","Map","La carte","travel"],
+  ["a2_nic_015","A2","Nice","Guide","Le guide","travel"],
+  ["a2_nic_016","A2","Nice","Tour","La visite guidée","travel"],
+  ["a2_nic_017","A2","Nice","Souvenir","Le souvenir","travel"],
+  ["a2_nic_018","A2","Nice","Currency exchange","Le bureau de change","travel"],
+  ["a2_nic_019","A2","Nice","Lost luggage","Bagages perdus","travel"],
+  ["a2_nic_020","A2","Nice","Left luggage","La consigne","travel"],
+  ["a2_nic_021","A2","Nice","Boarding pass","La carte d'embarquement","travel"],
+  ["a2_nic_022","A2","Nice","Customs","La douane","travel"],
+  ["a2_nic_023","A2","Nice","Visa","Le visa","travel"],
+  ["a2_nic_024","A2","Nice","Insurance","L'assurance","travel"],
+  ["a2_nic_025","A2","Nice","Delay","Le retard","travel"],
+  ["a2_nic_026","A2","Nice","On time","À l'heure","travel"],
+  ["a2_nic_027","A2","Nice","Cancelled","Annulé","travel"],
+  ["a2_nic_028","A2","Nice","Sun / Sunshine","Le soleil","weather"],
+  ["a2_nic_029","A2","Nice","Rain","La pluie","weather"],
+  ["a2_nic_030","A2","Nice","Wind","Le vent","weather"],
+  ["a2_nic_031","A2","Nice","Cloud","Le nuage","weather"],
+  ["a2_nic_032","A2","Nice","Snow","La neige","weather"],
+  ["a2_nic_033","A2","Nice","Storm","L'orage","weather"],
+  ["a2_nic_034","A2","Nice","Thunder","Le tonnerre","weather"],
+  ["a2_nic_035","A2","Nice","Lightning","L'éclair","weather"],
+  ["a2_nic_036","A2","Nice","Fog","Le brouillard","weather"],
+  ["a2_nic_037","A2","Nice","Hail","La grêle","weather"],
+  ["a2_nic_038","A2","Nice","Ice","La glace","weather"],
+  ["a2_nic_039","A2","Nice","Temperature","La température","weather"],
+  ["a2_nic_040","A2","Nice","Degree","Le degré","weather"],
+  ["a2_nic_041","A2","Nice","Weather forecast","La météo","weather"],
+  ["a2_nic_042","A2","Nice","Sunny","Ensoleillé","weather"],
+  ["a2_nic_043","A2","Nice","Cloudy","Nuageux","weather"],
+  ["a2_nic_044","A2","Nice","Rainy","Pluvieux","weather"],
+  ["a2_nic_045","A2","Nice","Windy","Venteux","weather"],
+  ["a2_nic_046","A2","Nice","Hot","Il fait chaud","weather"],
+  ["a2_nic_047","A2","Nice","Cold","Il fait froid","weather"],
+  ["a2_nic_048","A2","Nice","What's the weather like?","Quel temps fait-il ?","weather"],
+  ["a2_nic_049","A2","Nice","It's raining","Il pleut","weather"],
+  ["a2_nic_050","A2","Nice","It's snowing","Il neige","weather"],
+  ["a2_nic_051","A2","Nice","Beach","La plage","leisure"],
+  ["a2_nic_052","A2","Nice","Sea","La mer","leisure"],
+  ["a2_nic_053","A2","Nice","Sand","Le sable","leisure"],
+  ["a2_nic_054","A2","Nice","Wave","La vague","leisure"],
+  ["a2_nic_055","A2","Nice","Swimming","La baignade","leisure"],
+  ["a2_nic_056","A2","Nice","Sunbathing","Le bronzage","leisure"],
+  ["a2_nic_057","A2","Nice","Parasol / Sunshade","Le parasol","leisure"],
+  ["a2_nic_058","A2","Nice","Towel","La serviette","leisure"],
+  ["a2_nic_059","A2","Nice","Sunscreen","La crème solaire","leisure"],
+  ["a2_nic_060","A2","Nice","Swimming pool","La piscine","leisure"],
+  ["a2_nic_061","A2","Nice","To swim","Nager","leisure"],
+  ["a2_nic_062","A2","Nice","Cinema","Le cinéma","leisure"],
+  ["a2_nic_063","A2","Nice","Film / Movie","Le film","leisure"],
+  ["a2_nic_064","A2","Nice","Museum","Le musée","leisure"],
+  ["a2_nic_065","A2","Nice","Theatre","Le théâtre","leisure"],
+  ["a2_nic_066","A2","Nice","Concert","Le concert","leisure"],
+  ["a2_nic_067","A2","Nice","Exhibition","L'exposition","leisure"],
+  ["a2_nic_068","A2","Nice","Festival","Le festival","leisure"],
+  ["a2_nic_069","A2","Nice","Match / Game","Le match","leisure"],
+  ["a2_nic_070","A2","Nice","Walk / Stroll","La promenade","leisure"],
+  ["a2_nic_071","A2","Nice","Hike / Trek","La randonnée","leisure"],
+  ["a2_nic_072","A2","Nice","Picnic","Le pique-nique","leisure"],
+  ["a2_nic_073","A2","Nice","Party","La fête","leisure"],
+  ["a2_nic_074","A2","Nice","Show","Le spectacle","leisure"],
+  ["a2_nic_075","A2","Nice","Music","La musique","leisure"],
+  ["a2_nic_076","A2","Nice","Song","La chanson","leisure"],
+  ["a2_nic_077","A2","Nice","Dance","La danse","leisure"],
+  ["a2_nic_078","A2","Nice","Shop / Store","Le magasin","shopping"],
+  ["a2_nic_079","A2","Nice","Price","Le prix","shopping"],
+  ["a2_nic_080","A2","Nice","Expensive","Cher","shopping"],
+  ["a2_nic_081","A2","Nice","Cheap","Bon marché","shopping"],
+  ["a2_nic_082","A2","Nice","Sale / Discount","Les soldes","shopping"],
+  ["a2_nic_083","A2","Nice","Credit card","La carte de crédit","shopping"],
+  ["a2_nic_084","A2","Nice","Cash","L'argent liquide","shopping"],
+  ["a2_nic_085","A2","Nice","Change","La monnaie","shopping"],
+  ["a2_nic_086","A2","Nice","Receipt","Le reçu","shopping"],
+  ["a2_nic_087","A2","Nice","Size","La taille","shopping"],
+  ["a2_nic_088","A2","Nice","Do you have... in size...?","Avez-vous... en taille... ?","shopping"],
+  ["a2_nic_089","A2","Nice","Can I try this on?","Je peux l'essayer ?","shopping"],
+  ["a2_nic_090","A2","Nice","Department store","Le grand magasin","shopping"],
+  ["a2_nic_091","A2","Nice","Market","Le marché","shopping"],
+  ["a2_nic_092","A2","Nice","Bakery","La boulangerie","shopping"],
+  ["a2_nic_093","A2","Nice","Butcher's","La boucherie","shopping"],
+  ["a2_nic_094","A2","Nice","Chemist's / Pharmacy","La pharmacie","shopping"],
+  ["a2_nic_095","A2","Nice","Supermarket","Le supermarché","shopping"],
+  ["a2_nic_096","A2","Nice","Happy","Heureux / Heureuse","feelings"],
+  ["a2_nic_097","A2","Nice","Sad","Triste","feelings"],
+  ["a2_nic_098","A2","Nice","Angry","En colère","feelings"],
+  ["a2_nic_099","A2","Nice","Surprised","Surpris(e)","feelings"],
+  ["a2_nic_100","A2","Nice","Scared","Effrayé(e)","feelings"],
+  ["a2_nic_101","A2","Nice","Excited","Enthousiaste","feelings"],
+  ["a2_nic_102","A2","Nice","Bored","Ennuyé(e)","feelings"],
+  ["a2_nic_103","A2","Nice","Nervous","Nerveux / Nerveuse","feelings"],
+  ["a2_nic_104","A2","Nice","Tired","Fatigué(e)","feelings"],
+  ["a2_nic_105","A2","Nice","Relaxed","Détendu(e)","feelings"],
+  ["a2_nic_106","A2","Nice","In love","Amoureux / Amoureuse","feelings"],
+  ["a2_nic_107","A2","Nice","Jealous","Jaloux / Jalouse","feelings"],
+  ["a2_nic_108","A2","Nice","Disappointed","Déçu(e)","feelings"],
+  ["a2_nic_109","A2","Nice","Proud","Fier / Fière","feelings"],
+  ["a2_nic_110","A2","Nice","Grateful","Reconnaissant(e)","feelings"],
+  ["a2_nic_111","A2","Nice","Worried","Inquiet / Inquiète","feelings"],
+  ["a2_nic_112","A2","Nice","Confident","Confiant(e)","feelings"],
+  ["a2_nic_113","A2","Nice","Lonely","Seul(e)","feelings"],
+  ["a2_nic_114","A2","Nice","What do you like doing?","Qu'est-ce que vous aimez faire ?","conversation"],
+  ["a2_nic_115","A2","Nice","I like / I love...","J'aime... / J'adore...","conversation"],
+  ["a2_nic_116","A2","Nice","I don't like...","Je n'aime pas...","conversation"],
+  ["a2_nic_117","A2","Nice","I prefer...","Je préfère...","conversation"],
+  ["a2_nic_118","A2","Nice","In my opinion","À mon avis","conversation"],
+  ["a2_nic_119","A2","Nice","I think that...","Je pense que...","conversation"],
+  ["a2_nic_120","A2","Nice","It's great!","C'est super !","conversation"],
+  ["a2_nic_121","A2","Nice","That's a shame","C'est dommage","conversation"],
+  ["a2_nic_122","A2","Nice","It doesn't matter","Ça ne fait rien","conversation"],
+  ["a2_nic_123","A2","Nice","I agree","Je suis d'accord","conversation"],
+  ["a2_nic_124","A2","Nice","I disagree","Je ne suis pas d'accord","conversation"],
+  ["a2_nic_125","A2","Nice","Can you help me?","Pouvez-vous m'aider ?","conversation"],
+  ["a2_nic_126","A2","Nice","Where is...?","Où se trouve... ?","conversation"],
+  ["a2_nic_127","A2","Nice","How far is...?","C'est loin ?","conversation"],
+  ["a2_ann_128","A2","Annecy","Lake","Le lac","nature"],
+  ["a2_ann_129","A2","Annecy","Mountain","La montagne","nature"],
+  ["a2_ann_130","A2","Annecy","Forest","La forêt","nature"],
+  ["a2_ann_131","A2","Annecy","River","La rivière","nature"],
+  ["a2_ann_132","A2","Annecy","Flower","La fleur","nature"],
+  ["a2_ann_133","A2","Annecy","Tree","L'arbre","nature"],
+  ["a2_ann_134","A2","Annecy","Grass","L'herbe","nature"],
+  ["a2_ann_135","A2","Annecy","Landscape","Le paysage","nature"],
+  ["a2_ann_136","A2","Annecy","Hill","La colline","nature"],
+  ["a2_ann_137","A2","Annecy","Valley","La vallée","nature"],
+  ["a2_ann_138","A2","Annecy","Field","Le champ","nature"],
+  ["a2_ann_139","A2","Annecy","Coast","La côte","nature"],
+  ["a2_ann_140","A2","Annecy","Island","L'île","nature"],
+  ["a2_ann_141","A2","Annecy","Desert","Le désert","nature"],
+  ["a2_ann_142","A2","Annecy","Volcano","Le volcan","nature"],
+  ["a2_ann_143","A2","Annecy","Waterfall","La cascade","nature"],
+  ["a2_ann_144","A2","Annecy","Cave","La grotte","nature"],
+  ["a2_ann_145","A2","Annecy","Rock","Le rocher","nature"],
+  ["a2_ann_146","A2","Annecy","Sand","Le sable","nature"],
+  ["a2_ann_147","A2","Annecy","Sky","Le ciel","nature"],
+  ["a2_ann_148","A2","Annecy","Moon","La lune","nature"],
+  ["a2_ann_149","A2","Annecy","Sun","Le soleil","nature"],
+  ["a2_ann_150","A2","Annecy","Star","L'étoile","nature"],
+  ["a2_ann_151","A2","Annecy","Earth","La terre","nature"],
+  ["a2_ann_152","A2","Annecy","Air","L'air","nature"],
+  ["a2_ann_153","A2","Annecy","Water","L'eau","nature"],
+  ["a2_ann_154","A2","Annecy","Fire","Le feu","nature"],
+  ["a2_ann_155","A2","Annecy","Football / Soccer","Le football","sports"],
+  ["a2_ann_156","A2","Annecy","Tennis","Le tennis","sports"],
+  ["a2_ann_157","A2","Annecy","Swimming","La natation","sports"],
+  ["a2_ann_158","A2","Annecy","Skiing","Le ski","sports"],
+  ["a2_ann_159","A2","Annecy","Cycling","Le cyclisme","sports"],
+  ["a2_ann_160","A2","Annecy","Running","La course à pied","sports"],
+  ["a2_ann_161","A2","Annecy","Yoga","Le yoga","sports"],
+  ["a2_ann_162","A2","Annecy","Hiking","La randonnée","sports"],
+  ["a2_ann_163","A2","Annecy","Basketball","Le basketball","sports"],
+  ["a2_ann_164","A2","Annecy","Volleyball","Le volleyball","sports"],
+  ["a2_ann_165","A2","Annecy","Rugby","Le rugby","sports"],
+  ["a2_ann_166","A2","Annecy","Golf","Le golf","sports"],
+  ["a2_ann_167","A2","Annecy","Climbing","L'escalade","sports"],
+  ["a2_ann_168","A2","Annecy","Sailing","La voile","sports"],
+  ["a2_ann_169","A2","Annecy","Horse riding","L'équitation","sports"],
+  ["a2_ann_170","A2","Annecy","Gymnastics","La gymnastique","sports"],
+  ["a2_ann_171","A2","Annecy","Boxing","La boxe","sports"],
+  ["a2_ann_172","A2","Annecy","Team","L'équipe","sports"],
+  ["a2_ann_173","A2","Annecy","Player","Le joueur","sports"],
+  ["a2_ann_174","A2","Annecy","Champion","Le champion","sports"],
+  ["a2_ann_175","A2","Annecy","Competition","La compétition","sports"],
+  ["a2_ann_176","A2","Annecy","Win","Gagner","sports"],
+  ["a2_ann_177","A2","Annecy","Lose","Perdre","sports"],
+  ["a2_ann_178","A2","Annecy","Score","Le score","sports"],
+  ["a2_ann_179","A2","Annecy","Stadium","Le stade","sports"],
+  ["a2_ann_180","A2","Annecy","Coach / Trainer","L'entraîneur","sports"],
+  ["a2_ann_181","A2","Annecy","Sick / Ill","Malade","health"],
+  ["a2_ann_182","A2","Annecy","Doctor","Le médecin","health"],
+  ["a2_ann_183","A2","Annecy","Medicine","Le médicament","health"],
+  ["a2_ann_184","A2","Annecy","Pain","La douleur","health"],
+  ["a2_ann_185","A2","Annecy","Fever","La fièvre","health"],
+  ["a2_ann_186","A2","Annecy","Cold (illness)","Le rhume","health"],
+  ["a2_ann_187","A2","Annecy","Allergy","L'allergie","health"],
+  ["a2_ann_188","A2","Annecy","Health","La santé","health"],
+  ["a2_ann_189","A2","Annecy","Hospital","L'hôpital","health"],
+  ["a2_ann_190","A2","Annecy","Appointment","Le rendez-vous","health"],
+  ["a2_ann_191","A2","Annecy","Prescription","L'ordonnance","health"],
+  ["a2_ann_192","A2","Annecy","Headache","Le mal de tête","health"],
+  ["a2_ann_193","A2","Annecy","Stomachache","Le mal de ventre","health"],
+  ["a2_ann_194","A2","Annecy","Sore throat","Le mal de gorge","health"],
+  ["a2_ann_195","A2","Annecy","Toothache","Le mal de dents","health"],
+  ["a2_ann_196","A2","Annecy","Tired","Fatigué(e)","health"],
+  ["a2_ann_197","A2","Annecy","Rest","Le repos","health"],
+  ["a2_ann_198","A2","Annecy","Operation","L'opération","health"],
+  ["a2_ann_199","A2","Annecy","Emergency","Les urgences","health"],
+  ["a2_ann_200","A2","Annecy","Ambulance","L'ambulance","health"],
+  ["a2_ann_201","A2","Annecy","Blood","Le sang","health"],
+  ["a2_ann_202","A2","Annecy","Broken (bone)","Cassé(e)","health"],
+  ["a2_ann_203","A2","Annecy","Bandage","Le pansement","health"],
+  ["a2_ann_204","A2","Annecy","To wake up","Se réveiller","daily"],
+  ["a2_ann_205","A2","Annecy","To get up","Se lever","daily"],
+  ["a2_ann_206","A2","Annecy","To shower","Se doucher","daily"],
+  ["a2_ann_207","A2","Annecy","To get dressed","S'habiller","daily"],
+  ["a2_ann_208","A2","Annecy","To brush teeth","Se brosser les dents","daily"],
+  ["a2_ann_209","A2","Annecy","To eat breakfast","Prendre le petit-déjeuner","daily"],
+  ["a2_ann_210","A2","Annecy","To go to work","Aller au travail","daily"],
+  ["a2_ann_211","A2","Annecy","To come home","Rentrer à la maison","daily"],
+  ["a2_ann_212","A2","Annecy","To cook dinner","Préparer le dîner","daily"],
+  ["a2_ann_213","A2","Annecy","To watch TV","Regarder la télévision","daily"],
+  ["a2_ann_214","A2","Annecy","To go to bed","Se coucher","daily"],
+  ["a2_ann_215","A2","Annecy","To do the shopping","Faire les courses","daily"],
+  ["a2_ann_216","A2","Annecy","To clean","Faire le ménage","daily"],
+  ["a2_ann_217","A2","Annecy","To do laundry","Faire la lessive","daily"],
+  ["a2_ann_218","A2","Annecy","To iron","Repasser","daily"],
+  ["a2_ann_219","A2","Annecy","To vacuum","Passer l'aspirateur","daily"],
+  ["a2_ann_220","A2","Annecy","Left","À gauche","directions"],
+  ["a2_ann_221","A2","Annecy","Right","À droite","directions"],
+  ["a2_ann_222","A2","Annecy","Straight ahead","Tout droit","directions"],
+  ["a2_ann_223","A2","Annecy","Opposite","En face","directions"],
+  ["a2_ann_224","A2","Annecy","Next to","À côté de","directions"],
+  ["a2_ann_225","A2","Annecy","Behind","Derrière","directions"],
+  ["a2_ann_226","A2","Annecy","In front of","Devant","directions"],
+  ["a2_ann_227","A2","Annecy","Between","Entre","directions"],
+  ["a2_ann_228","A2","Annecy","Near","Près de","directions"],
+  ["a2_ann_229","A2","Annecy","Far from","Loin de","directions"],
+  ["a2_ann_230","A2","Annecy","At the end of","Au bout de","directions"],
+  ["a2_ann_231","A2","Annecy","Turn left","Tournez à gauche","directions"],
+  ["a2_ann_232","A2","Annecy","Turn right","Tournez à droite","directions"],
+  ["a2_ann_233","A2","Annecy","Traffic light","Le feu","directions"],
+  ["a2_ann_234","A2","Annecy","Crossroads","Le carrefour","directions"],
+  ["a2_ann_235","A2","Annecy","Roundabout","Le rond-point","directions"],
+  ["a2_ann_236","A2","Annecy","North","Le nord","directions"],
+  ["a2_ann_237","A2","Annecy","South","Le sud","directions"],
+  ["a2_ann_238","A2","Annecy","East","L'est","directions"],
+  ["a2_ann_239","A2","Annecy","West","L'ouest","directions"],
+  ["a2_rou_240","A2","Rouen","Castle / Château","Le château","culture"],
+  ["a2_rou_241","A2","Rouen","Cathedral","La cathédrale","culture"],
+  ["a2_rou_242","A2","Rouen","Monument","Le monument","culture"],
+  ["a2_rou_243","A2","Rouen","Exhibition","L'exposition","culture"],
+  ["a2_rou_244","A2","Rouen","Visit / Tour","La visite","culture"],
+  ["a2_rou_245","A2","Rouen","Heritage","Le patrimoine","culture"],
+  ["a2_rou_246","A2","Rouen","History","L'histoire","culture"],
+  ["a2_rou_247","A2","Rouen","Architecture","L'architecture","culture"],
+  ["a2_rou_248","A2","Rouen","Palace","Le palais","culture"],
+  ["a2_rou_249","A2","Rouen","Square","La place","culture"],
+  ["a2_rou_250","A2","Rouen","Fountain","La fontaine","culture"],
+  ["a2_rou_251","A2","Rouen","Statue","La statue","culture"],
+  ["a2_rou_252","A2","Rouen","Church","L'église","culture"],
+  ["a2_rou_253","A2","Rouen","Abbey","L'abbaye","culture"],
+  ["a2_rou_254","A2","Rouen","Town hall","La mairie","culture"],
+  ["a2_rou_255","A2","Rouen","Post office","La poste","culture"],
+  ["a2_rou_256","A2","Rouen","Police station","Le commissariat","culture"],
+  ["a2_rou_257","A2","Rouen","Embassy","L'ambassade","culture"],
+  ["a2_rou_258","A2","Rouen","Bank","La banque","culture"],
+  ["a2_rou_259","A2","Rouen","Restaurant","Le restaurant","culture"],
+  ["a2_rou_260","A2","Rouen","Café","Le café","culture"],
+  ["a2_rou_261","A2","Rouen","Bar","Le bar","culture"],
+  ["a2_rou_262","A2","Rouen","Hotel","L'hôtel","culture"],
+  ["a2_rou_263","A2","Rouen","Painting / Picture","Le tableau","art"],
+  ["a2_rou_264","A2","Rouen","Sculpture","La sculpture","art"],
+  ["a2_rou_265","A2","Rouen","Drawing","Le dessin","art"],
+  ["a2_rou_266","A2","Rouen","Photography","La photo","art"],
+  ["a2_rou_267","A2","Rouen","Artist","L'artiste","art"],
+  ["a2_rou_268","A2","Rouen","Work of art","L'œuvre d'art","art"],
+  ["a2_rou_269","A2","Rouen","Gallery","La galerie","art"],
+  ["a2_rou_270","A2","Rouen","Exhibition","L'exposition","art"],
+  ["a2_rou_271","A2","Rouen","Painting (activity)","La peinture","art"],
+  ["a2_rou_272","A2","Rouen","Brush","Le pinceau","art"],
+  ["a2_rou_273","A2","Rouen","Canvas","La toile","art"],
+  ["a2_rou_274","A2","Rouen","Colour","La couleur","art"],
+  ["a2_rou_275","A2","Rouen","Style","Le style","art"],
+  ["a2_rou_276","A2","Rouen","Abstract","Abstrait","art"],
+  ["a2_rou_277","A2","Rouen","Classical","Classique","art"],
+  ["a2_rou_278","A2","Rouen","Phone","Le téléphone","communication"],
+  ["a2_rou_279","A2","Rouen","Mobile / Cell phone","Le portable","communication"],
+  ["a2_rou_280","A2","Rouen","Message","Le message","communication"],
+  ["a2_rou_281","A2","Rouen","Email","L'email","communication"],
+  ["a2_rou_282","A2","Rouen","Letter","La lettre","communication"],
+  ["a2_rou_283","A2","Rouen","To call","Appeler","communication"],
+  ["a2_rou_284","A2","Rouen","To send","Envoyer","communication"],
+  ["a2_rou_285","A2","Rouen","To receive","Recevoir","communication"],
+  ["a2_rou_286","A2","Rouen","To answer","Répondre","communication"],
+  ["a2_rou_287","A2","Rouen","Internet","Internet","communication"],
+  ["a2_rou_288","A2","Rouen","Website","Le site web","communication"],
+  ["a2_rou_289","A2","Rouen","Social media","Les réseaux sociaux","communication"],
+  ["a2_rou_290","A2","Rouen","Post / Mail","Le courrier","communication"],
+  ["a2_rou_291","A2","Rouen","Postcard","La carte postale","communication"],
+  ["a2_rou_292","A2","Rouen","Stamp","Le timbre","communication"],
+  ["a2_rou_293","A2","Rouen","Envelope","L'enveloppe","communication"],
+  ["a2_rou_294","A2","Rouen","News","Les nouvelles","communication"],
+  ["a2_rou_295","A2","Rouen","Newspaper","Le journal","communication"],
+  ["a2_rou_296","A2","Rouen","Magazine","Le magazine","communication"],
+  ["a2_rou_297","A2","Rouen","Radio","La radio","communication"],
+  ["a2_rou_298","A2","Rouen","Television","La télévision","communication"],
+  ["a2_rou_299","A2","Rouen","Programme","L'émission","communication"],
+  ["a2_rou_300","A2","Rouen","A lot / Much","Beaucoup","quantities"],
+  ["a2_rou_301","A2","Rouen","A little / Few","Peu","quantities"],
+  ["a2_rou_302","A2","Rouen","Enough","Assez","quantities"],
+  ["a2_rou_303","A2","Rouen","Too much","Trop","quantities"],
+  ["a2_rou_304","A2","Rouen","Several","Plusieurs","quantities"],
+  ["a2_rou_305","A2","Rouen","Some","Quelques","quantities"],
+  ["a2_rou_306","A2","Rouen","Half","La moitié","quantities"],
+  ["a2_rou_307","A2","Rouen","A quarter","Un quart","quantities"],
+  ["a2_rou_308","A2","Rouen","All","Tout / Tous","quantities"],
+  ["a2_rou_309","A2","Rouen","Nothing","Rien","quantities"],
+  ["a2_rou_310","A2","Rouen","Someone","Quelqu'un","quantities"],
+  ["a2_rou_311","A2","Rouen","Nobody","Personne","quantities"],
+  ["a2_rou_312","A2","Rouen","More than","Plus de","comparison"],
+  ["a2_rou_313","A2","Rouen","Less than","Moins de","comparison"],
+  ["a2_rou_314","A2","Rouen","As... as","Aussi... que","comparison"],
+  ["a2_rou_315","A2","Rouen","Better","Meilleur(e)","comparison"],
+  ["a2_rou_316","A2","Rouen","Worse","Pire","comparison"],
+  ["a2_rou_317","A2","Rouen","The best","Le meilleur / La meilleure","comparison"],
+  ["a2_rou_318","A2","Rouen","The worst","Le pire","comparison"],
+  ["a2_rou_319","A2","Rouen","The same","Le même","comparison"],
+  ["a2_rou_320","A2","Rouen","Different","Différent(e)","comparison"],
+  ["a2_rou_321","A2","Rouen","Starter / Appetiser","L'entrée","food"],
+  ["a2_rou_322","A2","Rouen","Main course","Le plat principal","food"],
+  ["a2_rou_323","A2","Rouen","Dessert","Le dessert","food"],
+  ["a2_rou_324","A2","Rouen","Bill","L'addition","food"],
+  ["a2_rou_325","A2","Rouen","To order","Commander","food"],
+  ["a2_rou_326","A2","Rouen","Waiter (m)","Le serveur","food"],
+  ["a2_rou_327","A2","Rouen","Waiter (f)","La serveuse","food"],
+  ["a2_rou_328","A2","Rouen","Menu","La carte","food"],
+  ["a2_rou_329","A2","Rouen","Set menu","Le menu","food"],
+  ["a2_rou_330","A2","Rouen","Vegetarian","Végétarien(ne)","food"],
+  ["a2_rou_331","A2","Rouen","Seafood","Les fruits de mer","food"],
+  ["a2_rou_332","A2","Rouen","Snail","L'escargot","food"],
+  ["a2_rou_333","A2","Rouen","Frog legs","Les cuisses de grenouille","food"],
+  ["a2_rou_334","A2","Rouen","Crêpe","La crêpe","food"],
+  ["a2_rou_335","A2","Rouen","Croissant","Le croissant","food"],
+  ["a2_rou_336","A2","Rouen","Baguette","La baguette","food"],
+  ["a2_rou_337","A2","Rouen","Mustard","La moutarde","food"],
+  ["a2_rou_338","A2","Rouen","Vinegar","Le vinaigre","food"],
+  ["a2_rou_339","A2","Rouen","Oil","L'huile","food"],
+  ["a2_rou_340","A2","Rouen","Cream","La crème","food"],
+  ["a2_rou_341","A2","Rouen","Flour","La farine","food"],
+  ["a2_rou_342","A2","Rouen","Pepper","Le poivre","food"],
+  ["a2_rou_343","A2","Rouen","Garlic","L'ail","food"],
+  ["a2_rou_344","A2","Rouen","Herb","L'herbe","food"],
+  ["a2_rou_345","A2","Rouen","Recipe","La recette","food"],
+  ["a2_rou_346","A2","Rouen","To cook","Cuisiner","food"],
+  ["a2_rou_347","A2","Rouen","To boil","Faire bouillir","food"],
+  ["a2_rou_348","A2","Rouen","To fry","Faire frire","food"],
+  ["a2_rou_349","A2","Rouen","To bake","Faire cuire au four","food"],
+  ["b1_lyo_001","B1","Lyon","Work / Job","Le travail","work"],
+  ["b1_lyo_002","B1","Lyon","Career","La carrière","work"],
+  ["b1_lyo_003","B1","Lyon","Office","Le bureau","work"],
+  ["b1_lyo_004","B1","Lyon","Meeting","La réunion","work"],
+  ["b1_lyo_005","B1","Lyon","Appointment","Le rendez-vous","work"],
+  ["b1_lyo_006","B1","Lyon","Colleague","Le collègue","work"],
+  ["b1_lyo_007","B1","Lyon","Boss / Manager","Le patron / Le directeur","work"],
+  ["b1_lyo_008","B1","Lyon","Employee","L'employé(e)","work"],
+  ["b1_lyo_009","B1","Lyon","Salary","Le salaire","work"],
+  ["b1_lyo_010","B1","Lyon","Contract","Le contrat","work"],
+  ["b1_lyo_011","B1","Lyon","CV / Resume","Le CV","work"],
+  ["b1_lyo_012","B1","Lyon","Interview","L'entretien","work"],
+  ["b1_lyo_013","B1","Lyon","Promotion","La promotion","work"],
+  ["b1_lyo_014","B1","Lyon","Retirement","La retraite","work"],
+  ["b1_lyo_015","B1","Lyon","Unemployment","Le chômage","work"],
+  ["b1_lyo_016","B1","Lyon","Strike","La grève","work"],
+  ["b1_lyo_017","B1","Lyon","Trade union","Le syndicat","work"],
+  ["b1_lyo_018","B1","Lyon","Part-time","À temps partiel","work"],
+  ["b1_lyo_019","B1","Lyon","Full-time","À temps plein","work"],
+  ["b1_lyo_020","B1","Lyon","Self-employed","Indépendant(e)","work"],
+  ["b1_lyo_021","B1","Lyon","Company","L'entreprise","work"],
+  ["b1_lyo_022","B1","Lyon","Business","Les affaires","work"],
+  ["b1_lyo_023","B1","Lyon","Client","Le client","work"],
+  ["b1_lyo_024","B1","Lyon","Project","Le projet","work"],
+  ["b1_lyo_025","B1","Lyon","Deadline","La date limite","work"],
+  ["b1_lyo_026","B1","Lyon","Budget","Le budget","work"],
+  ["b1_lyo_027","B1","Lyon","Report","Le rapport","work"],
+  ["b1_lyo_028","B1","Lyon","Training","La formation","work"],
+  ["b1_lyo_029","B1","Lyon","Experience","L'expérience","work"],
+  ["b1_lyo_030","B1","Lyon","Skills","Les compétences","work"],
+  ["b1_lyo_031","B1","Lyon","Qualification","Le diplôme","work"],
+  ["b1_lyo_032","B1","Lyon","To hire","Embaucher","work"],
+  ["b1_lyo_033","B1","Lyon","To fire / dismiss","Licencier","work"],
+  ["b1_lyo_034","B1","Lyon","To apply for a job","Postuler à un emploi","work"],
+  ["b1_lyo_035","B1","Lyon","To negotiate","Négocier","work"],
+  ["b1_lyo_036","B1","Lyon","Commission","La commission","work"],
+  ["b1_lyo_037","B1","Lyon","Bonus","La prime","work"],
+  ["b1_lyo_038","B1","Lyon","News","L'actualité","media"],
+  ["b1_lyo_039","B1","Lyon","Headline","Le titre","media"],
+  ["b1_lyo_040","B1","Lyon","Article","L'article","media"],
+  ["b1_lyo_041","B1","Lyon","Journalist","Le journaliste","media"],
+  ["b1_lyo_042","B1","Lyon","Editor","Le rédacteur en chef","media"],
+  ["b1_lyo_043","B1","Lyon","Broadcasting","La diffusion","media"],
+  ["b1_lyo_044","B1","Lyon","Documentary","Le documentaire","media"],
+  ["b1_lyo_045","B1","Lyon","Advertisement","La publicité","media"],
+  ["b1_lyo_046","B1","Lyon","Audience","Le public","media"],
+  ["b1_lyo_047","B1","Lyon","Subscription","L'abonnement","media"],
+  ["b1_lyo_048","B1","Lyon","Streaming","Le streaming","media"],
+  ["b1_lyo_049","B1","Lyon","Podcast","Le podcast","media"],
+  ["b1_lyo_050","B1","Lyon","Blog","Le blog","media"],
+  ["b1_lyo_051","B1","Lyon","Comment","Le commentaire","media"],
+  ["b1_lyo_052","B1","Lyon","Share (social)","Partager","media"],
+  ["b1_lyo_053","B1","Lyon","Like (social)","Liker / Aimer","media"],
+  ["b1_lyo_054","B1","Lyon","Follower","L'abonné(e)","media"],
+  ["b1_lyo_055","B1","Lyon","Profile","Le profil","media"],
+  ["b1_lyo_056","B1","Lyon","Password","Le mot de passe","media"],
+  ["b1_lyo_057","B1","Lyon","Download","Télécharger","media"],
+  ["b1_lyo_058","B1","Lyon","Upload","Mettre en ligne","media"],
+  ["b1_lyo_059","B1","Lyon","Virus","Le virus","media"],
+  ["b1_lyo_060","B1","Lyon","Hacker","Le pirate informatique","media"],
+  ["b1_lyo_061","B1","Lyon","Artificial intelligence","L'intelligence artificielle","media"],
+  ["b1_lyo_062","B1","Lyon","App","L'application","media"],
+  ["b1_lyo_063","B1","Lyon","Software","Le logiciel","media"],
+  ["b1_lyo_064","B1","Lyon","Database","La base de données","media"],
+  ["b1_lyo_065","B1","Lyon","Cloud","Le nuage informatique","media"],
+  ["b1_lyo_066","B1","Lyon","Society","La société","society"],
+  ["b1_lyo_067","B1","Lyon","Government","Le gouvernement","society"],
+  ["b1_lyo_068","B1","Lyon","President","Le président","society"],
+  ["b1_lyo_069","B1","Lyon","Minister","Le ministre","society"],
+  ["b1_lyo_070","B1","Lyon","Election","L'élection","society"],
+  ["b1_lyo_071","B1","Lyon","Vote","Le vote","society"],
+  ["b1_lyo_072","B1","Lyon","Party (political)","Le parti politique","society"],
+  ["b1_lyo_073","B1","Lyon","Parliament","Le parlement","society"],
+  ["b1_lyo_074","B1","Lyon","Law","La loi","society"],
+  ["b1_lyo_075","B1","Lyon","Rights","Les droits","society"],
+  ["b1_lyo_076","B1","Lyon","Citizen","Le citoyen","society"],
+  ["b1_lyo_077","B1","Lyon","Nationality","La nationalité","society"],
+  ["b1_lyo_078","B1","Lyon","Immigration","L'immigration","society"],
+  ["b1_lyo_079","B1","Lyon","Integration","L'intégration","society"],
+  ["b1_lyo_080","B1","Lyon","Equality","L'égalité","society"],
+  ["b1_lyo_081","B1","Lyon","Discrimination","La discrimination","society"],
+  ["b1_lyo_082","B1","Lyon","Racism","Le racisme","society"],
+  ["b1_lyo_083","B1","Lyon","Poverty","La pauvreté","society"],
+  ["b1_lyo_084","B1","Lyon","Wealth","La richesse","society"],
+  ["b1_lyo_085","B1","Lyon","Social class","La classe sociale","society"],
+  ["b1_lyo_086","B1","Lyon","Privilege","Le privilège","society"],
+  ["b1_lyo_087","B1","Lyon","Environment","L'environnement","environment"],
+  ["b1_lyo_088","B1","Lyon","Climate","Le climat","environment"],
+  ["b1_lyo_089","B1","Lyon","Climate change","Le changement climatique","environment"],
+  ["b1_lyo_090","B1","Lyon","Global warming","Le réchauffement climatique","environment"],
+  ["b1_lyo_091","B1","Lyon","Pollution","La pollution","environment"],
+  ["b1_lyo_092","B1","Lyon","Greenhouse gas","Le gaz à effet de serre","environment"],
+  ["b1_lyo_093","B1","Lyon","Renewable energy","L'énergie renouvelable","environment"],
+  ["b1_lyo_094","B1","Lyon","Solar energy","L'énergie solaire","environment"],
+  ["b1_lyo_095","B1","Lyon","Wind energy","L'énergie éolienne","environment"],
+  ["b1_lyo_096","B1","Lyon","Recycling","Le recyclage","environment"],
+  ["b1_lyo_097","B1","Lyon","Waste","Les déchets","environment"],
+  ["b1_lyo_098","B1","Lyon","Biodiversity","La biodiversité","environment"],
+  ["b1_lyo_099","B1","Lyon","Endangered species","Espèce menacée","environment"],
+  ["b1_lyo_100","B1","Lyon","Deforestation","La déforestation","environment"],
+  ["b1_lyo_101","B1","Lyon","Flood","L'inondation","environment"],
+  ["b1_lyo_102","B1","Lyon","Drought","La sécheresse","environment"],
+  ["b1_lyo_103","B1","Lyon","Earthquake","Le tremblement de terre","environment"],
+  ["b1_lyo_104","B1","Lyon","Sustainability","Le développement durable","environment"],
+  ["b1_lyo_105","B1","Lyon","Carbon footprint","L'empreinte carbone","environment"],
+  ["b1_lyo_106","B1","Lyon","Organic","Bio / Biologique","environment"],
+  ["b1_lyo_107","B1","Lyon","Eco-friendly","Écologique","environment"],
+  ["b1_lyo_108","B1","Lyon","Greenhouse","La serre","environment"],
+  ["b1_lyo_109","B1","Lyon","Gastronomy","La gastronomie","food"],
+  ["b1_lyo_110","B1","Lyon","Recipe","La recette","food"],
+  ["b1_lyo_111","B1","Lyon","Chef","Le chef cuisinier","food"],
+  ["b1_lyo_112","B1","Lyon","Ingredient","L'ingrédient","food"],
+  ["b1_lyo_113","B1","Lyon","Flavour","La saveur","food"],
+  ["b1_lyo_114","B1","Lyon","Taste","Le goût","food"],
+  ["b1_lyo_115","B1","Lyon","Spice","L'épice","food"],
+  ["b1_lyo_116","B1","Lyon","Herb","L'herbe aromatique","food"],
+  ["b1_lyo_117","B1","Lyon","Wine pairing","L'accord mets-vins","food"],
+  ["b1_lyo_118","B1","Lyon","Traditional","Traditionnel(le)","food"],
+  ["b1_lyo_119","B1","Lyon","Local produce","Le produit local","food"],
+  ["b1_lyo_120","B1","Lyon","Starter","L'entrée","food"],
+  ["b1_lyo_121","B1","Lyon","Sausage","La saucisse","food"],
+  ["b1_lyo_122","B1","Lyon","Charcuterie","La charcuterie","food"],
+  ["b1_lyo_123","B1","Lyon","Sauce","La sauce","food"],
+  ["b1_lyo_124","B1","Lyon","Broth","Le bouillon","food"],
+  ["b1_lyo_125","B1","Lyon","Casserole","La cocotte","food"],
+  ["b1_lyo_126","B1","Lyon","Grill","Le gril","food"],
+  ["b1_lyo_127","B1","Lyon","Roast","Le rôti","food"],
+  ["b1_lyo_128","B1","Lyon","Stew","Le ragoût","food"],
+  ["b1_mar_129","B1","Marseille","General practitioner","Le médecin généraliste","health"],
+  ["b1_mar_130","B1","Marseille","Specialist","Le spécialiste","health"],
+  ["b1_mar_131","B1","Marseille","Surgeon","Le chirurgien","health"],
+  ["b1_mar_132","B1","Marseille","Nurse","L'infirmier / L'infirmière","health"],
+  ["b1_mar_133","B1","Marseille","Paramedic","Le secouriste","health"],
+  ["b1_mar_134","B1","Marseille","Blood test","La prise de sang","health"],
+  ["b1_mar_135","B1","Marseille","X-ray","La radiographie","health"],
+  ["b1_mar_136","B1","Marseille","Scan","Le scanner","health"],
+  ["b1_mar_137","B1","Marseille","Anaesthesia","L'anesthésie","health"],
+  ["b1_mar_138","B1","Marseille","Operation / Surgery","L'opération","health"],
+  ["b1_mar_139","B1","Marseille","Recovery","La guérison","health"],
+  ["b1_mar_140","B1","Marseille","Symptom","Le symptôme","health"],
+  ["b1_mar_141","B1","Marseille","Diagnosis","Le diagnostic","health"],
+  ["b1_mar_142","B1","Marseille","Treatment","Le traitement","health"],
+  ["b1_mar_143","B1","Marseille","Dose","La dose","health"],
+  ["b1_mar_144","B1","Marseille","Side effect","L'effet secondaire","health"],
+  ["b1_mar_145","B1","Marseille","Vaccination","La vaccination","health"],
+  ["b1_mar_146","B1","Marseille","Blood pressure","La tension artérielle","health"],
+  ["b1_mar_147","B1","Marseille","Cholesterol","Le cholestérol","health"],
+  ["b1_mar_148","B1","Marseille","Diabetes","Le diabète","health"],
+  ["b1_mar_149","B1","Marseille","Cancer","Le cancer","health"],
+  ["b1_mar_150","B1","Marseille","Heart disease","La maladie cardiaque","health"],
+  ["b1_mar_151","B1","Marseille","Mental health","La santé mentale","health"],
+  ["b1_mar_152","B1","Marseille","Depression","La dépression","health"],
+  ["b1_mar_153","B1","Marseille","Stress","Le stress","health"],
+  ["b1_mar_154","B1","Marseille","Burnout","L'épuisement professionnel","health"],
+  ["b1_mar_155","B1","Marseille","Well-being","Le bien-être","health"],
+  ["b1_mar_156","B1","Marseille","Lifestyle","Le mode de vie","health"],
+  ["b1_mar_157","B1","Marseille","Multicultural","Multiculturel(le)","culture"],
+  ["b1_mar_158","B1","Marseille","Community","La communauté","culture"],
+  ["b1_mar_159","B1","Marseille","Tradition","La tradition","culture"],
+  ["b1_mar_160","B1","Marseille","Custom","La coutume","culture"],
+  ["b1_mar_161","B1","Marseille","Festival","Le festival","culture"],
+  ["b1_mar_162","B1","Marseille","Carnival","Le carnaval","culture"],
+  ["b1_mar_163","B1","Marseille","Religion","La religion","culture"],
+  ["b1_mar_164","B1","Marseille","Faith","La foi","culture"],
+  ["b1_mar_165","B1","Marseille","Diversity","La diversité","culture"],
+  ["b1_mar_166","B1","Marseille","Tolerance","La tolérance","culture"],
+  ["b1_mar_167","B1","Marseille","Solidarity","La solidarité","culture"],
+  ["b1_mar_168","B1","Marseille","Volunteer","Le bénévole","culture"],
+  ["b1_mar_169","B1","Marseille","Association","L'association","culture"],
+  ["b1_mar_170","B1","Marseille","Charity","L'association caritative","culture"],
+  ["b1_mar_171","B1","Marseille","Donation","Le don","culture"],
+  ["b1_mar_172","B1","Marseille","Aid","L'aide","culture"],
+  ["b1_mar_173","B1","Marseille","Port / Harbour","Le port","transport"],
+  ["b1_mar_174","B1","Marseille","Ship","Le navire","transport"],
+  ["b1_mar_175","B1","Marseille","Ferry","Le ferry","transport"],
+  ["b1_mar_176","B1","Marseille","Cargo","La cargaison","transport"],
+  ["b1_mar_177","B1","Marseille","Trade","Le commerce","transport"],
+  ["b1_mar_178","B1","Marseille","Export","L'exportation","transport"],
+  ["b1_mar_179","B1","Marseille","Import","L'importation","transport"],
+  ["b1_mar_180","B1","Marseille","Customs","La douane","transport"],
+  ["b1_mar_181","B1","Marseille","Navigation","La navigation","transport"],
+  ["b1_mar_182","B1","Marseille","Captain","Le capitaine","transport"],
+  ["b1_mar_183","B1","Marseille","Performance","La performance","sports"],
+  ["b1_mar_184","B1","Marseille","Training session","L'entraînement","sports"],
+  ["b1_mar_185","B1","Marseille","Physical fitness","La forme physique","sports"],
+  ["b1_mar_186","B1","Marseille","Endurance","L'endurance","sports"],
+  ["b1_mar_187","B1","Marseille","Strength","La force","sports"],
+  ["b1_mar_188","B1","Marseille","Speed","La vitesse","sports"],
+  ["b1_mar_189","B1","Marseille","Flexibility","La souplesse","sports"],
+  ["b1_mar_190","B1","Marseille","Medal","La médaille","sports"],
+  ["b1_mar_191","B1","Marseille","Trophy","Le trophée","sports"],
+  ["b1_mar_192","B1","Marseille","Record","Le record","sports"],
+  ["b1_mar_193","B1","Marseille","Olympic Games","Les Jeux olympiques","sports"],
+  ["b1_mar_194","B1","Marseille","Tournament","Le tournoi","sports"],
+  ["b1_mar_195","B1","Marseille","League","La ligue","sports"],
+  ["b1_mar_196","B1","Marseille","Referee","L'arbitre","sports"],
+  ["b1_mar_197","B1","Marseille","Foul","La faute","sports"],
+  ["b1_mar_198","B1","Marseille","Penalty","Le penalty","sports"],
+  ["b1_mar_199","B1","Marseille","Goal","Le but","sports"],
+  ["b1_mar_200","B1","Marseille","Half-time","La mi-temps","sports"],
+  ["b1_mar_201","B1","Marseille","Extra time","Les prolongations","sports"],
+  ["b1_mar_202","B1","Marseille","Unexpected","Inattendu(e)","adjectives"],
+  ["b1_mar_203","B1","Marseille","Surprising","Surprenant(e)","adjectives"],
+  ["b1_mar_204","B1","Marseille","Remarkable","Remarquable","adjectives"],
+  ["b1_mar_205","B1","Marseille","Significant","Significatif / Significative","adjectives"],
+  ["b1_mar_206","B1","Marseille","Relevant","Pertinent(e)","adjectives"],
+  ["b1_mar_207","B1","Marseille","Efficient","Efficace","adjectives"],
+  ["b1_mar_208","B1","Marseille","Flexible","Flexible","adjectives"],
+  ["b1_mar_209","B1","Marseille","Reliable","Fiable","adjectives"],
+  ["b1_mar_210","B1","Marseille","Creative","Créatif / Créative","adjectives"],
+  ["b1_mar_211","B1","Marseille","Ambitious","Ambitieux / Ambitieuse","adjectives"],
+  ["b1_mar_212","B1","Marseille","Motivated","Motivé(e)","adjectives"],
+  ["b1_mar_213","B1","Marseille","Independent","Indépendant(e)","adjectives"],
+  ["b1_mar_214","B1","Marseille","Responsible","Responsable","adjectives"],
+  ["b1_mar_215","B1","Marseille","Patient","Patient(e)","adjectives"],
+  ["b1_mar_216","B1","Marseille","Generous","Généreux / Généreuse","adjectives"],
+  ["b1_mar_217","B1","Marseille","Honest","Honnête","adjectives"],
+  ["b1_mar_218","B1","Marseille","Polite","Poli(e)","adjectives"],
+  ["b1_mar_219","B1","Marseille","Rude","Impoli(e)","adjectives"],
+  ["b1_mar_220","B1","Marseille","Brave","Courageux / Courageuse","adjectives"],
+  ["b1_mar_221","B1","Marseille","Shy","Timide","adjectives"],
+  ["b1_ren_222","B1","Rennes","Computer","L'ordinateur","tech"],
+  ["b1_ren_223","B1","Rennes","Keyboard","Le clavier","tech"],
+  ["b1_ren_224","B1","Rennes","Screen","L'écran","tech"],
+  ["b1_ren_225","B1","Rennes","Mouse (computer)","La souris","tech"],
+  ["b1_ren_226","B1","Rennes","Printer","L'imprimante","tech"],
+  ["b1_ren_227","B1","Rennes","Hard drive","Le disque dur","tech"],
+  ["b1_ren_228","B1","Rennes","Memory","La mémoire","tech"],
+  ["b1_ren_229","B1","Rennes","USB drive","La clé USB","tech"],
+  ["b1_ren_230","B1","Rennes","WiFi","Le WiFi","tech"],
+  ["b1_ren_231","B1","Rennes","Connection","La connexion","tech"],
+  ["b1_ren_232","B1","Rennes","Email","L'email","tech"],
+  ["b1_ren_233","B1","Rennes","Attachment","La pièce jointe","tech"],
+  ["b1_ren_234","B1","Rennes","Folder","Le dossier","tech"],
+  ["b1_ren_235","B1","Rennes","File","Le fichier","tech"],
+  ["b1_ren_236","B1","Rennes","Program","Le programme","tech"],
+  ["b1_ren_237","B1","Rennes","Bug","Le bug","tech"],
+  ["b1_ren_238","B1","Rennes","Update","La mise à jour","tech"],
+  ["b1_ren_239","B1","Rennes","Version","La version","tech"],
+  ["b1_ren_240","B1","Rennes","Search engine","Le moteur de recherche","tech"],
+  ["b1_ren_241","B1","Rennes","Data","Les données","tech"],
+  ["b1_ren_242","B1","Rennes","Network","Le réseau","tech"],
+  ["b1_ren_243","B1","Rennes","Server","Le serveur","tech"],
+  ["b1_ren_244","B1","Rennes","Code","Le code","tech"],
+  ["b1_ren_245","B1","Rennes","Algorithm","L'algorithme","tech"],
+  ["b1_ren_246","B1","Rennes","Robot","Le robot","tech"],
+  ["b1_ren_247","B1","Rennes","Virtual reality","La réalité virtuelle","tech"],
+  ["b1_ren_248","B1","Rennes","3D printing","L'impression 3D","tech"],
+  ["b1_ren_249","B1","Rennes","Degree / Diploma","Le diplôme","education"],
+  ["b1_ren_250","B1","Rennes","Bachelor's degree","La licence","education"],
+  ["b1_ren_251","B1","Rennes","Master's degree","Le master","education"],
+  ["b1_ren_252","B1","Rennes","PhD","Le doctorat","education"],
+  ["b1_ren_253","B1","Rennes","Faculty","La faculté","education"],
+  ["b1_ren_254","B1","Rennes","Course","Le cours","education"],
+  ["b1_ren_255","B1","Rennes","Lecture","Le cours magistral","education"],
+  ["b1_ren_256","B1","Rennes","Seminar","Le séminaire","education"],
+  ["b1_ren_257","B1","Rennes","Grant / Scholarship","La bourse","education"],
+  ["b1_ren_258","B1","Rennes","Tuition fees","Les frais de scolarité","education"],
+  ["b1_ren_259","B1","Rennes","Campus","Le campus","education"],
+  ["b1_ren_260","B1","Rennes","Student union","Le syndicat étudiant","education"],
+  ["b1_ren_261","B1","Rennes","Research","La recherche","education"],
+  ["b1_ren_262","B1","Rennes","Researcher","Le chercheur / La chercheuse","education"],
+  ["b1_ren_263","B1","Rennes","Laboratory","Le laboratoire","education"],
+  ["b1_ren_264","B1","Rennes","Experiment","L'expérience","education"],
+  ["b1_ren_265","B1","Rennes","Hypothesis","L'hypothèse","education"],
+  ["b1_ren_266","B1","Rennes","Theory","La théorie","education"],
+  ["b1_ren_267","B1","Rennes","Result","Le résultat","education"],
+  ["b1_ren_268","B1","Rennes","Conclusion","La conclusion","education"],
+  ["b1_ren_269","B1","Rennes","Thesis","La thèse","education"],
+  ["b1_ren_270","B1","Rennes","Publication","La publication","education"],
+  ["b1_ren_271","B1","Rennes","However","Cependant","connectors"],
+  ["b1_ren_272","B1","Rennes","Nevertheless","Néanmoins","connectors"],
+  ["b1_ren_273","B1","Rennes","Therefore","Donc","connectors"],
+  ["b1_ren_274","B1","Rennes","Moreover","De plus","connectors"],
+  ["b1_ren_275","B1","Rennes","Furthermore","En outre","connectors"],
+  ["b1_ren_276","B1","Rennes","On the other hand","D'un autre côté","connectors"],
+  ["b1_ren_277","B1","Rennes","In addition","En plus","connectors"],
+  ["b1_ren_278","B1","Rennes","For example","Par exemple","connectors"],
+  ["b1_ren_279","B1","Rennes","That is to say","C'est-à-dire","connectors"],
+  ["b1_ren_280","B1","Rennes","In fact","En fait","connectors"],
+  ["b1_ren_281","B1","Rennes","Actually","En réalité","connectors"],
+  ["b1_ren_282","B1","Rennes","Generally","En général","connectors"],
+  ["b1_ren_283","B1","Rennes","Particularly","Particulièrement","connectors"],
+  ["b1_ren_284","B1","Rennes","Especially","Surtout","connectors"],
+  ["b1_ren_285","B1","Rennes","Finally","Enfin","connectors"],
+  ["b1_ren_286","B1","Rennes","First of all","Tout d'abord","connectors"],
+  ["b1_ren_287","B1","Rennes","Secondly","Ensuite / Deuxièmement","connectors"],
+  ["b1_ren_288","B1","Rennes","To conclude","Pour conclure","connectors"],
+  ["b1_ren_289","B1","Rennes","To summarise","Pour résumer","connectors"],
+  ["b1_ren_290","B1","Rennes","In my opinion","À mon avis","connectors"],
+  ["b1_ren_291","B1","Rennes","According to","Selon","connectors"],
+  ["b1_ren_292","B1","Rennes","Thanks to","Grâce à","connectors"],
+  ["b1_ren_293","B1","Rennes","Despite","Malgré","connectors"],
+  ["b1_ren_294","B1","Rennes","Although","Bien que + subjonctif","connectors"],
+  ["b1_ren_295","B1","Rennes","Tradition","La tradition","culture"],
+  ["b1_ren_296","B1","Rennes","Legend","La légende","culture"],
+  ["b1_ren_297","B1","Rennes","Celtic","Celtique","culture"],
+  ["b1_ren_298","B1","Rennes","Festival","Le festival","culture"],
+  ["b1_ren_299","B1","Rennes","Galette (buckwheat crêpe)","La galette","culture"],
+  ["b1_ren_300","B1","Rennes","Cider","Le cidre","culture"],
+  ["b1_ren_301","B1","Rennes","Lighthouse","Le phare","culture"],
+  ["b1_ren_302","B1","Rennes","Coastline","Le littoral","culture"],
+  ["b1_ren_303","B1","Rennes","Fisherman","Le pêcheur","culture"],
+  ["b1_ren_304","B1","Rennes","Sailor","Le marin","culture"],
+  ["b1_ren_305","B1","Rennes","Breton (language)","Le breton","culture"],
+  ["b1_ren_306","B1","Rennes","Heritage","Le patrimoine","culture"],
+  ["b1_lil_307","B1","Lille","Economy","L'économie","economy"],
+  ["b1_lil_308","B1","Lille","Market","Le marché","economy"],
+  ["b1_lil_309","B1","Lille","Supply","L'offre","economy"],
+  ["b1_lil_310","B1","Lille","Demand","La demande","economy"],
+  ["b1_lil_311","B1","Lille","Price","Le prix","economy"],
+  ["b1_lil_312","B1","Lille","Inflation","L'inflation","economy"],
+  ["b1_lil_313","B1","Lille","Tax","L'impôt","economy"],
+  ["b1_lil_314","B1","Lille","VAT","La TVA","economy"],
+  ["b1_lil_315","B1","Lille","Income","Le revenu","economy"],
+  ["b1_lil_316","B1","Lille","Profit","Le bénéfice","economy"],
+  ["b1_lil_317","B1","Lille","Loss","La perte","economy"],
+  ["b1_lil_318","B1","Lille","Investment","L'investissement","economy"],
+  ["b1_lil_319","B1","Lille","Stock exchange","La Bourse","economy"],
+  ["b1_lil_320","B1","Lille","Bank","La banque","economy"],
+  ["b1_lil_321","B1","Lille","Loan","L'emprunt","economy"],
+  ["b1_lil_322","B1","Lille","Debt","La dette","economy"],
+  ["b1_lil_323","B1","Lille","Savings","Les économies","economy"],
+  ["b1_lil_324","B1","Lille","Insurance","L'assurance","economy"],
+  ["b1_lil_325","B1","Lille","Pension","La retraite","economy"],
+  ["b1_lil_326","B1","Lille","Unemployment benefit","Le chômage (allocation)","economy"],
+  ["b1_lil_327","B1","Lille","Consumer","Le consommateur","economy"],
+  ["b1_lil_328","B1","Lille","Producer","Le producteur","economy"],
+  ["b1_lil_329","B1","Lille","Industry","L'industrie","economy"],
+  ["b1_lil_330","B1","Lille","Sector","Le secteur","economy"],
+  ["b1_lil_331","B1","Lille","Growth","La croissance","economy"],
+  ["b1_lil_332","B1","Lille","Recession","La récession","economy"],
+  ["b1_lil_333","B1","Lille","Inequality","L'inégalité","society"],
+  ["b1_lil_334","B1","Lille","Homeless person","Le sans-abri","society"],
+  ["b1_lil_335","B1","Lille","Poverty","La pauvreté","society"],
+  ["b1_lil_336","B1","Lille","Social exclusion","L'exclusion sociale","society"],
+  ["b1_lil_337","B1","Lille","Violence","La violence","society"],
+  ["b1_lil_338","B1","Lille","Crime","La criminalité","society"],
+  ["b1_lil_339","B1","Lille","Drug addiction","La toxicomanie","society"],
+  ["b1_lil_340","B1","Lille","Alcohol","L'alcool","society"],
+  ["b1_lil_341","B1","Lille","Gender equality","L'égalité des sexes","society"],
+  ["b1_lil_342","B1","Lille","Feminism","Le féminisme","society"],
+  ["b1_lil_343","B1","Lille","LGBTQ+","LGBTQ+","society"],
+  ["b1_lil_344","B1","Lille","Disability","Le handicap","society"],
+  ["b1_lil_345","B1","Lille","Discrimination","La discrimination","society"],
+  ["b1_lil_346","B1","Lille","Harassment","Le harcèlement","society"],
+  ["b1_lil_347","B1","Lille","Bullying","Le harcèlement scolaire","society"],
+  ["b1_lil_348","B1","Lille","Solidarity","La solidarité","society"],
+  ["b1_lil_349","B1","Lille","Social welfare","L'aide sociale","society"],
+  ["b1_lil_350","B1","Lille","NGO","L'ONG","society"],
+  ["b1_lil_351","B1","Lille","To manage","Gérer","verbs"],
+  ["b1_lil_352","B1","Lille","To organize","Organiser","verbs"],
+  ["b1_lil_353","B1","Lille","To plan","Planifier","verbs"],
+  ["b1_lil_354","B1","Lille","To achieve","Réaliser","verbs"],
+  ["b1_lil_355","B1","Lille","To improve","Améliorer","verbs"],
+  ["b1_lil_356","B1","Lille","To develop","Développer","verbs"],
+  ["b1_lil_357","B1","Lille","To adapt","S'adapter","verbs"],
+  ["b1_lil_358","B1","Lille","To integrate","Intégrer","verbs"],
+  ["b1_lil_359","B1","Lille","To communicate","Communiquer","verbs"],
+  ["b1_lil_360","B1","Lille","To participate","Participer","verbs"],
+  ["b1_lil_361","B1","Lille","To contribute","Contribuer","verbs"],
+  ["b1_lil_362","B1","Lille","To influence","Influencer","verbs"],
+  ["b1_lil_363","B1","Lille","To represent","Représenter","verbs"],
+  ["b1_lil_364","B1","Lille","To protect","Protéger","verbs"],
+  ["b1_lil_365","B1","Lille","To promote","Promouvoir","verbs"],
+  ["b1_lil_366","B1","Lille","To prevent","Prévenir","verbs"],
+  ["b1_lil_367","B1","Lille","To solve","Résoudre","verbs"],
+  ["b1_lil_368","B1","Lille","To analyse","Analyser","verbs"],
+  ["b1_lil_369","B1","Lille","To compare","Comparer","verbs"],
+  ["b1_lil_370","B1","Lille","To evaluate","Évaluer","verbs"],
+  ["b1_lil_371","B1","Lille","To justify","Justifier","verbs"],
+  ["b1_lil_372","B1","Lille","To demonstrate","Démontrer","verbs"],
+  ["b1_lil_373","B1","Lille","To support","Soutenir","verbs"],
+  ["b1_lil_374","B1","Lille","To oppose","S'opposer à","verbs"],
+  ["b1_lil_375","B1","Lille","To propose","Proposer","verbs"],
+  ["b1_lil_376","B1","Lille","To consider","Considérer","verbs"],
+  ["b1_lil_377","B1","Lille","To assume","Supposer","verbs"],
+  ["b1_lil_378","B1","Lille","To deduce","Déduire","verbs"],
+  ["b1_lil_379","B1","Lille","Beer","La bière","culture"],
+  ["b1_lil_380","B1","Lille","Flea market","La brocante","culture"],
+  ["b1_lil_381","B1","Lille","Textile","Le textile","culture"],
+  ["b1_lil_382","B1","Lille","Mining","L'exploitation minière","culture"],
+  ["b1_lil_383","B1","Lille","Flemish","Flamand(e)","culture"],
+  ["b1_lil_384","B1","Lille","Architecture","L'architecture","culture"],
+  ["b1_lil_385","B1","Lille","Town square","La Grand-Place","culture"],
+  ["b1_lil_386","B1","Lille","Bell tower","Le beffroi","culture"],
+  ["b2_bor_001","B2","Bordeaux","Concept","Le concept","abstract"],
+  ["b2_bor_002","B2","Bordeaux","Theory","La théorie","abstract"],
+  ["b2_bor_003","B2","Bordeaux","Hypothesis","L'hypothèse","abstract"],
+  ["b2_bor_004","B2","Bordeaux","Phenomenon","Le phénomène","abstract"],
+  ["b2_bor_005","B2","Bordeaux","Paradigm","Le paradigme","abstract"],
+  ["b2_bor_006","B2","Bordeaux","Ideology","L'idéologie","abstract"],
+  ["b2_bor_007","B2","Bordeaux","Philosophy","La philosophie","abstract"],
+  ["b2_bor_008","B2","Bordeaux","Ethics","L'éthique","abstract"],
+  ["b2_bor_009","B2","Bordeaux","Morality","La morale","abstract"],
+  ["b2_bor_010","B2","Bordeaux","Conscience","La conscience","abstract"],
+  ["b2_bor_011","B2","Bordeaux","Awareness","La prise de conscience","abstract"],
+  ["b2_bor_012","B2","Bordeaux","Perception","La perception","abstract"],
+  ["b2_bor_013","B2","Bordeaux","Interpretation","L'interprétation","abstract"],
+  ["b2_bor_014","B2","Bordeaux","Perspective","La perspective","abstract"],
+  ["b2_bor_015","B2","Bordeaux","Point of view","Le point de vue","abstract"],
+  ["b2_bor_016","B2","Bordeaux","Argument","L'argument","abstract"],
+  ["b2_bor_017","B2","Bordeaux","Reasoning","Le raisonnement","abstract"],
+  ["b2_bor_018","B2","Bordeaux","Logic","La logique","abstract"],
+  ["b2_bor_019","B2","Bordeaux","Evidence","La preuve","abstract"],
+  ["b2_bor_020","B2","Bordeaux","Contradiction","La contradiction","abstract"],
+  ["b2_bor_021","B2","Bordeaux","Nuance","La nuance","abstract"],
+  ["b2_bor_022","B2","Bordeaux","Ambiguity","L'ambiguïté","abstract"],
+  ["b2_bor_023","B2","Bordeaux","Complexity","La complexité","abstract"],
+  ["b2_bor_024","B2","Bordeaux","Paradox","Le paradoxe","abstract"],
+  ["b2_bor_025","B2","Bordeaux","Dilemma","Le dilemme","abstract"],
+  ["b2_bor_026","B2","Bordeaux","Subjectivity","La subjectivité","abstract"],
+  ["b2_bor_027","B2","Bordeaux","Objectivity","L'objectivité","abstract"],
+  ["b2_bor_028","B2","Bordeaux","Relativity","La relativité","abstract"],
+  ["b2_bor_029","B2","Bordeaux","Abstract (adj)","Abstrait(e)","abstract"],
+  ["b2_bor_030","B2","Bordeaux","Concrete (adj)","Concret / Concrète","abstract"],
+  ["b2_bor_031","B2","Bordeaux","Coherent","Cohérent(e)","abstract"],
+  ["b2_bor_032","B2","Bordeaux","Relevant","Pertinent(e)","abstract"],
+  ["b2_bor_033","B2","Bordeaux","Profound","Profond(e)","abstract"],
+  ["b2_bor_034","B2","Bordeaux","Superficial","Superficiel(le)","abstract"],
+  ["b2_bor_035","B2","Bordeaux","Globalisation","La mondialisation","economy"],
+  ["b2_bor_036","B2","Bordeaux","Free trade","Le libre-échange","economy"],
+  ["b2_bor_037","B2","Bordeaux","Protectionism","Le protectionnisme","economy"],
+  ["b2_bor_038","B2","Bordeaux","Subsidy","La subvention","economy"],
+  ["b2_bor_039","B2","Bordeaux","Tariff","Le tarif douanier","economy"],
+  ["b2_bor_040","B2","Bordeaux","Currency","La devise","economy"],
+  ["b2_bor_041","B2","Bordeaux","Exchange rate","Le taux de change","economy"],
+  ["b2_bor_042","B2","Bordeaux","Interest rate","Le taux d'intérêt","economy"],
+  ["b2_bor_043","B2","Bordeaux","GDP","Le PIB (Produit intérieur brut)","economy"],
+  ["b2_bor_044","B2","Bordeaux","Deficit","Le déficit","economy"],
+  ["b2_bor_045","B2","Bordeaux","Surplus","L'excédent","economy"],
+  ["b2_bor_046","B2","Bordeaux","Austerity","L'austérité","economy"],
+  ["b2_bor_047","B2","Bordeaux","Privatisation","La privatisation","economy"],
+  ["b2_bor_048","B2","Bordeaux","Nationalisation","La nationalisation","economy"],
+  ["b2_bor_049","B2","Bordeaux","Merger","La fusion","economy"],
+  ["b2_bor_050","B2","Bordeaux","Acquisition","L'acquisition","economy"],
+  ["b2_bor_051","B2","Bordeaux","Multinational","La multinationale","economy"],
+  ["b2_bor_052","B2","Bordeaux","Shareholder","L'actionnaire","economy"],
+  ["b2_bor_053","B2","Bordeaux","Dividend","Le dividende","economy"],
+  ["b2_bor_054","B2","Bordeaux","Capital","Le capital","economy"],
+  ["b2_bor_055","B2","Bordeaux","Labour","La main-d'œuvre","economy"],
+  ["b2_bor_056","B2","Bordeaux","Productivity","La productivité","economy"],
+  ["b2_bor_057","B2","Bordeaux","Competitiveness","La compétitivité","economy"],
+  ["b2_bor_058","B2","Bordeaux","Innovation","L'innovation","economy"],
+  ["b2_bor_059","B2","Bordeaux","Startup","La startup","economy"],
+  ["b2_bor_060","B2","Bordeaux","Entrepreneurship","L'entrepreneuriat","economy"],
+  ["b2_bor_061","B2","Bordeaux","Furthermore / What is more","Qui plus est","discourse"],
+  ["b2_bor_062","B2","Bordeaux","It goes without saying that","Il va sans dire que","discourse"],
+  ["b2_bor_063","B2","Bordeaux","Contrary to what one might think","Contrairement à ce qu'on pourrait croire","discourse"],
+  ["b2_bor_064","B2","Bordeaux","It is worth noting that","Il convient de noter que","discourse"],
+  ["b2_bor_065","B2","Bordeaux","To put it another way","Autrement dit","discourse"],
+  ["b2_bor_066","B2","Bordeaux","From this perspective","De ce point de vue","discourse"],
+  ["b2_bor_067","B2","Bordeaux","In this regard","À cet égard","discourse"],
+  ["b2_bor_068","B2","Bordeaux","Insofar as","Dans la mesure où","discourse"],
+  ["b2_bor_069","B2","Bordeaux","Provided that","À condition que","discourse"],
+  ["b2_bor_070","B2","Bordeaux","Unless","À moins que","discourse"],
+  ["b2_bor_071","B2","Bordeaux","So that","Afin que","discourse"],
+  ["b2_bor_072","B2","Bordeaux","For fear that","De peur que","discourse"],
+  ["b2_bor_073","B2","Bordeaux","Although","Bien que","discourse"],
+  ["b2_bor_074","B2","Bordeaux","Even though","Même si","discourse"],
+  ["b2_bor_075","B2","Bordeaux","Whereas / While","Tandis que","discourse"],
+  ["b2_bor_076","B2","Bordeaux","Whereas (contrast)","Alors que","discourse"],
+  ["b2_bor_077","B2","Bordeaux","As soon as","Dès que","discourse"],
+  ["b2_bor_078","B2","Bordeaux","Since / As","Puisque","discourse"],
+  ["b2_bor_079","B2","Bordeaux","Given that","Étant donné que","discourse"],
+  ["b2_bor_080","B2","Bordeaux","With regard to","En ce qui concerne","discourse"],
+  ["b2_bor_081","B2","Bordeaux","On the whole","Dans l'ensemble","discourse"],
+  ["b2_bor_082","B2","Bordeaux","All things considered","Tout compte fait","discourse"],
+  ["b2_bor_083","B2","Bordeaux","It should be emphasised that","Il faut souligner que","discourse"],
+  ["b2_bor_084","B2","Bordeaux","Vineyard","Le vignoble","culture"],
+  ["b2_bor_085","B2","Bordeaux","Grape","Le raisin","culture"],
+  ["b2_bor_086","B2","Bordeaux","Vintage","Le millésime","culture"],
+  ["b2_bor_087","B2","Bordeaux","Cellar","La cave","culture"],
+  ["b2_bor_088","B2","Bordeaux","Wine tasting","La dégustation","culture"],
+  ["b2_bor_089","B2","Bordeaux","Sommelier","Le sommelier","culture"],
+  ["b2_bor_090","B2","Bordeaux","Bouquet (wine)","Le bouquet","culture"],
+  ["b2_bor_091","B2","Bordeaux","Tannin","Le tannin","culture"],
+  ["b2_bor_092","B2","Bordeaux","Appellation","L'appellation d'origine contrôlée (AOC)","culture"],
+  ["b2_bor_093","B2","Bordeaux","Château (winery)","Le château","culture"],
+  ["b2_bor_094","B2","Bordeaux","Cask / Barrel","Le tonneau","culture"],
+  ["b2_bor_095","B2","Bordeaux","Ambiguous","Ambigu / Ambiguë","adjectives"],
+  ["b2_bor_096","B2","Bordeaux","Subtle","Subtil(e)","adjectives"],
+  ["b2_bor_097","B2","Bordeaux","Controversial","Controversé(e)","adjectives"],
+  ["b2_bor_098","B2","Bordeaux","Groundbreaking","Révolutionnaire","adjectives"],
+  ["b2_bor_099","B2","Bordeaux","Obsolete","Obsolète","adjectives"],
+  ["b2_bor_100","B2","Bordeaux","Unprecedented","Sans précédent","adjectives"],
+  ["b2_bor_101","B2","Bordeaux","Inevitable","Inévitable","adjectives"],
+  ["b2_bor_102","B2","Bordeaux","Sustainable","Durable","adjectives"],
+  ["b2_bor_103","B2","Bordeaux","Resilient","Résilient(e)","adjectives"],
+  ["b2_bor_104","B2","Bordeaux","Transparent","Transparent(e)","adjectives"],
+  ["b2_bor_105","B2","Bordeaux","Legitimate","Légitime","adjectives"],
+  ["b2_bor_106","B2","Bordeaux","Plausible","Plausible","adjectives"],
+  ["b2_bor_107","B2","Bordeaux","Pragmatic","Pragmatique","adjectives"],
+  ["b2_bor_108","B2","Bordeaux","Systematic","Systématique","adjectives"],
+  ["b2_bor_109","B2","Bordeaux","Holistic","Holistique","adjectives"],
+  ["b2_bor_110","B2","Bordeaux","Innovative","Innovant(e)","adjectives"],
+  ["b2_bor_111","B2","Bordeaux","Sustainable","Durable","adjectives"],
+  ["b2_bor_112","B2","Bordeaux","Inclusive","Inclusif / Inclusive","adjectives"],
+  ["b2_tou_113","B2","Toulouse","Scientific method","La méthode scientifique","science"],
+  ["b2_tou_114","B2","Toulouse","Experiment","L'expérience","science"],
+  ["b2_tou_115","B2","Toulouse","Hypothesis","L'hypothèse","science"],
+  ["b2_tou_116","B2","Toulouse","Variable","La variable","science"],
+  ["b2_tou_117","B2","Toulouse","Control group","Le groupe témoin","science"],
+  ["b2_tou_118","B2","Toulouse","Observation","L'observation","science"],
+  ["b2_tou_119","B2","Toulouse","Measurement","La mesure","science"],
+  ["b2_tou_120","B2","Toulouse","Data analysis","L'analyse des données","science"],
+  ["b2_tou_121","B2","Toulouse","Statistic","La statistique","science"],
+  ["b2_tou_122","B2","Toulouse","Probability","La probabilité","science"],
+  ["b2_tou_123","B2","Toulouse","Sample","L'échantillon","science"],
+  ["b2_tou_124","B2","Toulouse","Correlation","La corrélation","science"],
+  ["b2_tou_125","B2","Toulouse","Causality","La causalité","science"],
+  ["b2_tou_126","B2","Toulouse","Discovery","La découverte","science"],
+  ["b2_tou_127","B2","Toulouse","Invention","L'invention","science"],
+  ["b2_tou_128","B2","Toulouse","Patent","Le brevet","science"],
+  ["b2_tou_129","B2","Toulouse","Publication","La publication","science"],
+  ["b2_tou_130","B2","Toulouse","Peer review","L'évaluation par les pairs","science"],
+  ["b2_tou_131","B2","Toulouse","Citation","La citation","science"],
+  ["b2_tou_132","B2","Toulouse","Breakthrough","L'avancée majeure","science"],
+  ["b2_tou_133","B2","Toulouse","Technology transfer","Le transfert de technologie","science"],
+  ["b2_tou_134","B2","Toulouse","Aircraft","L'aéronef","science"],
+  ["b2_tou_135","B2","Toulouse","Satellite","Le satellite","science"],
+  ["b2_tou_136","B2","Toulouse","Rocket","La fusée","science"],
+  ["b2_tou_137","B2","Toulouse","Astronaut","L'astronaute","science"],
+  ["b2_tou_138","B2","Toulouse","Space shuttle","La navette spatiale","science"],
+  ["b2_tou_139","B2","Toulouse","Orbit","L'orbite","science"],
+  ["b2_tou_140","B2","Toulouse","Gravity","La gravité","science"],
+  ["b2_tou_141","B2","Toulouse","Atmosphere","L'atmosphère","science"],
+  ["b2_tou_142","B2","Toulouse","Engine","Le moteur","science"],
+  ["b2_tou_143","B2","Toulouse","Propulsion","La propulsion","science"],
+  ["b2_tou_144","B2","Toulouse","Navigation system","Le système de navigation","science"],
+  ["b2_tou_145","B2","Toulouse","GPS","Le GPS","science"],
+  ["b2_tou_146","B2","Toulouse","Aerodynamics","L'aérodynamique","science"],
+  ["b2_tou_147","B2","Toulouse","Turbulence","La turbulence","science"],
+  ["b2_tou_148","B2","Toulouse","Carbon neutrality","La neutralité carbone","environment"],
+  ["b2_tou_149","B2","Toulouse","Net zero","Le zéro émission net","environment"],
+  ["b2_tou_150","B2","Toulouse","Emissions trading","Le marché du carbone","environment"],
+  ["b2_tou_151","B2","Toulouse","Environmental impact","L'impact environnemental","environment"],
+  ["b2_tou_152","B2","Toulouse","Ecological transition","La transition écologique","environment"],
+  ["b2_tou_153","B2","Toulouse","Circular economy","L'économie circulaire","environment"],
+  ["b2_tou_154","B2","Toulouse","Sustainable development","Le développement durable","environment"],
+  ["b2_tou_155","B2","Toulouse","Biodiversity loss","L'érosion de la biodiversité","environment"],
+  ["b2_tou_156","B2","Toulouse","Ecosystem","L'écosystème","environment"],
+  ["b2_tou_157","B2","Toulouse","Food chain","La chaîne alimentaire","environment"],
+  ["b2_tou_158","B2","Toulouse","Invasive species","L'espèce invasive","environment"],
+  ["b2_tou_159","B2","Toulouse","Habitat","L'habitat","environment"],
+  ["b2_tou_160","B2","Toulouse","Conservation","La conservation","environment"],
+  ["b2_tou_161","B2","Toulouse","Reforestation","Le reboisement","environment"],
+  ["b2_tou_162","B2","Toulouse","Rewilding","La rewildification","environment"],
+  ["b2_tou_163","B2","Toulouse","Marine pollution","La pollution marine","environment"],
+  ["b2_tou_164","B2","Toulouse","Microplastics","Les microplastiques","environment"],
+  ["b2_tou_165","B2","Toulouse","Ozone layer","La couche d'ozone","environment"],
+  ["b2_tou_166","B2","Toulouse","To analyse","Analyser","verbs"],
+  ["b2_tou_167","B2","Toulouse","To synthesise","Synthétiser","verbs"],
+  ["b2_tou_168","B2","Toulouse","To evaluate","Évaluer","verbs"],
+  ["b2_tou_169","B2","Toulouse","To critique","Critiquer","verbs"],
+  ["b2_tou_170","B2","Toulouse","To interpret","Interpréter","verbs"],
+  ["b2_tou_171","B2","Toulouse","To contextualise","Contextualiser","verbs"],
+  ["b2_tou_172","B2","Toulouse","To quantify","Quantifier","verbs"],
+  ["b2_tou_173","B2","Toulouse","To qualify","Nuancer","verbs"],
+  ["b2_tou_174","B2","Toulouse","To corroborate","Corroborer","verbs"],
+  ["b2_tou_175","B2","Toulouse","To refute","Réfuter","verbs"],
+  ["b2_tou_176","B2","Toulouse","To advocate","Plaider pour","verbs"],
+  ["b2_tou_177","B2","Toulouse","To challenge","Remettre en question","verbs"],
+  ["b2_tou_178","B2","Toulouse","To undermine","Saper","verbs"],
+  ["b2_tou_179","B2","Toulouse","To reinforce","Renforcer","verbs"],
+  ["b2_tou_180","B2","Toulouse","To highlight","Mettre en lumière","verbs"],
+  ["b2_tou_181","B2","Toulouse","To illustrate","Illustrer","verbs"],
+  ["b2_tou_182","B2","Toulouse","To exemplify","Illustrer par un exemple","verbs"],
+  ["b2_tou_183","B2","Toulouse","To characterise","Caractériser","verbs"],
+  ["b2_tou_184","B2","Toulouse","To distinguish","Distinguer","verbs"],
+  ["b2_tou_185","B2","Toulouse","To reconcile","Réconcilier","verbs"],
+  ["b2_tou_186","B2","Toulouse","To transcend","Transcender","verbs"],
+  ["b2_tou_187","B2","Toulouse","To encompass","Englober","verbs"],
+  ["b2_tou_188","B2","Toulouse","Disruptive innovation","L'innovation de rupture","economy"],
+  ["b2_tou_189","B2","Toulouse","Digital transformation","La transformation numérique","economy"],
+  ["b2_tou_190","B2","Toulouse","Platform economy","L'économie de plateforme","economy"],
+  ["b2_tou_191","B2","Toulouse","Gig economy","L'économie des petits boulots","economy"],
+  ["b2_tou_192","B2","Toulouse","Automation","L'automatisation","economy"],
+  ["b2_tou_193","B2","Toulouse","Robotics","La robotique","economy"],
+  ["b2_tou_194","B2","Toulouse","Blockchain","La blockchain","economy"],
+  ["b2_tou_195","B2","Toulouse","Cryptocurrency","La cryptomonnaie","economy"],
+  ["b2_tou_196","B2","Toulouse","Venture capital","Le capital-risque","economy"],
+  ["b2_tou_197","B2","Toulouse","Incubator","L'incubateur","economy"],
+  ["b2_tou_198","B2","Toulouse","Scale-up","La scale-up","economy"],
+  ["b2_tou_199","B2","Toulouse","Disruption","La disruption","economy"],
+  ["b2_tou_200","B2","Toulouse","Agile","Agile","economy"],
+  ["b2_tou_201","B2","Toulouse","Lean","Lean","economy"],
+  ["b2_str_202","B2","Strasbourg","European Union","L'Union européenne","politics"],
+  ["b2_str_203","B2","Strasbourg","Council of Europe","Le Conseil de l'Europe","politics"],
+  ["b2_str_204","B2","Strasbourg","European Parliament","Le Parlement européen","politics"],
+  ["b2_str_205","B2","Strasbourg","European Commission","La Commission européenne","politics"],
+  ["b2_str_206","B2","Strasbourg","Commissioner","Le commissaire européen","politics"],
+  ["b2_str_207","B2","Strasbourg","MEP","Le député européen","politics"],
+  ["b2_str_208","B2","Strasbourg","Treaty","Le traité","politics"],
+  ["b2_str_209","B2","Strasbourg","Summit","Le sommet","politics"],
+  ["b2_str_210","B2","Strasbourg","Referendum","Le référendum","politics"],
+  ["b2_str_211","B2","Strasbourg","Democracy","La démocratie","politics"],
+  ["b2_str_212","B2","Strasbourg","Republic","La République","politics"],
+  ["b2_str_213","B2","Strasbourg","Constitution","La Constitution","politics"],
+  ["b2_str_214","B2","Strasbourg","Sovereignty","La souveraineté","politics"],
+  ["b2_str_215","B2","Strasbourg","Federalism","Le fédéralisme","politics"],
+  ["b2_str_216","B2","Strasbourg","Multilateralism","Le multilatéralisme","politics"],
+  ["b2_str_217","B2","Strasbourg","Diplomacy","La diplomatie","politics"],
+  ["b2_str_218","B2","Strasbourg","Ambassador","L'ambassadeur","politics"],
+  ["b2_str_219","B2","Strasbourg","Sanction","La sanction","politics"],
+  ["b2_str_220","B2","Strasbourg","Embargo","L'embargo","politics"],
+  ["b2_str_221","B2","Strasbourg","Alliance","L'alliance","politics"],
+  ["b2_str_222","B2","Strasbourg","Negotiation","La négociation","politics"],
+  ["b2_str_223","B2","Strasbourg","Ceasefire","Le cessez-le-feu","politics"],
+  ["b2_str_224","B2","Strasbourg","Peace treaty","Le traité de paix","politics"],
+  ["b2_str_225","B2","Strasbourg","Human rights","Les droits de l'homme","politics"],
+  ["b2_str_226","B2","Strasbourg","International law","Le droit international","politics"],
+  ["b2_str_227","B2","Strasbourg","Justice","La justice","law"],
+  ["b2_str_228","B2","Strasbourg","Court","Le tribunal","law"],
+  ["b2_str_229","B2","Strasbourg","Judge","Le juge","law"],
+  ["b2_str_230","B2","Strasbourg","Lawyer","L'avocat(e)","law"],
+  ["b2_str_231","B2","Strasbourg","Prosecutor","Le procureur","law"],
+  ["b2_str_232","B2","Strasbourg","Defendant","Le prévenu / L'accusé","law"],
+  ["b2_str_233","B2","Strasbourg","Plaintiff","Le plaignant","law"],
+  ["b2_str_234","B2","Strasbourg","Verdict","Le verdict","law"],
+  ["b2_str_235","B2","Strasbourg","Sentence","La peine","law"],
+  ["b2_str_236","B2","Strasbourg","Fine","L'amende","law"],
+  ["b2_str_237","B2","Strasbourg","Prison","La prison","law"],
+  ["b2_str_238","B2","Strasbourg","Acquittal","L'acquittement","law"],
+  ["b2_str_239","B2","Strasbourg","Appeal","L'appel","law"],
+  ["b2_str_240","B2","Strasbourg","Evidence","La preuve","law"],
+  ["b2_str_241","B2","Strasbourg","Witness","Le témoin","law"],
+  ["b2_str_242","B2","Strasbourg","Contract","Le contrat","law"],
+  ["b2_str_243","B2","Strasbourg","Clause","La clause","law"],
+  ["b2_str_244","B2","Strasbourg","Liability","La responsabilité","law"],
+  ["b2_str_245","B2","Strasbourg","Intellectual property","La propriété intellectuelle","law"],
+  ["b2_str_246","B2","Strasbourg","Copyright","Le droit d'auteur","law"],
+  ["b2_str_247","B2","Strasbourg","Privacy","La vie privée","law"],
+  ["b2_str_248","B2","Strasbourg","GDPR","Le RGPD","law"],
+  ["b2_str_249","B2","Strasbourg","Novel","Le roman","literature"],
+  ["b2_str_250","B2","Strasbourg","Essay","L'essai","literature"],
+  ["b2_str_251","B2","Strasbourg","Poetry","La poésie","literature"],
+  ["b2_str_252","B2","Strasbourg","Prose","La prose","literature"],
+  ["b2_str_253","B2","Strasbourg","Narrative","Le récit","literature"],
+  ["b2_str_254","B2","Strasbourg","Character","Le personnage","literature"],
+  ["b2_str_255","B2","Strasbourg","Plot","L'intrigue","literature"],
+  ["b2_str_256","B2","Strasbourg","Setting","Le cadre","literature"],
+  ["b2_str_257","B2","Strasbourg","Metaphor","La métaphore","literature"],
+  ["b2_str_258","B2","Strasbourg","Symbolism","Le symbolisme","literature"],
+  ["b2_str_259","B2","Strasbourg","Irony","L'ironie","literature"],
+  ["b2_str_260","B2","Strasbourg","Satire","La satire","literature"],
+  ["b2_str_261","B2","Strasbourg","Enlightenment","Les Lumières","literature"],
+  ["b2_str_262","B2","Strasbourg","Existentialism","L'existentialisme","literature"],
+  ["b2_str_263","B2","Strasbourg","Structuralism","Le structuralisme","literature"],
+  ["b2_str_264","B2","Strasbourg","Postmodernism","Le postmodernisme","literature"],
+  ["b2_str_265","B2","Strasbourg","Descartes","Descartes","literature"],
+  ["b2_str_266","B2","Strasbourg","Voltaire","Voltaire","literature"],
+  ["b2_str_267","B2","Strasbourg","Rousseau","Rousseau","literature"],
+  ["b2_str_268","B2","Strasbourg","Sartre","Sartre","literature"],
+  ["b2_str_269","B2","Strasbourg","Simone de Beauvoir","Simone de Beauvoir","literature"],
+  ["b2_str_270","B2","Strasbourg","Camus","Camus","literature"],
+  ["b2_str_271","B2","Strasbourg","It must be acknowledged that","Il faut reconnaître que","phrases"],
+  ["b2_str_272","B2","Strasbourg","There is no denying that","Il est indéniable que","phrases"],
+  ["b2_str_273","B2","Strasbourg","One cannot overlook the fact that","On ne peut ignorer le fait que","phrases"],
+  ["b2_str_274","B2","Strasbourg","The evidence suggests that","Les données montrent que","phrases"],
+  ["b2_str_275","B2","Strasbourg","A critical analysis reveals that","Une analyse critique révèle que","phrases"],
+  ["b2_str_276","B2","Strasbourg","This raises the question of","Cela soulève la question de","phrases"],
+  ["b2_str_277","B2","Strasbourg","The implications are far-reaching","Les implications sont considérables","phrases"],
+  ["b2_str_278","B2","Strasbourg","This is a double-edged sword","C'est une arme à double tranchant","phrases"],
+  ["b2_str_279","B2","Strasbourg","To have the upper hand","Avoir le dessus","phrases"],
+  ["b2_str_280","B2","Strasbourg","To play devil's advocate","Jouer l'avocat du diable","phrases"],
+  ["b2_str_281","B2","Strasbourg","To cut to the chase","En venir au fait","phrases"],
+  ["b2_str_282","B2","Strasbourg","Silver lining","Le bon côté des choses","phrases"],
+  ["b2_str_283","B2","Strasbourg","State of the art","À la pointe de la technologie","phrases"],
+  ["b2_str_284","B2","Strasbourg","Food for thought","Matière à réflexion","phrases"],
+  ["b2_str_285","B2","Strasbourg","The ball is in their court","La balle est dans leur camp","phrases"],
+  ["b2_str_286","B2","Strasbourg","Christmas market","Le marché de Noël","culture"],
+  ["b2_str_287","B2","Strasbourg","Half-timbered house","La maison à colombages","culture"],
+  ["b2_str_288","B2","Strasbourg","Cathedral","La cathédrale","culture"],
+  ["b2_str_289","B2","Strasbourg","Alsatian","Alsacien(ne)","culture"],
+  ["b2_str_290","B2","Strasbourg","Alsace","L'Alsace","culture"],
+  ["b2_str_291","B2","Strasbourg","Sauerkraut","La choucroute","culture"],
+  ["b2_str_292","B2","Strasbourg","Pretzel","Le bretzel","culture"],
+  ["b2_str_293","B2","Strasbourg","Riesling","Le riesling","culture"],
+  ["b2_str_294","B2","Strasbourg","Bilingual","Bilingue","culture"],
+  ["b2_str_295","B2","Strasbourg","Border region","La région frontalière","culture"],
+  ["b2_str_296","B2","Strasbourg","Cross-border","Transfrontalier(ère)","culture"],
+  ["b2_str_297","B2","Strasbourg","Reconciliation","La réconciliation","culture"],
+].map(([id,level,city,question,answer,category])=>({id,level,city,question,answer,category}));
+
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        .progress-bar { transition: width 0.5s ease; }
+        .city-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .city-card.unlocked:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.25); }
+        .choice-btn { transition: all 0.15s; }
+        .choice-btn:not(:disabled):hover { transform: translateY(-1px); }
+        .choice-btn.correct  { background:#22c55e !important; border-color:#22c55e !important; color:white !important; }
+        .choice-btn.incorrect{ background:#ef4444 !important; border-color:#ef4444 !important; color:white !important; }
+        .choice-btn.reveal   { background:#22c55e !important; border-color:#22c55e !important; color:white !important; }
+        @keyframes bounce-in { 0%{transform:scale(0.85);opacity:0} 60%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
+        .bounce-in { animation: bounce-in 0.28s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+        .shake { animation: shake 0.28s; }
+        /* Eiffel Tower SVG icon */
+        .eiffel-icon { display:inline-block; width:36px; height:52px; }
+        .flag-bar { height:6px; border-radius:3px; overflow:hidden; display:flex; }
+        .flag-bar div { flex:1; }
+        /* Dashboard bar */
+        .stat-bar { background:#e5e7eb; border-radius:6px; overflow:hidden; height:10px; }
+        .stat-bar-fill { height:10px; border-radius:6px; transition: width 1s ease; }
+        /* Nav tabs */
+        .nav-tab { transition:all 0.15s; }
+        .nav-tab.active { background:#002395; color:white; }
+        /* Leaflet map */
+        #france-map { width:100%; height:100%; }
+        .city-pin { display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+        .city-pin-dot {
+            width:36px; height:36px; border-radius:50%; border:3px solid white;
+            display:flex; align-items:center; justify-content:center;
+            font-size:17px; box-shadow:0 3px 10px rgba(0,0,0,0.35);
+            transition: transform 0.15s;
+        }
+        .city-pin-dot:hover { transform: scale(1.18); }
+        .city-pin-label {
+            background:white; border-radius:6px; padding:2px 6px;
+            font-size:10px; font-weight:800; margin-top:3px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.2); white-space:nowrap;
+            color:#1e293b;
+        }
+        .leaflet-popup-content-wrapper { border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); }
+        .leaflet-popup-content { margin:0; padding:0; }
+        .map-popup { padding:16px; min-width:200px; }
+        .map-popup h3 { font-size:16px; font-weight:900; margin-bottom:4px; }
+        .map-popup p  { font-size:12px; color:#64748b; margin-bottom:8px; }
+        .map-popup button {
+            width:100%; padding:8px; border-radius:10px; font-weight:800; font-size:13px;
+            border:none; cursor:pointer; transition:opacity 0.15s;
+        }
+        .map-popup button:hover { opacity:0.85; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div id="app"></div>
+
+<script>
+// ============================================================
+//  CITY CONFIG  (12 French cities, sequential unlock)
+// ============================================================
+const CITIES = [
+  { id:"paris",      name:"Paris",      level:"A1", emoji:"⚜️",  desc:"City of Light · Eiffel Tower",         unlockAfter:null,       grad:"from-blue-700 to-blue-900",     region:"Île-de-France",            lat:48.8566,  lng:2.3522  },
+  { id:"versailles", name:"Versailles", level:"A1", emoji:"👑",  desc:"Palace of Versailles · Royal Gardens",  unlockAfter:"paris",     grad:"from-amber-600 to-yellow-800",  region:"Île-de-France",            lat:48.8049,  lng:2.1204  },
+  { id:"nice",       name:"Nice",       level:"A2", emoji:"🌊",  desc:"French Riviera · Mediterranean",        unlockAfter:"versailles",grad:"from-cyan-500 to-blue-600",     region:"Côte d'Azur",             lat:43.7102,  lng:7.2620  },
+  { id:"annecy",     name:"Annecy",     level:"A2", emoji:"🏔️", desc:"Pearl of the Alps · Crystal Lake",      unlockAfter:"nice",      grad:"from-teal-500 to-cyan-700",     region:"Auvergne-Rhône-Alpes",    lat:45.8992,  lng:6.1294  },
+  { id:"rouen",      name:"Rouen",      level:"A2", emoji:"⛪",  desc:"Joan of Arc · Gothic Cathedral",        unlockAfter:"annecy",    grad:"from-stone-500 to-stone-700",   region:"Normandy",                lat:49.4432,  lng:1.0993  },
+  { id:"lyon",       name:"Lyon",       level:"B1", emoji:"🍽️", desc:"Gastronomy Capital · World Heritage",   unlockAfter:"rouen",     grad:"from-rose-600 to-red-800",      region:"Auvergne-Rhône-Alpes",    lat:45.7640,  lng:4.8357  },
+  { id:"marseille",  name:"Marseille",  level:"B1", emoji:"⚓",  desc:"Oldest Port City · Mediterranean Hub", unlockAfter:"lyon",      grad:"from-sky-600 to-blue-800",      region:"Provence",                lat:43.2965,  lng:5.3698  },
+  { id:"rennes",     name:"Rennes",     level:"B1", emoji:"🥞",  desc:"Celtic Brittany · Galettes & Cider",   unlockAfter:"marseille", grad:"from-emerald-600 to-green-800", region:"Brittany",                lat:48.1173,  lng:-1.6778 },
+  { id:"lille",      name:"Lille",      level:"B1", emoji:"🛍️", desc:"Flemish Culture · Giant Flea Market",  unlockAfter:"rennes",    grad:"from-violet-600 to-purple-800", region:"Hauts-de-France",         lat:50.6292,  lng:3.0573  },
+  { id:"bordeaux",   name:"Bordeaux",   level:"B2", emoji:"🍷",  desc:"World Wine Capital · UNESCO Heritage", unlockAfter:"lille",     grad:"from-purple-700 to-purple-900", region:"Nouvelle-Aquitaine",      lat:44.8378,  lng:-0.5792 },
+  { id:"toulouse",   name:"Toulouse",   level:"B2", emoji:"🚀",  desc:"Pink City · Airbus Headquarters",      unlockAfter:"bordeaux",  grad:"from-pink-600 to-rose-800",     region:"Occitanie",               lat:43.6047,  lng:1.4442  },
+  { id:"strasbourg", name:"Strasbourg", level:"B2", emoji:"🎄",  desc:"European Parliament · Christmas Market",unlockAfter:"toulouse", grad:"from-red-700 to-red-900",       region:"Grand Est",               lat:48.5734,  lng:7.7521  },
+];
+
+// ============================================================
+//  STATE  (LocalStorage)
+// ============================================================
+const STORAGE_KEY = 'french_adv_v2';
+function loadState() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch(_){}
+  return {
+    totalPoints:0,
+    clearedCities:[],
+    bestAccuracies:{},
+    masteredWords:{},   // wordId → true if answered correctly at least once
+    quizHistory:[],     // [{cityId, accuracy, date, pts}]
+    rankings:[],
+    daysActive:[],      // array of date strings
+    totalQuizzes:0,
+  };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(gs)); } catch(_){}
+}
+
+let gs = loadState();
+let qs = null;  // quiz state
+
+// Mark today active
+(function() {
+  const today = new Date().toLocaleDateString('en-CA');
+  if (!gs.daysActive) gs.daysActive = [];
+  if (!gs.daysActive.includes(today)) { gs.daysActive.push(today); saveState(); }
+})();
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function wordsForCity(cityName) {
+  return WORD_DATA.filter(w => w.city === cityName);
+}
+
+function isCityUnlocked(cityId) {
+  const c = CITIES.find(x => x.id === cityId);
+  return !c.unlockAfter || gs.clearedCities.includes(c.unlockAfter);
+}
+
+function shuffle(arr) {
+  const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a;
+}
+
+function makeChoices(word) {
+  const pool = WORD_DATA.filter(w => w.level === word.level && w.id !== word.id);
+  return shuffle([word.answer, ...shuffle(pool).slice(0,3).map(w=>w.answer)]);
+}
+
+function totalMastered() { return Object.keys(gs.masteredWords).length; }
+
+function accuracyColor(pct) {
+  if (pct >= 80) return '#22c55e';
+  if (pct >= 60) return '#f59e0b';
+  return '#ef4444';
+}
+
+// ============================================================
+//  AUDIO
+// ============================================================
+function playSound(ok) {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    if(ok){ o.frequency.setValueAtTime(660,ctx.currentTime); o.frequency.setValueAtTime(880,ctx.currentTime+0.1); }
+    else  { o.frequency.setValueAtTime(300,ctx.currentTime); o.frequency.setValueAtTime(200,ctx.currentTime+0.12); }
+    g.gain.setValueAtTime(0.22,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.35);
+    o.start(); o.stop(ctx.currentTime+0.35);
+  } catch(_){}
+}
+
+// ============================================================
+//  SCREEN ROUTER
+// ============================================================
+const app = document.getElementById('app');
+function show(name, arg) {
+  if      (name==='top')       renderTop();
+  else if (name==='map')       renderMap();
+  else if (name==='mapview')   renderMapView();
+  else if (name==='quiz')      startQuiz(arg);
+  else if (name==='quizRender')renderQuiz();
+  else if (name==='result')    renderResult();
+  else if (name==='ranking')   renderRanking();
+  else if (name==='dashboard') renderDashboard();
+}
+
+// ============================================================
+//  TOP SCREEN
+// ============================================================
+function renderTop() {
+  const hasProgress = gs.totalPoints > 0;
+  app.innerHTML = `
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10"
+         style="background:linear-gradient(160deg,#001a5c 0%,#002395 50%,#001a5c 100%)">
+      <div class="text-center max-w-sm w-full">
+        <div class="flag-bar w-32 mx-auto mb-8">
+          <div style="background:#002395"></div>
+          <div style="background:#fff"></div>
+          <div style="background:#ED2939"></div>
+        </div>
+
+        <!-- Eiffel Tower SVG (not Tokyo Tower emoji!) -->
+        <div class="flex justify-center mb-4">
+          <svg viewBox="0 0 60 90" width="60" height="90" fill="white" opacity="0.95">
+            <rect x="27" y="0" width="6" height="18" rx="2"/>
+            <rect x="20" y="16" width="20" height="5" rx="2"/>
+            <polygon points="16,21 44,21 40,42 20,42"/>
+            <rect x="14" y="40" width="32" height="6" rx="2"/>
+            <polygon points="10,46 50,46 46,68 14,68"/>
+            <rect x="8" y="66" width="44" height="6" rx="2"/>
+            <rect x="8" y="72" width="14" height="18" rx="2"/>
+            <rect x="38" y="72" width="14" height="18" rx="2"/>
+            <rect x="14" y="78" width="32" height="4" rx="1" opacity="0.5"/>
+          </svg>
+        </div>
+
+        <h1 class="text-4xl font-extrabold text-white leading-tight mb-1">French Word<br>Adventure</h1>
+        <p class="text-blue-300 mb-1">フランス語単語攻略トラベル</p>
+        <p class="text-blue-400 text-sm mb-6">12 French Cities · DELF A1→B2 · ${WORD_DATA.length}+ Words</p>
+
+        ${hasProgress ? `
+        <div class="bg-white/10 rounded-2xl p-4 mb-5 text-white">
+          <p class="text-blue-200 text-xs mb-1">✨ Welcome back!</p>
+          <div class="flex justify-around">
+            <div><div class="text-2xl font-black text-yellow-300">${gs.totalPoints}</div><div class="text-blue-300 text-xs">Points</div></div>
+            <div><div class="text-2xl font-black">${gs.clearedCities.length}/12</div><div class="text-blue-300 text-xs">Cities</div></div>
+            <div><div class="text-2xl font-black text-green-300">${totalMastered()}</div><div class="text-blue-300 text-xs">Words</div></div>
+          </div>
+        </div>` : ''}
+
+        <button onclick="show('map')"
+          class="w-full max-w-xs bg-white text-blue-900 font-extrabold text-lg py-4 rounded-full shadow-xl hover:bg-blue-50 active:scale-95 transition-all mb-3">
+          🚀 START — No Registration!
+        </button>
+        <button onclick="show('mapview')"
+          class="w-full max-w-xs bg-blue-500/80 text-white font-extrabold py-3 rounded-full hover:bg-blue-400/80 active:scale-95 transition-all mb-3 border border-white/30">
+          🗺️ View Adventure Map
+        </button>
+        <div class="flex gap-2 max-w-xs mx-auto">
+          <button onclick="show('dashboard')"
+            class="flex-1 border-2 border-white/50 text-white font-bold py-2.5 rounded-full hover:bg-white/10 transition-all text-sm">
+            📊 Dashboard
+          </button>
+          <button onclick="show('ranking')"
+            class="flex-1 border-2 border-white/50 text-white font-bold py-2.5 rounded-full hover:bg-white/10 transition-all text-sm">
+            🏆 Rankings
+          </button>
+        </div>
+
+        <p class="mt-8 text-blue-500 text-xs">No registration · Progress auto-saved · Free forever</p>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  MAP SCREEN
+// ============================================================
+function renderMap() {
+  const levelColors = {A1:'bg-blue-100 text-blue-800', A2:'bg-cyan-100 text-cyan-800', B1:'bg-rose-100 text-rose-800', B2:'bg-purple-100 text-purple-800'};
+  const cards = CITIES.map(city => {
+    const unlocked = isCityUnlocked(city.id);
+    const cleared  = gs.clearedCities.includes(city.id);
+    const best     = gs.bestAccuracies[city.id];
+    const cityWords = wordsForCity(city.name);
+    const masteredInCity = cityWords.filter(w => gs.masteredWords[w.id]).length;
+    const prev = city.unlockAfter ? CITIES.find(c=>c.id===city.unlockAfter) : null;
+
+    return `
+    <div class="city-card ${unlocked?'unlocked cursor-pointer':'cursor-not-allowed opacity-55'}
+                bg-gradient-to-br ${city.grad} rounded-2xl p-5 text-white shadow-md"
+         ${unlocked?`onclick="show('quiz','${city.id}')"`:''}>
+      <div class="flex justify-between items-start mb-2">
+        <span class="text-4xl leading-none">${city.emoji}</span>
+        <div class="text-right flex flex-col items-end gap-1">
+          ${cleared?`<span class="bg-yellow-400 text-yellow-900 text-xs font-black px-2 py-0.5 rounded-full">✓ CLEARED</span>`:''}
+          ${!unlocked?`<span class="text-xl">🔒</span>`:''}
+          <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full">${city.region}</span>
+        </div>
+      </div>
+      <h3 class="text-xl font-black">${city.name}</h3>
+      <p class="text-white/70 text-xs mb-3">${city.desc}</p>
+      <div class="flex items-center justify-between mb-2">
+        <span class="${levelColors[city.level]} text-xs font-black px-2 py-0.5 rounded-full">${city.level} · ${cityWords.length} words</span>
+        ${best!==undefined?`<span class="text-xs text-white/80">Best: <b>${best}%</b></span>`:''}
+      </div>
+      ${unlocked && cityWords.length>0 ? `
+      <div class="stat-bar mt-1">
+        <div class="stat-bar-fill bg-white/60" style="width:${Math.round(masteredInCity/cityWords.length*100)}%"></div>
+      </div>
+      <p class="text-xs text-white/60 mt-1">${masteredInCity}/${cityWords.length} mastered</p>`:''}
+      ${!unlocked&&prev?`<p class="text-xs mt-2 text-white/60">🔒 Clear ${prev.name} (${prev.level}) first</p>`:''}
+    </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-gray-100">
+      <div class="sticky top-0 z-10 bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-3 shadow">
+        <div class="max-w-lg mx-auto flex items-center justify-between">
+          <button onclick="show('top')" class="text-blue-300 hover:text-white text-sm">← Home</button>
+          <span class="font-black text-lg">🗺️ France — 12 Cities</span>
+          <span class="text-yellow-300 font-bold text-sm">${gs.totalPoints} pts</span>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div class="sticky top-12 z-10 bg-white border-b px-4 py-2 shadow-sm">
+        <div class="max-w-lg mx-auto flex gap-2">
+          <button onclick="show('mapview')"   class="nav-tab flex-1 text-sm font-bold py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">🗺️ Real Map</button>
+          <button onclick="show('dashboard')" class="nav-tab flex-1 text-sm font-bold py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">📊 Dashboard</button>
+          <button onclick="show('ranking')"   class="nav-tab flex-1 text-sm font-bold py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">🏆 Rankings</button>
+        </div>
+      </div>
+      <div class="max-w-lg mx-auto p-4 space-y-3">
+        <p class="text-center text-gray-500 text-sm">Tap a city · Need 80%+ accuracy to unlock next</p>
+        ${cards}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  QUIZ
+// ============================================================
+function startQuiz(cityId) {
+  const city = CITIES.find(c=>c.id===cityId);
+  const pool = wordsForCity(city.name);
+  // Prioritise unseen words, then shuffle
+  const unseen = pool.filter(w => !gs.masteredWords[w.id]);
+  const seen   = pool.filter(w =>  gs.masteredWords[w.id]);
+  const ordered = [...shuffle(unseen), ...shuffle(seen)];
+  const words = ordered.slice(0, Math.min(20, ordered.length));
+  qs = { cityId, city, words, idx:0, correct:0, answered:false, choices:[], selected:null };
+  qs.choices = makeChoices(words[0]);
+  renderQuiz();
+}
+
+function answerQ(i) {
+  if (qs.answered) return;
+  qs.answered = true; qs.selected = i;
+  const ok = qs.choices[i] === qs.words[qs.idx].answer;
+  if (ok) {
+    qs.correct++;
+    gs.masteredWords[qs.words[qs.idx].id] = true;
+  }
+  playSound(ok);
+  renderQuiz();
+}
+
+function nextQ() {
+  qs.idx++;
+  if (qs.idx >= qs.words.length) { finishQuiz(); return; }
+  qs.answered = false; qs.selected = null;
+  qs.choices = makeChoices(qs.words[qs.idx]);
+  renderQuiz();
+}
+
+function finishQuiz() {
+  const accuracy = Math.round((qs.correct/qs.words.length)*100);
+  const pts = qs.correct * 10;
+  if (accuracy >= 80 && !gs.clearedCities.includes(qs.cityId)) gs.clearedCities.push(qs.cityId);
+  if (gs.bestAccuracies[qs.cityId]===undefined || accuracy>gs.bestAccuracies[qs.cityId])
+    gs.bestAccuracies[qs.cityId] = accuracy;
+  gs.totalPoints += pts;
+  if (!gs.totalQuizzes) gs.totalQuizzes = 0;
+  gs.totalQuizzes++;
+  if (!gs.quizHistory) gs.quizHistory = [];
+  gs.quizHistory.unshift({ cityId:qs.cityId, accuracy, pts, date:new Date().toLocaleDateString('en-US') });
+  if (gs.quizHistory.length > 50) gs.quizHistory = gs.quizHistory.slice(0,50);
+  saveState();
+  renderResult();
+}
+
+function renderQuiz() {
+  const {words,idx,correct,answered,choices,selected,city} = qs;
+  const total = words.length;
+  const w = words[idx];
+  const pct = Math.round(idx/total*100);
+  const acc = idx===0 ? 100 : Math.round(correct/idx*100);
+  const isCorrect = answered && choices[selected]===w.answer;
+
+  const btns = choices.map((c,i)=>{
+    let cls='choice-btn w-full text-left py-4 px-5 rounded-xl font-semibold border-2 text-base ';
+    if (!answered) cls+='bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98]';
+    else if (c===w.answer) cls+='correct';
+    else if (i===selected) cls+='incorrect';
+    else cls+='bg-gray-100 border-gray-200 text-gray-400';
+    return `<button class="${cls}" ${answered?'disabled':''} onclick="answerQ(${i})">${c}</button>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-gray-50 flex flex-col">
+      <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 pt-3 pb-4 shadow">
+        <div class="max-w-lg mx-auto">
+          <div class="flex items-center justify-between mb-2">
+            <button onclick="if(confirm('Quit quiz?')) show('map')" class="text-blue-300 hover:text-white text-sm">✕ Quit</button>
+            <span class="font-bold">${city.emoji} ${city.name} — ${city.level}</span>
+            <span class="text-yellow-300 font-bold text-sm">${correct*10} pts</span>
+          </div>
+          <div class="flex items-center gap-2 mb-1">
+            <div class="flex-1 bg-blue-950/50 rounded-full h-2.5">
+              <div class="bg-yellow-400 h-2.5 rounded-full progress-bar" style="width:${pct}%"></div>
+            </div>
+            <span class="text-xs text-blue-200 shrink-0">${idx+1}/${total}</span>
+          </div>
+          ${idx>0?`<p class="text-center text-xs text-blue-300">Accuracy: <b class="text-white">${acc}%</b> ${acc>=80?'✅':acc>=60?'⚠️':'❌'}</p>`:''}
+        </div>
+      </div>
+
+      <div class="max-w-lg mx-auto w-full px-4 py-5 flex-1">
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-5 text-center bounce-in">
+          <span class="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full mb-2">${w.category}</span>
+          <p class="text-gray-400 text-sm mb-1">What is the French for...</p>
+          <p class="text-2xl font-black text-gray-800">${w.question}</p>
+        </div>
+
+        <div class="space-y-3 mb-4">${btns}</div>
+
+        ${answered?`
+        <div class="rounded-xl p-4 mb-4 text-center bounce-in ${isCorrect?'bg-green-50 border border-green-200':'bg-red-50 border border-red-200'}">
+          <p class="font-black text-lg ${isCorrect?'text-green-700':'text-red-600'}">${isCorrect?'✓ Correct! 🎉':'✗ Incorrect'}</p>
+          ${!isCorrect?`<p class="text-gray-600 mt-1">Answer: <span class="font-bold text-green-700">${w.answer}</span></p>`:''}
+        </div>
+        <button onclick="nextQ()"
+          class="w-full bg-blue-600 text-white font-black text-lg py-4 rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-md">
+          ${idx+1>=total?'🏁 See Results':'Next →'}
+        </button>`:''}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  RESULT SCREEN
+// ============================================================
+function renderResult() {
+  const {words,correct,city} = qs;
+  const total    = words.length;
+  const accuracy = Math.round(correct/total*100);
+  const pts      = correct*10;
+  const cleared  = accuracy>=80;
+
+  app.innerHTML = `
+    <div class="min-h-screen flex flex-col" style="background:linear-gradient(160deg,#001a5c,#002395 50%,#001a5c)">
+      <div class="max-w-lg mx-auto w-full px-4 py-10 text-center text-white flex-1">
+        <div class="text-7xl mb-3 bounce-in">${cleared?'🏆':'📝'}</div>
+        <h2 class="text-3xl font-black mb-1">${cleared?'Stage Cleared!':'Quiz Complete'}</h2>
+        <p class="text-blue-300 mb-6">${city.emoji} ${city.name} — ${city.level}</p>
+
+        <div class="bg-white/10 rounded-2xl p-6 mb-4 grid grid-cols-3 gap-4">
+          <div><div class="text-3xl font-black text-yellow-300">${accuracy}%</div><div class="text-blue-300 text-xs mt-0.5">Accuracy</div></div>
+          <div><div class="text-3xl font-black">${correct}/${total}</div><div class="text-blue-300 text-xs mt-0.5">Correct</div></div>
+          <div><div class="text-3xl font-black text-yellow-300">+${pts}</div><div class="text-blue-300 text-xs mt-0.5">Points</div></div>
+        </div>
+
+        <div class="bg-white/10 rounded-xl p-3 mb-4 text-sm">
+          <span class="text-green-300 font-bold">📚 ${totalMastered()} words mastered total</span>
+        </div>
+
+        ${cleared?`
+        <div class="bg-yellow-400/20 border border-yellow-400/40 rounded-xl p-3 mb-4">
+          <p class="text-yellow-300 font-black">🎊 80%+ Cleared! Next city unlocked!</p>
+        </div>
+        <div id="rankForm" class="bg-white/10 rounded-2xl p-5 mb-4 text-left">
+          <p class="text-white font-bold mb-2 text-center text-sm">📋 Submit to Global Rankings</p>
+          <input id="nick" type="text" placeholder="Your nickname (max 20 chars)" maxlength="20"
+            class="w-full bg-white/20 border border-white/30 rounded-xl px-4 py-2.5 text-white placeholder-blue-300 mb-3 text-sm focus:outline-none focus:border-white">
+          <button onclick="submitScore()"
+            class="w-full bg-yellow-400 text-yellow-900 font-black py-3 rounded-xl hover:bg-yellow-300 active:scale-95 transition-all">
+            🚀 Submit Score
+          </button>
+        </div>`:`
+        <div class="bg-white/10 rounded-xl p-4 mb-4">
+          <p class="text-blue-200 text-sm">Need <b class="text-white">80%+</b> to clear. You got ${accuracy}% — keep going!</p>
+        </div>`}
+
+        <div class="space-y-3">
+          <button onclick="startQuiz('${city.id}')"
+            class="w-full bg-white/20 font-black py-3 rounded-xl hover:bg-white/30 transition-all">🔄 Try Again</button>
+          <button onclick="show('map')"
+            class="w-full border-2 border-white/40 font-bold py-3 rounded-xl hover:bg-white/10 transition-all">🗺️ Back to Map</button>
+          <button onclick="show('dashboard')"
+            class="w-full border-2 border-white/40 font-bold py-3 rounded-xl hover:bg-white/10 transition-all">📊 View Dashboard</button>
+        </div>
+
+        <p class="mt-5 text-blue-400 text-xs">Total: ${gs.totalPoints} pts · ${gs.clearedCities.length}/12 cities cleared</p>
+      </div>
+    </div>`;
+}
+
+function submitScore() {
+  const nick = document.getElementById('nick').value.trim();
+  if (!nick) { alert('Please enter a nickname!'); return; }
+  const {words,correct,city} = qs;
+  const accuracy = Math.round(correct/words.length*100);
+  if (!gs.rankings) gs.rankings=[];
+  gs.rankings = [{
+    nickname:nick, points:gs.totalPoints, accuracy,
+    city:city.name, level:city.level,
+    mastered:totalMastered(),
+    date:new Date().toLocaleDateString('en-US')
+  }, ...gs.rankings].slice(0,100);
+  saveState();
+  document.getElementById('rankForm').innerHTML=`<p class="text-center text-green-300 font-black">✓ Submitted! Thanks, ${nick}! 🎉</p>`;
+}
+
+// ============================================================
+//  RANKING SCREEN
+// ============================================================
+function renderRanking() {
+  const sorted = [...(gs.rankings||[])].sort((a,b)=>b.points-a.points);
+  const medals = ['🥇','🥈','🥉'];
+  const rows = sorted.length===0
+    ? `<tr><td colspan="5" class="text-center py-10 text-gray-400">No scores yet — be the first! 🌟</td></tr>`
+    : sorted.map((r,i)=>`
+      <tr class="${i%2===0?'bg-white':'bg-gray-50'} hover:bg-blue-50 transition-colors">
+        <td class="px-3 py-3 text-center font-black ${i<3?'text-xl':''} ${i===0?'text-yellow-500':i===1?'text-gray-400':i===2?'text-orange-400':'text-gray-500'}">${i<3?medals[i]:i+1}</td>
+        <td class="px-3 py-3 font-semibold text-gray-800">${r.nickname}</td>
+        <td class="px-3 py-3 text-center font-black text-blue-600">${r.points}</td>
+        <td class="px-3 py-3 text-center">${r.accuracy}%</td>
+        <td class="px-3 py-3 text-center text-xs text-gray-500">${r.city}<br><span class="text-gray-400">${r.date}</span></td>
+      </tr>`).join('');
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-gray-100">
+      <div class="sticky top-0 bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-3 flex items-center shadow">
+        <button onclick="show('map')" class="text-blue-300 hover:text-white mr-3 text-sm">← Map</button>
+        <h2 class="font-black text-lg">🏆 Global Rankings</h2>
+      </div>
+      <div class="max-w-lg mx-auto p-4">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <table class="w-full text-sm">
+            <thead class="bg-blue-900 text-white">
+              <tr>
+                <th class="px-3 py-3">#</th>
+                <th class="px-3 py-3 text-left">Name</th>
+                <th class="px-3 py-3">Points</th>
+                <th class="px-3 py-3">Acc.</th>
+                <th class="px-3 py-3">City</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <button onclick="show('map')" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-blue-700 transition-all">🗺️ Back to Map</button>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  DASHBOARD SCREEN
+// ============================================================
+function renderDashboard() {
+  const mastered  = totalMastered();
+  const total     = WORD_DATA.length;
+  const pct       = Math.round(mastered/total*100);
+  const days      = (gs.daysActive||[]).length;
+  const quizDone  = gs.totalQuizzes || 0;
+  const cleared   = gs.clearedCities.length;
+
+  // Per-level stats
+  const levels = ["A1","A2","B1","B2"];
+  const levelStats = levels.map(lv => {
+    const lvWords = WORD_DATA.filter(w=>w.level===lv);
+    const lvMastered = lvWords.filter(w=>gs.masteredWords[w.id]).length;
+    const lvCities = CITIES.filter(c=>c.level===lv);
+    const lvCleared = lvCities.filter(c=>gs.clearedCities.includes(c.id)).length;
+    return { lv, total:lvWords.length, mastered:lvMastered, cities:lvCities.length, cleared:lvCleared };
+  });
+
+  const levelColors = {A1:'#3b82f6',A2:'#06b6d4',B1:'#f43f5e',B2:'#9333ea'};
+
+  const levelCards = levelStats.map(s=>`
+    <div class="bg-white rounded-xl p-4 shadow-sm">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-black text-gray-800">${s.lv}</span>
+        <span class="text-xs text-gray-500">${s.cleared}/${s.cities} cities cleared</span>
+      </div>
+      <div class="stat-bar mb-1">
+        <div class="stat-bar-fill" style="width:${s.total>0?Math.round(s.mastered/s.total*100):0}%;background:${levelColors[s.lv]}"></div>
+      </div>
+      <p class="text-xs text-gray-500">${s.mastered} / ${s.total} words mastered</p>
+    </div>`).join('');
+
+  // Recent quiz history
+  const history = (gs.quizHistory||[]).slice(0,10);
+  const histRows = history.length===0
+    ? `<p class="text-gray-400 text-center py-4 text-sm">No quizzes yet!</p>`
+    : history.map(h=>{
+        const city = CITIES.find(c=>c.id===h.cityId);
+        return `<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+          <div class="flex items-center gap-2">
+            <span>${city?city.emoji:'🏙️'}</span>
+            <div><p class="text-sm font-semibold text-gray-800">${city?city.name:h.cityId}</p><p class="text-xs text-gray-400">${h.date}</p></div>
+          </div>
+          <div class="text-right">
+            <span class="font-black text-sm" style="color:${accuracyColor(h.accuracy)}">${h.accuracy}%</span>
+            <p class="text-xs text-gray-400">+${h.pts} pts</p>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Category breakdown
+  const cats = {};
+  WORD_DATA.forEach(w=>{ if(!cats[w.category]) cats[w.category]={total:0,mastered:0}; cats[w.category].total++; if(gs.masteredWords[w.id]) cats[w.category].mastered++; });
+  const topCats = Object.entries(cats).sort((a,b)=>b[1].mastered-a[1].mastered).slice(0,6);
+  const catBars = topCats.map(([cat,s])=>`
+    <div class="mb-3">
+      <div class="flex justify-between text-xs mb-1"><span class="text-gray-700 capitalize">${cat}</span><span class="text-gray-500">${s.mastered}/${s.total}</span></div>
+      <div class="stat-bar">
+        <div class="stat-bar-fill bg-blue-500" style="width:${s.total>0?Math.round(s.mastered/s.total*100):0}%"></div>
+      </div>
+    </div>`).join('');
+
+  // City accuracy chart
+  const cityBars = CITIES.filter(c=>gs.bestAccuracies[c.id]!==undefined).map(c=>`
+    <div class="mb-2">
+      <div class="flex justify-between text-xs mb-0.5">
+        <span>${c.emoji} ${c.name}</span>
+        <span style="color:${accuracyColor(gs.bestAccuracies[c.id])}">${gs.bestAccuracies[c.id]}%</span>
+      </div>
+      <div class="stat-bar">
+        <div class="stat-bar-fill" style="width:${gs.bestAccuracies[c.id]}%;background:${accuracyColor(gs.bestAccuracies[c.id])}"></div>
+      </div>
+    </div>`).join('') || '<p class="text-gray-400 text-sm">Play a quiz to see your accuracy!</p>';
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-gray-100">
+      <div class="sticky top-0 z-10 bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-3 shadow">
+        <div class="max-w-lg mx-auto flex items-center justify-between">
+          <button onclick="show('map')" class="text-blue-300 hover:text-white text-sm">← Map</button>
+          <span class="font-black text-lg">📊 My Dashboard</span>
+          <span class="text-yellow-300 font-bold text-sm">${gs.totalPoints} pts</span>
+        </div>
+      </div>
+
+      <div class="max-w-lg mx-auto p-4 space-y-4">
+
+        <!-- Top stats -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white rounded-2xl p-4 shadow-sm text-center">
+            <div class="text-4xl font-black text-yellow-500">${gs.totalPoints}</div>
+            <div class="text-xs text-gray-500 mt-0.5">Total Points</div>
+          </div>
+          <div class="bg-white rounded-2xl p-4 shadow-sm text-center">
+            <div class="text-4xl font-black text-green-600">${mastered}</div>
+            <div class="text-xs text-gray-500 mt-0.5">Words Mastered</div>
+          </div>
+          <div class="bg-white rounded-2xl p-4 shadow-sm text-center">
+            <div class="text-4xl font-black text-blue-600">${cleared}<span class="text-gray-400 text-xl">/12</span></div>
+            <div class="text-xs text-gray-500 mt-0.5">Cities Cleared</div>
+          </div>
+          <div class="bg-white rounded-2xl p-4 shadow-sm text-center">
+            <div class="text-4xl font-black text-purple-600">${days}</div>
+            <div class="text-xs text-gray-500 mt-0.5">Days Active</div>
+          </div>
+        </div>
+
+        <!-- Overall progress -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-black text-gray-800">Overall Progress</h3>
+            <span class="font-black text-blue-600">${pct}%</span>
+          </div>
+          <div class="stat-bar mb-1" style="height:14px">
+            <div class="stat-bar-fill bg-gradient-to-r from-blue-500 to-purple-600" style="width:${pct}%;height:14px;border-radius:7px"></div>
+          </div>
+          <p class="text-xs text-gray-500">${mastered} / ${total} words across all levels</p>
+        </div>
+
+        <!-- By level -->
+        <div>
+          <h3 class="font-black text-gray-700 mb-2 text-sm px-1">Progress by Level</h3>
+          <div class="grid grid-cols-2 gap-3">${levelCards}</div>
+        </div>
+
+        <!-- City accuracy -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 class="font-black text-gray-800 mb-3">Best Accuracy by City</h3>
+          ${cityBars}
+        </div>
+
+        <!-- Category breakdown -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 class="font-black text-gray-800 mb-3">Top Categories Mastered</h3>
+          ${catBars}
+        </div>
+
+        <!-- Recent history -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 class="font-black text-gray-800 mb-2">Recent Quizzes</h3>
+          ${histRows}
+        </div>
+
+        <!-- Quick stats -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 class="font-black text-gray-800 mb-2">Stats</h3>
+          <div class="space-y-1 text-sm text-gray-600">
+            <div class="flex justify-between"><span>Quizzes completed</span><span class="font-bold">${quizDone}</span></div>
+            <div class="flex justify-between"><span>Unique words seen</span><span class="font-bold">${mastered}</span></div>
+            <div class="flex justify-between"><span>Cities explored</span><span class="font-bold">${Object.keys(gs.bestAccuracies||{}).length}/12</span></div>
+            <div class="flex justify-between"><span>Days learning</span><span class="font-bold">${days}</span></div>
+          </div>
+        </div>
+
+        <button onclick="show('map')" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-blue-700 transition-all">🗺️ Back to Map</button>
+        <p class="text-center text-gray-400 text-xs pb-4">Progress saved automatically in your browser</p>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+//  MAP VIEW (Leaflet real map)
+// ============================================================
+function renderMapView() {
+  app.innerHTML = `
+    <div class="min-h-screen flex flex-col" style="background:#0f172a">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-3 shadow z-20 relative">
+        <div class="max-w-lg mx-auto flex items-center justify-between">
+          <button onclick="show('map')" class="text-blue-300 hover:text-white text-sm">← List View</button>
+          <span class="font-black text-lg">🗺️ France — Adventure Map</span>
+          <span class="text-yellow-300 font-bold text-sm">${gs.totalPoints} pts</span>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="bg-white/95 backdrop-blur px-4 py-2 flex items-center gap-4 text-xs font-semibold z-10 shadow-sm flex-wrap">
+        <span class="text-gray-500">Legend:</span>
+        <span class="flex items-center gap-1"><span style="background:#f59e0b;width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid white"></span> Cleared ✓</span>
+        <span class="flex items-center gap-1"><span style="background:#3b82f6;width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid white"></span> A1 Unlocked</span>
+        <span class="flex items-center gap-1"><span style="background:#06b6d4;width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid white"></span> A2 Unlocked</span>
+        <span class="flex items-center gap-1"><span style="background:#f43f5e;width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid white"></span> B1 Unlocked</span>
+        <span class="flex items-center gap-1"><span style="background:#9333ea;width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid white"></span> B2 Unlocked</span>
+        <span class="flex items-center gap-1"><span style="background:#94a3b8;width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid white"></span> 🔒 Locked</span>
+      </div>
+
+      <!-- Map container -->
+      <div id="france-map" style="flex:1; min-height:0; height:calc(100vh - 108px)"></div>
+    </div>`;
+
+  // Leaflet needs a tick before the container is measured
+  setTimeout(() => {
+    const levelColor = { A1:'#3b82f6', A2:'#06b6d4', B1:'#f43f5e', B2:'#9333ea' };
+
+    const map = L.map('france-map', {
+      center: [46.6, 2.3],
+      zoom: 6,
+      zoomControl: true,
+      attributionControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 18,
+    }).addTo(map);
+
+    CITIES.forEach(city => {
+      const unlocked = isCityUnlocked(city.id);
+      const cleared  = gs.clearedCities.includes(city.id);
+      const best     = gs.bestAccuracies[city.id];
+      const cityWords = wordsForCity(city.name);
+      const mastered  = cityWords.filter(w => gs.masteredWords[w.id]).length;
+
+      // Pin color
+      const pinColor = cleared ? '#f59e0b' : unlocked ? levelColor[city.level] : '#94a3b8';
+      const ringColor = cleared ? '#fcd34d' : 'white';
+
+      // Custom DivIcon
+      const icon = L.divIcon({
+        className: '',
+        html: `
+          <div class="city-pin">
+            <div class="city-pin-dot" style="background:${pinColor};border-color:${ringColor}">
+              <span style="font-size:16px;line-height:1">${cleared ? '⭐' : unlocked ? city.emoji : '🔒'}</span>
+            </div>
+            <div class="city-pin-label" style="color:${pinColor === '#94a3b8' ? '#94a3b8' : '#1e293b'}">
+              ${city.name}
+            </div>
+          </div>`,
+        iconSize: [60, 54],
+        iconAnchor: [30, 18],
+        popupAnchor: [0, -22],
+      });
+
+      const marker = L.marker([city.lat, city.lng], { icon }).addTo(map);
+
+      // Popup content
+      const statusBadge = cleared
+        ? `<span style="background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800">✓ CLEARED — Best: ${best}%</span>`
+        : unlocked
+        ? `<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800">${city.level} — Unlocked</span>`
+        : `<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800">🔒 Locked</span>`;
+
+      const progressBar = cityWords.length > 0 ? `
+        <div style="margin:8px 0 4px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:3px">
+            <span>Words mastered</span><span>${mastered}/${cityWords.length}</span>
+          </div>
+          <div style="background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden">
+            <div style="width:${Math.round(mastered/cityWords.length*100)}%;height:6px;background:${pinColor};border-radius:4px;transition:width 0.5s"></div>
+          </div>
+        </div>` : '';
+
+      const btn = unlocked
+        ? `<button onclick="show('quiz','${city.id}')"
+             style="background:${pinColor};color:white;margin-top:8px">
+             ${cleared ? '🔄 Play Again' : '▶ Start Quiz'}
+           </button>`
+        : `<button disabled style="background:#e2e8f0;color:#94a3b8;margin-top:8px;cursor:not-allowed">
+             🔒 Clear ${CITIES.find(c=>c.id===city.unlockAfter)?.name || ''} first
+           </button>`;
+
+      const popup = L.popup({ maxWidth: 240, closeButton: true }).setContent(`
+        <div class="map-popup">
+          <div style="font-size:22px;margin-bottom:4px">${city.emoji}</div>
+          <h3>${city.name}</h3>
+          <p>${city.desc}</p>
+          ${statusBadge}
+          ${progressBar}
+          ${btn}
+        </div>`);
+
+      marker.bindPopup(popup);
+    });
+
+    // Draw route line between cities (in unlock order)
+    const routeCoords = CITIES.map(c => [c.lat, c.lng]);
+    L.polyline(routeCoords, {
+      color: '#002395',
+      weight: 2,
+      opacity: 0.35,
+      dashArray: '6 8',
+    }).addTo(map);
+
+  }, 50);
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+show('top');
+</script>
+</body>
+</html>
