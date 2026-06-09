@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOEIC単語クイズシステム</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #2563eb; --primary-dark: #1d4ed8;
+    --success: #16a34a; --danger: #dc2626; --warn: #d97706;
+    --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0;
+    --text: #1e293b; --muted: #64748b;
+    --level1: #6366f1; --level2: #0ea5e9; --level3: #10b981;
+    --level4: #f59e0b; --level5: #ef4444;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  nav { background: var(--primary); color: white; padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.15); position: sticky; top: 0; z-index: 100; }
+  nav .logo { font-size: 18px; font-weight: 700; flex: 1; }
+  nav button { background: rgba(255,255,255,.15); border: none; color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background .15s; }
+  nav button:hover { background: rgba(255,255,255,.25); }
+  nav button.active { background: rgba(255,255,255,.3); }
+
+  .page { display: none; padding: 32px 24px; max-width: 860px; margin: 0 auto; }
+  .page.visible { display: block; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+
+  /* LEVEL SELECT */
+  .level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+  .level-card { border: 2px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: all .15s; background: white; }
+  .level-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,.15); }
+  .level-card .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; color: white; margin-bottom: 8px; }
+  .level-card h3 { font-size: 16px; margin-bottom: 4px; }
+  .level-card .meta { font-size: 13px; color: var(--muted); }
+  .level-card .best { margin-top: 10px; font-size: 13px; font-weight: 600; }
+  .level-card.cleared { border-color: var(--success); background: #f0fdf4; }
+
+  /* SET SELECT */
+  .set-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .set-header h1 { font-size: 20px; margin: 0; flex: 1; }
+  .set-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .set-card { border: 2px solid var(--border); border-radius: 10px; padding: 16px 12px; cursor: pointer; transition: all .15s; background: white; text-align: center; position: relative; }
+  .set-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,.12); }
+  .set-card.done { border-color: var(--success); background: #f0fdf4; }
+  .set-card .set-num { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .set-card .set-range { font-size: 11px; color: var(--muted); }
+  .set-card .set-score { font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .set-card .set-check { position: absolute; top: 8px; right: 10px; font-size: 16px; }
+
+  /* QUIZ */
+  .quiz-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .back-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; white-space: nowrap; transition: all .15s; }
+  .back-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .progress-bar-wrap { flex: 1; background: var(--border); border-radius: 99px; height: 8px; }
+  .progress-bar-fill { height: 8px; border-radius: 99px; background: var(--primary); transition: width .3s; }
+  .q-counter { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+  /* 単語表示 */
+  .word-display { text-align: center; padding: 28px 20px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 12px; margin-bottom: 20px; }
+  .word-main { font-size: 40px; font-weight: 800; color: var(--primary); letter-spacing: 1px; margin-bottom: 6px; }
+  .word-pos { font-size: 13px; color: var(--muted); background: white; display: inline-block; padding: 2px 10px; border-radius: 20px; border: 1px solid var(--border); }
+  .q-lead { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+
+  /* 選択肢（日本語） */
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .choice-btn { background: white; border: 2px solid var(--border); border-radius: 10px; padding: 16px 14px; font-size: 15px; cursor: pointer; text-align: left; transition: all .15s; display: flex; align-items: center; gap: 10px; line-height: 1.4; }
+  .choice-btn:hover:not(:disabled) { border-color: var(--primary); background: #eff6ff; }
+  .choice-btn .choice-id { font-weight: 700; min-width: 22px; flex-shrink: 0; color: var(--muted); }
+  .choice-btn.correct { border-color: var(--success); background: #f0fdf4; color: var(--success); }
+  .choice-btn.correct .choice-id { color: var(--success); }
+  .choice-btn.wrong { border-color: var(--danger); background: #fef2f2; color: var(--danger); }
+  .choice-btn.wrong .choice-id { color: var(--danger); }
+  .choice-btn:disabled { cursor: default; }
+
+  /* フィードバック＋例文 */
+  .answer-feedback { margin-top: 16px; border-radius: 10px; overflow: hidden; display: none; }
+  .feedback-header { padding: 10px 16px; font-size: 15px; font-weight: 700; }
+  .feedback-header.ok { background: var(--success); color: white; }
+  .feedback-header.ng { background: var(--danger); color: white; }
+  .example-box { background: #f8fafc; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 14px 16px; }
+  .example-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .example-en { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.6; }
+  .example-ja { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .next-btn { margin-top: 16px; padding: 13px 32px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; transition: background .15s; display: none; }
+  .next-btn:hover { background: var(--primary-dark); }
+
+  /* RESULT */
+  .result-score { font-size: 64px; font-weight: 800; text-align: center; margin: 8px 0; }
+  .result-label { text-align: center; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .clear-badge { display: inline-block; background: var(--success); color: white; padding: 4px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; }
+  .fail-badge { display: inline-block; background: var(--warn); color: white; padding: 4px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; }
+  .result-center { text-align: center; }
+  .result-detail table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .result-detail th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-weight: 600; }
+  .result-detail td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .tag-correct { color: var(--success); font-weight: 700; }
+  .tag-wrong { color: var(--danger); font-weight: 700; }
+  .btn-row { display: flex; gap: 12px; margin-top: 20px; }
+  .btn-secondary { flex: 1; padding: 12px; border: 2px solid var(--primary); color: var(--primary); background: white; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn-primary { flex: 1; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn-home { flex: 1; padding: 12px; border: 2px solid var(--border); color: var(--muted); background: white; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+  /* DASHBOARD */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  .stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+  .stat-card .stat-val { font-size: 36px; font-weight: 800; color: var(--primary); }
+  .stat-card .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .master-bar-wrap { background: var(--border); border-radius: 99px; height: 20px; margin: 16px 0 8px; position: relative; overflow: hidden; }
+  .master-bar-fill { height: 20px; background: linear-gradient(90deg, var(--primary), #60a5fa); border-radius: 99px; transition: width 1s ease; }
+  .master-bar-text { position: absolute; right: 8px; top: 0; height: 20px; display: flex; align-items: center; font-size: 12px; font-weight: 700; color: white; }
+  .master-count { font-size: 28px; font-weight: 800; color: var(--primary); text-align: center; margin-bottom: 4px; }
+  .master-sub { font-size: 14px; color: var(--muted); text-align: center; }
+  .level-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .level-row:last-child { border-bottom: none; }
+  .level-row .lname { font-weight: 600; width: 80px; flex-shrink: 0; font-size: 14px; }
+  .level-row .lscore { width: 70px; text-align: right; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .level-row .lbar-wrap { flex: 1; background: var(--border); border-radius: 99px; height: 10px; }
+  .level-row .lbar-fill { height: 10px; border-radius: 99px; transition: width 1s ease; }
+  .level-row .lstatus { width: 64px; text-align: center; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+  .lstatus.cleared { background: #dcfce7; color: var(--success); }
+  .lstatus.progress { background: #fef9c3; color: var(--warn); }
+  .lstatus.not-started { background: #f1f5f9; color: var(--muted); }
+
+  h1 { font-size: 22px; margin-bottom: 8px; }
+  h2 { font-size: 18px; margin-bottom: 12px; }
+  .sub { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+  @media (max-width: 520px) {
+    .choices { grid-template-columns: 1fr; }
+    .btn-row { flex-direction: column; }
+    .word-main { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">📚 TOEIC単語クイズ</span>
+  <button id="nav-quiz" class="active" onclick="showPage('quiz')">問題集</button>
+  <button id="nav-dash" onclick="showPage('dashboard')">ダッシュボード</button>
+</nav>
+
+<!-- QUIZ PAGE -->
+<div id="page-quiz" class="page visible">
+  <div id="level-select">
+    <h1>レベルを選択</h1>
+    <p class="sub">目標スコアに合わせてレベルを選んでください。</p>
+    <div class="level-grid" id="level-grid"></div>
+  </div>
+
+  <div id="set-select" style="display:none;">
+    <div class="set-header">
+      <button class="back-btn" onclick="backToSelect()">← レベル選択</button>
+      <h1 id="set-title"></h1>
+    </div>
+    <p class="sub" id="set-sub"></p>
+    <div class="set-grid" id="set-grid"></div>
+  </div>
+
+  <div id="quiz-area" class="card" style="display:none;">
+    <div class="quiz-header">
+      <button class="back-btn" onclick="confirmBack()">← セット一覧</button>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-fill"></div></div>
+      <div class="q-counter" id="q-counter"></div>
+    </div>
+    <div class="word-display">
+      <div class="word-main" id="q-word"></div>
+      <div class="word-pos" id="q-pos"></div>
+    </div>
+    <div class="q-lead">次の単語の意味として最も適切なものを選びなさい。</div>
+    <div class="choices" id="choices"></div>
+    <div class="answer-feedback" id="answer-feedback">
+      <div class="feedback-header" id="feedback-header"></div>
+      <div class="example-box">
+        <div class="example-label">例文</div>
+        <div class="example-en" id="example-en"></div>
+        <div class="example-ja" id="example-ja"></div>
+      </div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題へ →</button>
+  </div>
+
+  <div id="result-area" class="card" style="display:none;">
+    <div class="result-center">
+      <div class="result-label">今回の結果</div>
+      <div class="result-score" id="res-score"></div>
+      <div id="res-badge"></div>
+      <div style="font-size:14px;color:var(--muted);margin-top:6px;" id="res-detail-text"></div>
+    </div>
+    <div class="result-detail" style="margin-top:20px;">
+      <h2>問題の振り返り</h2>
+      <table id="res-table">
+        <thead><tr><th>#</th><th>単語</th><th>意味</th><th>結果</th></tr></thead>
+        <tbody id="res-tbody"></tbody>
+      </table>
+    </div>
+    <div id="result-next-btn-wrap" style="margin-top:20px;"></div>
+    <div class="btn-row">
+      <button class="btn-home" onclick="backToSetSelect()">📋 セット一覧へ</button>
+      <button class="btn-secondary" onclick="showPage('dashboard')">ダッシュボード</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="page-dash" class="page">
+  <h1>ダッシュボード</h1>
+  <p class="sub">あなたの学習進捗を確認できます。</p>
+  <div class="card">
+    <h2>総習得単語数</h2>
+    <div class="master-count" id="dash-count">0 / 3,000 語</div>
+    <div class="master-bar-wrap">
+      <div class="master-bar-fill" id="dash-bar" style="width:0%"></div>
+      <span class="master-bar-text" id="dash-pct">0%</span>
+    </div>
+    <div class="master-sub">一度でも正解した単語の累計数</div>
+  </div>
+  <div class="card">
+    <h2>レベル別進捗</h2>
+    <div id="level-progress"></div>
+  </div>
+  <div class="card">
+    <h2>統計</h2>
+    <div class="stat-grid" id="stat-grid"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// WORD DATA  各レベル500語（25セット×20問）= 2,500語
+// スキーマ: { id, level, word, part_of_speech, meaning,
+//             question_sentence, question_sentence_ja }
+// ============================================================
+const WORDS = [
+// ── LEVEL 1（~300点）100語・5セット ──────────────────────────
+{"id":"w_l1_001","level":1,"word":"office","part_of_speech":"noun","meaning":"事務所、職場","question_sentence":"She goes to the office every day by train.","question_sentence_ja":"彼女は毎日電車で職場に通っています。"},
+{"id":"w_l1_002","level":1,"word":"meeting","part_of_speech":"noun","meaning":"会議、ミーティング","question_sentence":"We have an important meeting at 3 p.m. today.","question_sentence_ja":"今日の午後3時に重要な会議があります。"},
+{"id":"w_l1_003","level":1,"word":"order","part_of_speech":"verb","meaning":"注文する","question_sentence":"Please order the supplies before the end of the month.","question_sentence_ja":"月末までに備品を注文してください。"},
+{"id":"w_l1_004","level":1,"word":"send","part_of_speech":"verb","meaning":"送る","question_sentence":"Please send me the report by email.","question_sentence_ja":"メールでレポートを送ってください。"},
+{"id":"w_l1_005","level":1,"word":"help","part_of_speech":"verb","meaning":"助ける、手伝う","question_sentence":"Could you help me carry these boxes?","question_sentence_ja":"これらの箱を運ぶのを手伝っていただけますか？"},
+{"id":"w_l1_006","level":1,"word":"price","part_of_speech":"noun","meaning":"価格、値段","question_sentence":"The price of this product is very reasonable.","question_sentence_ja":"この製品の価格は非常にリーズナブルです。"},
+{"id":"w_l1_007","level":1,"word":"travel","part_of_speech":"verb","meaning":"旅行する","question_sentence":"He likes to travel abroad during his vacation.","question_sentence_ja":"彼は休暇中に海外旅行をするのが好きです。"},
+{"id":"w_l1_008","level":1,"word":"staff","part_of_speech":"noun","meaning":"スタッフ、職員","question_sentence":"All staff members must wear ID badges.","question_sentence_ja":"全スタッフはIDバッジを着用しなければなりません。"},
+{"id":"w_l1_009","level":1,"word":"check","part_of_speech":"verb","meaning":"確認する、チェックする","question_sentence":"Please check the document before submitting it.","question_sentence_ja":"提出前に書類を確認してください。"},
+{"id":"w_l1_010","level":1,"word":"customer","part_of_speech":"noun","meaning":"顧客、お客様","question_sentence":"Every customer should be treated with respect.","question_sentence_ja":"すべてのお客様は敬意を持って接遇されるべきです。"},
+{"id":"w_l1_011","level":1,"word":"answer","part_of_speech":"verb","meaning":"答える、応答する","question_sentence":"Please answer the phone if it rings.","question_sentence_ja":"電話が鳴ったら応答してください。"},
+{"id":"w_l1_012","level":1,"word":"address","part_of_speech":"noun","meaning":"住所、アドレス","question_sentence":"Could you give me your email address?","question_sentence_ja":"メールアドレスを教えていただけますか？"},
+{"id":"w_l1_013","level":1,"word":"busy","part_of_speech":"adjective","meaning":"忙しい","question_sentence":"She is too busy to attend the optional seminar.","question_sentence_ja":"彼女は忙しすぎて任意参加のセミナーに出席できません。"},
+{"id":"w_l1_014","level":1,"word":"free","part_of_speech":"adjective","meaning":"無料の、空いている","question_sentence":"The sample is completely free of charge.","question_sentence_ja":"サンプルは完全に無料です。"},
+{"id":"w_l1_015","level":1,"word":"buy","part_of_speech":"verb","meaning":"買う、購入する","question_sentence":"We need to buy more printer paper today.","question_sentence_ja":"今日はプリンター用紙をもっと買う必要があります。"},
+{"id":"w_l1_016","level":1,"word":"important","part_of_speech":"adjective","meaning":"重要な","question_sentence":"It is important to back up your files regularly.","question_sentence_ja":"定期的にファイルをバックアップすることが重要です。"},
+{"id":"w_l1_017","level":1,"word":"number","part_of_speech":"noun","meaning":"番号、数","question_sentence":"Please write your phone number on the form.","question_sentence_ja":"フォームに電話番号を記入してください。"},
+{"id":"w_l1_018","level":1,"word":"store","part_of_speech":"noun","meaning":"店、店舗","question_sentence":"The new store will open downtown next week.","question_sentence_ja":"新しいお店が来週ダウンタウンにオープンします。"},
+{"id":"w_l1_019","level":1,"word":"call","part_of_speech":"verb","meaning":"電話する、呼ぶ","question_sentence":"Please call the office if you will be late.","question_sentence_ja":"遅れる場合はオフィスに電話してください。"},
+{"id":"w_l1_020","level":1,"word":"letter","part_of_speech":"noun","meaning":"手紙、文字","question_sentence":"I received a letter from the bank today.","question_sentence_ja":"今日、銀行から手紙を受け取りました。"},
+{"id":"w_l1_021","level":1,"word":"work","part_of_speech":"verb","meaning":"働く、作動する","question_sentence":"She will work from home on Fridays.","question_sentence_ja":"彼女は金曜日に在宅で仕事をします。"},
+{"id":"w_l1_022","level":1,"word":"open","part_of_speech":"verb","meaning":"開ける、開く","question_sentence":"Please open the window — it's hot in here.","question_sentence_ja":"窓を開けてください。ここは暑いです。"},
+{"id":"w_l1_023","level":1,"word":"lunch","part_of_speech":"noun","meaning":"昼食、ランチ","question_sentence":"Let's discuss the project over lunch.","question_sentence_ja":"ランチをしながらプロジェクトについて話し合いましょう。"},
+{"id":"w_l1_024","level":1,"word":"copy","part_of_speech":"verb","meaning":"コピーする、複写する","question_sentence":"Could you copy this document for all team members?","question_sentence_ja":"この書類をチーム全員分コピーしていただけますか？"},
+{"id":"w_l1_025","level":1,"word":"early","part_of_speech":"adjective","meaning":"早い、早期の","question_sentence":"We should make an early decision to avoid delays.","question_sentence_ja":"遅延を避けるために早期に決定を下すべきです。"},
+{"id":"w_l1_026","level":1,"word":"time","part_of_speech":"noun","meaning":"時間、時刻","question_sentence":"What time does the meeting start?","question_sentence_ja":"会議は何時に始まりますか？"},
+{"id":"w_l1_027","level":1,"word":"name","part_of_speech":"noun","meaning":"名前","question_sentence":"Please write your name on the form.","question_sentence_ja":"フォームにお名前をご記入ください。"},
+{"id":"w_l1_028","level":1,"word":"company","part_of_speech":"noun","meaning":"会社、企業","question_sentence":"He has worked for the same company for ten years.","question_sentence_ja":"彼は同じ会社に10年間勤めています。"},
+{"id":"w_l1_029","level":1,"word":"product","part_of_speech":"noun","meaning":"製品、商品","question_sentence":"Our new product is selling very well this month.","question_sentence_ja":"今月は新製品がとてもよく売れています。"},
+{"id":"w_l1_030","level":1,"word":"service","part_of_speech":"noun","meaning":"サービス、業務","question_sentence":"The hotel offers excellent service to all guests.","question_sentence_ja":"そのホテルはすべての宿泊客に優れたサービスを提供しています。"},
+{"id":"w_l1_031","level":1,"word":"team","part_of_speech":"noun","meaning":"チーム","question_sentence":"Our team finished the project ahead of schedule.","question_sentence_ja":"私たちのチームは予定より早くプロジェクトを終えました。"},
+{"id":"w_l1_032","level":1,"word":"plan","part_of_speech":"noun","meaning":"計画、プラン","question_sentence":"Do you have a plan for the upcoming quarter?","question_sentence_ja":"次の四半期の計画はありますか？"},
+{"id":"w_l1_033","level":1,"word":"goal","part_of_speech":"noun","meaning":"目標、ゴール","question_sentence":"Setting a clear goal helps you stay focused.","question_sentence_ja":"明確な目標を設定することで集中力が保てます。"},
+{"id":"w_l1_034","level":1,"word":"problem","part_of_speech":"noun","meaning":"問題","question_sentence":"We need to solve this problem before the deadline.","question_sentence_ja":"締め切りまでにこの問題を解決する必要があります。"},
+{"id":"w_l1_035","level":1,"word":"report","part_of_speech":"noun","meaning":"報告書、レポート","question_sentence":"Please submit the report by Friday.","question_sentence_ja":"金曜日までにレポートを提出してください。"},
+{"id":"w_l1_036","level":1,"word":"money","part_of_speech":"noun","meaning":"お金","question_sentence":"The company saved a lot of money by reducing waste.","question_sentence_ja":"会社は廃棄物を削減することで多くのお金を節約しました。"},
+{"id":"w_l1_037","level":1,"word":"pay","part_of_speech":"verb","meaning":"支払う","question_sentence":"You can pay by credit card or cash.","question_sentence_ja":"クレジットカードまたは現金でお支払いいただけます。"},
+{"id":"w_l1_038","level":1,"word":"find","part_of_speech":"verb","meaning":"見つける","question_sentence":"I could not find the file on my computer.","question_sentence_ja":"コンピュータ上でファイルが見つかりませんでした。"},
+{"id":"w_l1_039","level":1,"word":"start","part_of_speech":"verb","meaning":"始める、始まる","question_sentence":"The training session will start at 9 a.m.","question_sentence_ja":"研修セッションは午前9時に始まります。"},
+{"id":"w_l1_040","level":1,"word":"finish","part_of_speech":"verb","meaning":"終える、終わる","question_sentence":"Did you finish the assignment on time?","question_sentence_ja":"課題を時間通りに終えましたか？"},
+{"id":"w_l1_041","level":1,"word":"use","part_of_speech":"verb","meaning":"使う、利用する","question_sentence":"Please use the side entrance after 6 p.m.","question_sentence_ja":"午後6時以降は側面の入口をご利用ください。"},
+{"id":"w_l1_042","level":1,"word":"make","part_of_speech":"verb","meaning":"作る、〜にする","question_sentence":"Can you make a copy of this for me?","question_sentence_ja":"これのコピーを作っていただけますか？"},
+{"id":"w_l1_043","level":1,"word":"take","part_of_speech":"verb","meaning":"取る、持っていく","question_sentence":"Please take a seat and wait for a moment.","question_sentence_ja":"お座りになってしばらくお待ちください。"},
+{"id":"w_l1_044","level":1,"word":"give","part_of_speech":"verb","meaning":"与える、渡す","question_sentence":"Can you give me your contact information?","question_sentence_ja":"連絡先を教えていただけますか？"},
+{"id":"w_l1_045","level":1,"word":"read","part_of_speech":"verb","meaning":"読む","question_sentence":"Please read the instructions carefully before starting.","question_sentence_ja":"始める前に説明書をよくお読みください。"},
+{"id":"w_l1_046","level":1,"word":"meet","part_of_speech":"verb","meaning":"会う、出会う","question_sentence":"Nice to meet you at the conference today.","question_sentence_ja":"今日の会議でお会いできて光栄です。"},
+{"id":"w_l1_047","level":1,"word":"change","part_of_speech":"verb","meaning":"変える、変わる","question_sentence":"We need to change the meeting room to a larger one.","question_sentence_ja":"会議室をより大きなものに変更する必要があります。"},
+{"id":"w_l1_048","level":1,"word":"return","part_of_speech":"verb","meaning":"戻る、返す","question_sentence":"Please return the borrowed equipment by Monday.","question_sentence_ja":"借りた備品を月曜日までに返却してください。"},
+{"id":"w_l1_049","level":1,"word":"wait","part_of_speech":"verb","meaning":"待つ","question_sentence":"Please wait in the lobby until your name is called.","question_sentence_ja":"名前が呼ばれるまでロビーでお待ちください。"},
+{"id":"w_l1_050","level":1,"word":"new","part_of_speech":"adjective","meaning":"新しい","question_sentence":"The new model will be released next month.","question_sentence_ja":"新モデルは来月発売される予定です。"},
+{"id":"w_l1_051","level":1,"word":"job","part_of_speech":"noun","meaning":"仕事、職業","question_sentence":"She applied for a job at a major bank.","question_sentence_ja":"彼女は大手銀行の仕事に応募しました。"},
+{"id":"w_l1_052","level":1,"word":"date","part_of_speech":"noun","meaning":"日付、期日","question_sentence":"What is the due date for this project?","question_sentence_ja":"このプロジェクトの期限はいつですか？"},
+{"id":"w_l1_053","level":1,"word":"week","part_of_speech":"noun","meaning":"週","question_sentence":"The results will be ready next week.","question_sentence_ja":"結果は来週出る予定です。"},
+{"id":"w_l1_054","level":1,"word":"year","part_of_speech":"noun","meaning":"年","question_sentence":"Sales grew by 15 percent this year.","question_sentence_ja":"今年は売上が15パーセント伸びました。"},
+{"id":"w_l1_055","level":1,"word":"day","part_of_speech":"noun","meaning":"日、曜日","question_sentence":"Which day is the seminar scheduled for?","question_sentence_ja":"セミナーは何曜日に予定されていますか？"},
+{"id":"w_l1_056","level":1,"word":"place","part_of_speech":"noun","meaning":"場所","question_sentence":"The event will take place at the city hall.","question_sentence_ja":"イベントは市庁舎で開催されます。"},
+{"id":"w_l1_057","level":1,"word":"room","part_of_speech":"noun","meaning":"部屋、室","question_sentence":"The meeting room is booked until noon.","question_sentence_ja":"会議室は正午まで予約されています。"},
+{"id":"w_l1_058","level":1,"word":"car","part_of_speech":"noun","meaning":"車","question_sentence":"He drove his car to the client's office.","question_sentence_ja":"彼は自分の車でクライアントのオフィスまで運転しました。"},
+{"id":"w_l1_059","level":1,"word":"train","part_of_speech":"noun","meaning":"電車","question_sentence":"She takes the train to work every morning.","question_sentence_ja":"彼女は毎朝電車で通勤しています。"},
+{"id":"w_l1_060","level":1,"word":"hotel","part_of_speech":"noun","meaning":"ホテル","question_sentence":"The business trip delegates stayed at a downtown hotel.","question_sentence_ja":"出張の代表団はダウンタウンのホテルに滞在しました。"},
+{"id":"w_l1_061","level":1,"word":"restaurant","part_of_speech":"noun","meaning":"レストラン","question_sentence":"The team celebrated at a local restaurant.","question_sentence_ja":"チームは地元のレストランでお祝いしました。"},
+{"id":"w_l1_062","level":1,"word":"bank","part_of_speech":"noun","meaning":"銀行","question_sentence":"He went to the bank to open a new account.","question_sentence_ja":"彼は新しい口座を開設するために銀行に行きました。"},
+{"id":"w_l1_063","level":1,"word":"ticket","part_of_speech":"noun","meaning":"チケット","question_sentence":"You can buy a train ticket at the machine.","question_sentence_ja":"券売機で電車のチケットを購入できます。"},
+{"id":"w_l1_064","level":1,"word":"bag","part_of_speech":"noun","meaning":"バッグ、鞄","question_sentence":"Please do not leave your bag unattended.","question_sentence_ja":"バッグをその場に放置しないでください。"},
+{"id":"w_l1_065","level":1,"word":"book","part_of_speech":"noun","meaning":"本","question_sentence":"There is a useful book on the reception desk.","question_sentence_ja":"受付に役立つ本があります。"},
+{"id":"w_l1_066","level":1,"word":"paper","part_of_speech":"noun","meaning":"紙","question_sentence":"We ran out of paper for the printer.","question_sentence_ja":"プリンターの紙が切れてしまいました。"},
+{"id":"w_l1_067","level":1,"word":"card","part_of_speech":"noun","meaning":"カード","question_sentence":"He handed his business card to the client.","question_sentence_ja":"彼はクライアントに名刺を渡しました。"},
+{"id":"w_l1_068","level":1,"word":"key","part_of_speech":"noun","meaning":"鍵、キー","question_sentence":"Please return the key when you leave the room.","question_sentence_ja":"部屋を出る際は鍵を返してください。"},
+{"id":"w_l1_069","level":1,"word":"sale","part_of_speech":"noun","meaning":"セール、販売","question_sentence":"The store is having a big sale this weekend.","question_sentence_ja":"そのお店は今週末に大セールを開催しています。"},
+{"id":"w_l1_070","level":1,"word":"fee","part_of_speech":"noun","meaning":"料金、手数料","question_sentence":"There is a small fee for using the parking lot.","question_sentence_ja":"駐車場の利用には少額の料金がかかります。"},
+{"id":"w_l1_071","level":1,"word":"arrive","part_of_speech":"verb","meaning":"到着する","question_sentence":"The package should arrive by tomorrow.","question_sentence_ja":"荷物は明日までに届くはずです。"},
+{"id":"w_l1_072","level":1,"word":"attend","part_of_speech":"verb","meaning":"出席する","question_sentence":"All employees must attend the safety training.","question_sentence_ja":"全従業員は安全研修に出席しなければなりません。"},
+{"id":"w_l1_073","level":1,"word":"print","part_of_speech":"verb","meaning":"印刷する","question_sentence":"Please print two copies of the contract.","question_sentence_ja":"契約書を2部印刷してください。"},
+{"id":"w_l1_074","level":1,"word":"save","part_of_speech":"verb","meaning":"保存する、節約する","question_sentence":"Remember to save your work before closing.","question_sentence_ja":"閉じる前に作業内容を保存することを忘れずに。"},
+{"id":"w_l1_075","level":1,"word":"join","part_of_speech":"verb","meaning":"参加する、加わる","question_sentence":"Would you like to join us for lunch today?","question_sentence_ja":"今日のランチにご一緒しませんか？"},
+{"id":"w_l1_076","level":1,"word":"show","part_of_speech":"verb","meaning":"見せる、示す","question_sentence":"Can you show me how to use this software?","question_sentence_ja":"このソフトウェアの使い方を教えていただけますか？"},
+{"id":"w_l1_077","level":1,"word":"receive","part_of_speech":"verb","meaning":"受け取る","question_sentence":"Did you receive the email I sent this morning?","question_sentence_ja":"今朝送ったメールを受け取りましたか？"},
+{"id":"w_l1_078","level":1,"word":"prepare","part_of_speech":"verb","meaning":"準備する","question_sentence":"Please prepare the materials for tomorrow's meeting.","question_sentence_ja":"明日の会議の資料を準備してください。"},
+{"id":"w_l1_079","level":1,"word":"choose","part_of_speech":"verb","meaning":"選ぶ","question_sentence":"Please choose a time that works for you.","question_sentence_ja":"ご都合の良い時間を選んでください。"},
+{"id":"w_l1_080","level":1,"word":"decide","part_of_speech":"verb","meaning":"決める","question_sentence":"We need to decide on a venue for the event.","question_sentence_ja":"イベントの会場を決める必要があります。"},
+{"id":"w_l1_081","level":1,"word":"large","part_of_speech":"adjective","meaning":"大きい、広い","question_sentence":"We need a large conference room for the presentation.","question_sentence_ja":"プレゼンテーションには大きな会議室が必要です。"},
+{"id":"w_l1_082","level":1,"word":"small","part_of_speech":"adjective","meaning":"小さい","question_sentence":"This is a small but very efficient team.","question_sentence_ja":"これは小さいけれどとても効率的なチームです。"},
+{"id":"w_l1_083","level":1,"word":"good","part_of_speech":"adjective","meaning":"良い","question_sentence":"She received good feedback from her manager.","question_sentence_ja":"彼女はマネージャーから良いフィードバックを受けました。"},
+{"id":"w_l1_084","level":1,"word":"long","part_of_speech":"adjective","meaning":"長い","question_sentence":"It was a long meeting but very productive.","question_sentence_ja":"長い会議でしたが非常に生産的でした。"},
+{"id":"w_l1_085","level":1,"word":"short","part_of_speech":"adjective","meaning":"短い","question_sentence":"We have a short break before the next session.","question_sentence_ja":"次のセッションまで短い休憩があります。"},
+{"id":"w_l1_086","level":1,"word":"fast","part_of_speech":"adjective","meaning":"速い","question_sentence":"The new system is much faster than the old one.","question_sentence_ja":"新しいシステムは古いものよりはるかに速いです。"},
+{"id":"w_l1_087","level":1,"word":"easy","part_of_speech":"adjective","meaning":"簡単な","question_sentence":"The new interface is easy to navigate.","question_sentence_ja":"新しいインターフェースは操作が簡単です。"},
+{"id":"w_l1_088","level":1,"word":"safe","part_of_speech":"adjective","meaning":"安全な","question_sentence":"Please keep your password in a safe place.","question_sentence_ja":"パスワードは安全な場所に保管してください。"},
+{"id":"w_l1_089","level":1,"word":"ready","part_of_speech":"adjective","meaning":"準備ができた","question_sentence":"Is everything ready for the client visit?","question_sentence_ja":"クライアントの訪問準備はすべて整っていますか？"},
+{"id":"w_l1_090","level":1,"word":"available","part_of_speech":"adjective","meaning":"利用可能な、空いている","question_sentence":"Is the conference room available on Thursday?","question_sentence_ja":"木曜日に会議室は空いていますか？"},
+{"id":"w_l1_091","level":1,"word":"local","part_of_speech":"adjective","meaning":"地元の","question_sentence":"We support local businesses whenever possible.","question_sentence_ja":"できる限り地元の企業を支援しています。"},
+{"id":"w_l1_092","level":1,"word":"general","part_of_speech":"adjective","meaning":"一般的な","question_sentence":"This is a general guideline for all staff.","question_sentence_ja":"これはすべてのスタッフ向けの一般的なガイドラインです。"},
+{"id":"w_l1_093","level":1,"word":"public","part_of_speech":"adjective","meaning":"公共の、公開の","question_sentence":"The park is open to the public every day.","question_sentence_ja":"その公園は毎日一般公開されています。"},
+{"id":"w_l1_094","level":1,"word":"current","part_of_speech":"adjective","meaning":"現在の、最新の","question_sentence":"Please update your current contact information.","question_sentence_ja":"現在の連絡先情報を更新してください。"},
+{"id":"w_l1_095","level":1,"word":"daily","part_of_speech":"adjective","meaning":"毎日の、日常の","question_sentence":"He checks his email as part of his daily routine.","question_sentence_ja":"彼は毎日のルーティンとしてメールをチェックします。"},
+{"id":"w_l1_096","level":1,"word":"total","part_of_speech":"adjective","meaning":"合計の","question_sentence":"The total cost came to three hundred dollars.","question_sentence_ja":"合計費用は300ドルになりました。"},
+{"id":"w_l1_097","level":1,"word":"final","part_of_speech":"adjective","meaning":"最終の","question_sentence":"Please review the final draft before sending.","question_sentence_ja":"送付前に最終原稿を確認してください。"},
+{"id":"w_l1_098","level":1,"word":"main","part_of_speech":"adjective","meaning":"主な、主要な","question_sentence":"The main entrance is located on the north side.","question_sentence_ja":"正面玄関は北側にあります。"},
+{"id":"w_l1_099","level":1,"word":"next","part_of_speech":"adjective","meaning":"次の","question_sentence":"The next training session is scheduled for Tuesday.","question_sentence_ja":"次の研修セッションは火曜日に予定されています。"},
+{"id":"w_l1_100","level":1,"word":"special","part_of_speech":"adjective","meaning":"特別な","question_sentence":"We offer special discounts for loyal members.","question_sentence_ja":"常連会員には特別割引をご提供しています。"},
+// ── LEVEL 2（301〜500点）100語・5セット ──────────────────────
+{"id":"w_l2_001","level":2,"word":"apply","part_of_speech":"verb","meaning":"応募する、申し込む","question_sentence":"You can apply for the position online.","question_sentence_ja":"そのポジションにはオンラインで応募できます。"},
+{"id":"w_l2_002","level":2,"word":"reservation","part_of_speech":"noun","meaning":"予約","question_sentence":"I'd like to make a reservation for two people.","question_sentence_ja":"2名で予約を取りたいのですが。"},
+{"id":"w_l2_003","level":2,"word":"schedule","part_of_speech":"noun","meaning":"スケジュール、予定","question_sentence":"Please check the schedule before booking the conference room.","question_sentence_ja":"会議室を予約する前にスケジュールを確認してください。"},
+{"id":"w_l2_004","level":2,"word":"confirm","part_of_speech":"verb","meaning":"確認する、確定する","question_sentence":"Please confirm your attendance by Friday.","question_sentence_ja":"金曜日までに出席を確認してください。"},
+{"id":"w_l2_005","level":2,"word":"available","part_of_speech":"adjective","meaning":"利用可能な、入手できる","question_sentence":"Is the conference room available this afternoon?","question_sentence_ja":"今日の午後、会議室は空いていますか？"},
+{"id":"w_l2_006","level":2,"word":"deliver","part_of_speech":"verb","meaning":"配達する、届ける","question_sentence":"The courier will deliver the package tomorrow morning.","question_sentence_ja":"宅配業者が明日の朝に荷物を届けます。"},
+{"id":"w_l2_007","level":2,"word":"discount","part_of_speech":"noun","meaning":"割引","question_sentence":"Members receive a 10% discount on all purchases.","question_sentence_ja":"会員はすべての購入品に対して10%割引を受けられます。"},
+{"id":"w_l2_008","level":2,"word":"require","part_of_speech":"verb","meaning":"必要とする、求める","question_sentence":"This job will require excellent communication skills.","question_sentence_ja":"この仕事には優れたコミュニケーション能力が必要です。"},
+{"id":"w_l2_009","level":2,"word":"deadline","part_of_speech":"noun","meaning":"締め切り","question_sentence":"The deadline for submitting applications is next Monday.","question_sentence_ja":"応募書類の締め切りは来週の月曜日です。"},
+{"id":"w_l2_010","level":2,"word":"improve","part_of_speech":"verb","meaning":"改善する、向上させる","question_sentence":"We need to improve customer satisfaction scores.","question_sentence_ja":"顧客満足度スコアを改善する必要があります。"},
+{"id":"w_l2_011","level":2,"word":"notify","part_of_speech":"verb","meaning":"通知する、知らせる","question_sentence":"Please notify us if you need to cancel the appointment.","question_sentence_ja":"予約をキャンセルする必要がある場合はご連絡ください。"},
+{"id":"w_l2_012","level":2,"word":"policy","part_of_speech":"noun","meaning":"方針、ポリシー","question_sentence":"The company's refund policy allows returns within 30 days.","question_sentence_ja":"会社の返金ポリシーでは30日以内の返品が認められています。"},
+{"id":"w_l2_013","level":2,"word":"promote","part_of_speech":"verb","meaning":"昇進させる、促進する","question_sentence":"The company plans to promote him to senior manager.","question_sentence_ja":"会社は彼をシニアマネージャーに昇進させる予定です。"},
+{"id":"w_l2_014","level":2,"word":"complaint","part_of_speech":"noun","meaning":"苦情、クレーム","question_sentence":"We received a complaint about the delayed shipment.","question_sentence_ja":"配送の遅延についてクレームが届きました。"},
+{"id":"w_l2_015","level":2,"word":"efficient","part_of_speech":"adjective","meaning":"効率的な","question_sentence":"The new system is more efficient than the old one.","question_sentence_ja":"新しいシステムは以前のものより効率的です。"},
+{"id":"w_l2_016","level":2,"word":"invoice","part_of_speech":"noun","meaning":"請求書、インボイス","question_sentence":"Please issue an invoice by the end of the month.","question_sentence_ja":"月末までに請求書を発行してください。"},
+{"id":"w_l2_017","level":2,"word":"negotiate","part_of_speech":"verb","meaning":"交渉する","question_sentence":"We hope to negotiate a better deal with our suppliers.","question_sentence_ja":"仕入れ先とより良い条件で交渉したいと考えています。"},
+{"id":"w_l2_018","level":2,"word":"receipt","part_of_speech":"noun","meaning":"領収書、受取証","question_sentence":"Keep the receipt in case you want to return the item.","question_sentence_ja":"商品を返品する場合に備えて領収書を保管してください。"},
+{"id":"w_l2_019","level":2,"word":"accept","part_of_speech":"verb","meaning":"受け入れる、承認する","question_sentence":"The committee will accept applications until the end of March.","question_sentence_ja":"委員会は3月末まで申請を受け付けます。"},
+{"id":"w_l2_020","level":2,"word":"account","part_of_speech":"noun","meaning":"口座、アカウント","question_sentence":"Please enter your bank account number to proceed.","question_sentence_ja":"続けるには銀行口座番号を入力してください。"},
+{"id":"w_l2_021","level":2,"word":"request","part_of_speech":"noun","meaning":"依頼、要求","question_sentence":"We received a request for additional information from the client.","question_sentence_ja":"クライアントから追加情報の依頼を受けました。"},
+{"id":"w_l2_022","level":2,"word":"responsible","part_of_speech":"adjective","meaning":"責任のある","question_sentence":"She is responsible for managing the daily operations.","question_sentence_ja":"彼女は日常業務の管理に責任を持っています。"},
+{"id":"w_l2_023","level":2,"word":"agreement","part_of_speech":"noun","meaning":"合意、契約","question_sentence":"Both parties signed the agreement yesterday.","question_sentence_ja":"両者は昨日合意書に署名しました。"},
+{"id":"w_l2_024","level":2,"word":"feedback","part_of_speech":"noun","meaning":"フィードバック、意見","question_sentence":"Your feedback will help us improve our services.","question_sentence_ja":"皆様のご意見はサービス向上に役立ちます。"},
+{"id":"w_l2_025","level":2,"word":"manage","part_of_speech":"verb","meaning":"管理する、なんとかする","question_sentence":"Can you manage the project while I am away?","question_sentence_ja":"私の不在中にプロジェクトを管理してもらえますか？"},
+{"id":"w_l2_026","level":2,"word":"arrange","part_of_speech":"verb","meaning":"手配する、整える","question_sentence":"Could you arrange a taxi for the airport?","question_sentence_ja":"空港までのタクシーを手配していただけますか？"},
+{"id":"w_l2_027","level":2,"word":"assist","part_of_speech":"verb","meaning":"手伝う、補助する","question_sentence":"Our staff will assist you with the registration process.","question_sentence_ja":"スタッフが登録手続きをお手伝いします。"},
+{"id":"w_l2_028","level":2,"word":"assign","part_of_speech":"verb","meaning":"割り当てる、任命する","question_sentence":"The manager assigned new tasks to each team member.","question_sentence_ja":"マネージャーは各チームメンバーに新しい仕事を割り当てました。"},
+{"id":"w_l2_029","level":2,"word":"collect","part_of_speech":"verb","meaning":"集める、回収する","question_sentence":"Please collect the feedback forms after the session.","question_sentence_ja":"セッション後にフィードバック用紙を回収してください。"},
+{"id":"w_l2_030","level":2,"word":"communicate","part_of_speech":"verb","meaning":"伝える、連絡を取る","question_sentence":"It is important to communicate clearly with clients.","question_sentence_ja":"クライアントと明確にコミュニケーションを取ることが重要です。"},
+{"id":"w_l2_031","level":2,"word":"complete","part_of_speech":"verb","meaning":"完了する、仕上げる","question_sentence":"Please complete the form and hand it in by noon.","question_sentence_ja":"正午までにフォームに記入して提出してください。"},
+{"id":"w_l2_032","level":2,"word":"contact","part_of_speech":"verb","meaning":"連絡する","question_sentence":"Please contact us if you have any questions.","question_sentence_ja":"ご質問がございましたらご連絡ください。"},
+{"id":"w_l2_033","level":2,"word":"coordinate","part_of_speech":"verb","meaning":"調整する、まとめる","question_sentence":"She coordinates travel arrangements for the executive team.","question_sentence_ja":"彼女は経営幹部チームの出張手配を調整しています。"},
+{"id":"w_l2_034","level":2,"word":"document","part_of_speech":"verb","meaning":"記録する、文書化する","question_sentence":"Please document all changes made to the system.","question_sentence_ja":"システムへのすべての変更を記録してください。"},
+{"id":"w_l2_035","level":2,"word":"expand","part_of_speech":"verb","meaning":"拡大する、広げる","question_sentence":"The company plans to expand its operations overseas.","question_sentence_ja":"会社は海外での事業を拡大する計画です。"},
+{"id":"w_l2_036","level":2,"word":"handle","part_of_speech":"verb","meaning":"対処する、扱う","question_sentence":"She handles all incoming customer complaints.","question_sentence_ja":"彼女はすべての顧客からのクレームに対応しています。"},
+{"id":"w_l2_037","level":2,"word":"include","part_of_speech":"verb","meaning":"含む、含める","question_sentence":"Please include your contact details in the email.","question_sentence_ja":"メールに連絡先を記載してください。"},
+{"id":"w_l2_038","level":2,"word":"maintain","part_of_speech":"verb","meaning":"維持する、保守する","question_sentence":"It is important to maintain good records of all transactions.","question_sentence_ja":"すべての取引の良好な記録を維持することが重要です。"},
+{"id":"w_l2_039","level":2,"word":"obtain","part_of_speech":"verb","meaning":"得る、入手する","question_sentence":"You must obtain approval before making any changes.","question_sentence_ja":"変更を加える前に承認を得なければなりません。"},
+{"id":"w_l2_040","level":2,"word":"participate","part_of_speech":"verb","meaning":"参加する","question_sentence":"All staff are encouraged to participate in the survey.","question_sentence_ja":"全スタッフがアンケートへの参加を奨励されています。"},
+{"id":"w_l2_041","level":2,"word":"perform","part_of_speech":"verb","meaning":"実行する、パフォーマンスを発揮する","question_sentence":"The team performed well under tight deadlines.","question_sentence_ja":"チームはタイトな締め切りの中でよくパフォーマンスを発揮しました。"},
+{"id":"w_l2_042","level":2,"word":"present","part_of_speech":"verb","meaning":"発表する、提示する","question_sentence":"She will present the quarterly results to the board.","question_sentence_ja":"彼女は取締役会に四半期の結果を発表します。"},
+{"id":"w_l2_043","level":2,"word":"process","part_of_speech":"verb","meaning":"処理する","question_sentence":"It takes two days to process a refund request.","question_sentence_ja":"返金申請の処理には2日かかります。"},
+{"id":"w_l2_044","level":2,"word":"purchase","part_of_speech":"verb","meaning":"購入する","question_sentence":"You can purchase tickets at the front desk.","question_sentence_ja":"フロントでチケットを購入できます。"},
+{"id":"w_l2_045","level":2,"word":"record","part_of_speech":"verb","meaning":"記録する","question_sentence":"Please record the minutes of the meeting.","question_sentence_ja":"会議の議事録を記録してください。"},
+{"id":"w_l2_046","level":2,"word":"reduce","part_of_speech":"verb","meaning":"削減する、減らす","question_sentence":"We are trying to reduce operational costs this year.","question_sentence_ja":"今年は運営コストを削減しようとしています。"},
+{"id":"w_l2_047","level":2,"word":"register","part_of_speech":"verb","meaning":"登録する","question_sentence":"You need to register for the event in advance.","question_sentence_ja":"事前にイベントへの登録が必要です。"},
+{"id":"w_l2_048","level":2,"word":"replace","part_of_speech":"verb","meaning":"交換する、取り替える","question_sentence":"We will replace the old equipment next month.","question_sentence_ja":"来月、古い機器を交換します。"},
+{"id":"w_l2_049","level":2,"word":"resolve","part_of_speech":"verb","meaning":"解決する","question_sentence":"We aim to resolve all complaints within 24 hours.","question_sentence_ja":"すべてのクレームを24時間以内に解決することを目指しています。"},
+{"id":"w_l2_050","level":2,"word":"review","part_of_speech":"verb","meaning":"見直す、審査する","question_sentence":"Please review the contract before signing it.","question_sentence_ja":"署名する前に契約書を確認してください。"},
+{"id":"w_l2_051","level":2,"word":"submit","part_of_speech":"verb","meaning":"提出する","question_sentence":"Please submit your expense report by the end of the week.","question_sentence_ja":"今週末までに経費報告書を提出してください。"},
+{"id":"w_l2_052","level":2,"word":"support","part_of_speech":"verb","meaning":"支援する、サポートする","question_sentence":"Our IT team is available to support you at any time.","question_sentence_ja":"ITチームはいつでもサポートできる体制です。"},
+{"id":"w_l2_053","level":2,"word":"track","part_of_speech":"verb","meaning":"追跡する、管理する","question_sentence":"You can track your order status on our website.","question_sentence_ja":"当社のウェブサイトで注文状況を追跡できます。"},
+{"id":"w_l2_054","level":2,"word":"transfer","part_of_speech":"verb","meaning":"転送する、異動する","question_sentence":"She was transferred to the overseas branch last year.","question_sentence_ja":"彼女は昨年、海外支社に異動しました。"},
+{"id":"w_l2_055","level":2,"word":"update","part_of_speech":"verb","meaning":"更新する","question_sentence":"Please update the spreadsheet with the latest figures.","question_sentence_ja":"最新の数字でスプレッドシートを更新してください。"},
+{"id":"w_l2_056","level":2,"word":"shipment","part_of_speech":"noun","meaning":"発送、出荷","question_sentence":"The shipment arrived three days ahead of schedule.","question_sentence_ja":"出荷物は予定より3日早く届きました。"},
+{"id":"w_l2_057","level":2,"word":"salary","part_of_speech":"noun","meaning":"給与、給料","question_sentence":"The salary for this position includes annual bonuses.","question_sentence_ja":"このポジションの給与には年間ボーナスが含まれます。"},
+{"id":"w_l2_058","level":2,"word":"candidate","part_of_speech":"noun","meaning":"候補者","question_sentence":"We interviewed ten candidates for the open position.","question_sentence_ja":"空席のポジションに10名の候補者を面接しました。"},
+{"id":"w_l2_059","level":2,"word":"contract","part_of_speech":"noun","meaning":"契約書","question_sentence":"Both sides agreed to the terms of the contract.","question_sentence_ja":"両者は契約条件に合意しました。"},
+{"id":"w_l2_060","level":2,"word":"department","part_of_speech":"noun","meaning":"部署、部門","question_sentence":"Each department submitted its annual budget report.","question_sentence_ja":"各部署が年間予算報告書を提出しました。"},
+{"id":"w_l2_061","level":2,"word":"equipment","part_of_speech":"noun","meaning":"機器、設備","question_sentence":"All equipment must be inspected before use.","question_sentence_ja":"すべての機器は使用前に点検しなければなりません。"},
+{"id":"w_l2_062","level":2,"word":"expense","part_of_speech":"noun","meaning":"費用、経費","question_sentence":"Please keep all receipts for your business expenses.","question_sentence_ja":"業務経費のすべての領収書を保管してください。"},
+{"id":"w_l2_063","level":2,"word":"interview","part_of_speech":"noun","meaning":"面接、インタビュー","question_sentence":"The interview is scheduled for 10 a.m. on Wednesday.","question_sentence_ja":"面接は水曜日の午前10時に予定されています。"},
+{"id":"w_l2_064","level":2,"word":"operation","part_of_speech":"noun","meaning":"業務、運営","question_sentence":"Daily operations run smoothly thanks to our team.","question_sentence_ja":"私たちのチームのおかげで日常業務はスムーズに運営されています。"},
+{"id":"w_l2_065","level":2,"word":"position","part_of_speech":"noun","meaning":"役職、ポジション","question_sentence":"She applied for the position of marketing manager.","question_sentence_ja":"彼女はマーケティングマネージャーのポジションに応募しました。"},
+{"id":"w_l2_066","level":2,"word":"proposal","part_of_speech":"noun","meaning":"提案書、提案","question_sentence":"Please send the proposal to the client by Monday.","question_sentence_ja":"月曜日までにクライアントに提案書を送ってください。"},
+{"id":"w_l2_067","level":2,"word":"quarter","part_of_speech":"noun","meaning":"四半期","question_sentence":"Sales increased significantly in the third quarter.","question_sentence_ja":"第3四半期に売上が大幅に増加しました。"},
+{"id":"w_l2_068","level":2,"word":"refund","part_of_speech":"noun","meaning":"返金、払い戻し","question_sentence":"The store offered a full refund for the damaged item.","question_sentence_ja":"店は破損した商品の全額返金を申し出ました。"},
+{"id":"w_l2_069","level":2,"word":"supplier","part_of_speech":"noun","meaning":"仕入れ先、サプライヤー","question_sentence":"We work with reliable suppliers across the region.","question_sentence_ja":"私たちは地域全体の信頼できる仕入れ先と取り引きしています。"},
+{"id":"w_l2_070","level":2,"word":"survey","part_of_speech":"noun","meaning":"アンケート、調査","question_sentence":"The customer survey results were very encouraging.","question_sentence_ja":"顧客アンケートの結果はとても励みになりました。"},
+{"id":"w_l2_071","level":2,"word":"efficient","part_of_speech":"adjective","meaning":"効率的な","question_sentence":"Our new workflow is more efficient than before.","question_sentence_ja":"新しい業務フローは以前より効率的です。"},
+{"id":"w_l2_072","level":2,"word":"flexible","part_of_speech":"adjective","meaning":"柔軟な","question_sentence":"We offer flexible working hours to all employees.","question_sentence_ja":"全従業員にフレキシブルな勤務時間を提供しています。"},
+{"id":"w_l2_073","level":2,"word":"professional","part_of_speech":"adjective","meaning":"プロフェッショナルな","question_sentence":"She handled the situation in a very professional manner.","question_sentence_ja":"彼女はとてもプロフェッショナルな態度で状況に対処しました。"},
+{"id":"w_l2_074","level":2,"word":"reliable","part_of_speech":"adjective","meaning":"信頼できる","question_sentence":"We need a reliable supplier for our raw materials.","question_sentence_ja":"原材料の信頼できる仕入れ先が必要です。"},
+{"id":"w_l2_075","level":2,"word":"satisfied","part_of_speech":"adjective","meaning":"満足した","question_sentence":"The client was very satisfied with the results.","question_sentence_ja":"クライアントは結果にとても満足していました。"},
+{"id":"w_l2_076","level":2,"word":"successful","part_of_speech":"adjective","meaning":"成功した","question_sentence":"The product launch was very successful.","question_sentence_ja":"製品の発売はとても成功しました。"},
+{"id":"w_l2_077","level":2,"word":"urgent","part_of_speech":"adjective","meaning":"緊急の","question_sentence":"There is an urgent matter that needs your attention.","question_sentence_ja":"すぐに対応が必要な緊急事項があります。"},
+{"id":"w_l2_078","level":2,"word":"previous","part_of_speech":"adjective","meaning":"以前の、前の","question_sentence":"Please refer to the previous meeting notes.","question_sentence_ja":"以前の会議メモを参照してください。"},
+{"id":"w_l2_079","level":2,"word":"additional","part_of_speech":"adjective","meaning":"追加の","question_sentence":"We may need additional staff during the busy season.","question_sentence_ja":"繁忙期には追加のスタッフが必要になるかもしれません。"},
+{"id":"w_l2_080","level":2,"word":"various","part_of_speech":"adjective","meaning":"様々な","question_sentence":"We offer various training programs for new employees.","question_sentence_ja":"新入社員向けに様々なトレーニングプログラムを提供しています。"},
+{"id":"w_l2_081","level":2,"word":"accurate","part_of_speech":"adjective","meaning":"正確な","question_sentence":"Please make sure the data is accurate before submitting.","question_sentence_ja":"提出前にデータが正確であることを確認してください。"},
+{"id":"w_l2_082","level":2,"word":"effective","part_of_speech":"adjective","meaning":"効果的な","question_sentence":"This is an effective way to reduce costs.","question_sentence_ja":"これはコストを削減する効果的な方法です。"},
+{"id":"w_l2_083","level":2,"word":"suitable","part_of_speech":"adjective","meaning":"適切な、ふさわしい","question_sentence":"Please wear suitable attire for the client meeting.","question_sentence_ja":"クライアントとの会議には適切な服装をしてください。"},
+{"id":"w_l2_084","level":2,"word":"significant","part_of_speech":"adjective","meaning":"重要な、著しい","question_sentence":"There was a significant increase in sales last month.","question_sentence_ja":"先月、売上が著しく増加しました。"},
+{"id":"w_l2_085","level":2,"word":"relevant","part_of_speech":"adjective","meaning":"関連した、適切な","question_sentence":"Please include only relevant information in your report.","question_sentence_ja":"報告書には関連する情報のみ記載してください。"},
+{"id":"w_l2_086","level":2,"word":"gradually","part_of_speech":"adverb","meaning":"徐々に、少しずつ","question_sentence":"Sales have been gradually increasing over the past year.","question_sentence_ja":"過去1年間で売上が徐々に増加しています。"},
+{"id":"w_l2_087","level":2,"word":"immediately","part_of_speech":"adverb","meaning":"すぐに、直ちに","question_sentence":"Please respond to the client's email immediately.","question_sentence_ja":"クライアントのメールにすぐに返信してください。"},
+{"id":"w_l2_088","level":2,"word":"recently","part_of_speech":"adverb","meaning":"最近","question_sentence":"The company recently launched a new product line.","question_sentence_ja":"会社は最近、新しい製品ラインを発売しました。"},
+{"id":"w_l2_089","level":2,"word":"currently","part_of_speech":"adverb","meaning":"現在、今のところ","question_sentence":"We are currently reviewing all applications.","question_sentence_ja":"現在、すべての申請を審査中です。"},
+{"id":"w_l2_090","level":2,"word":"approximately","part_of_speech":"adverb","meaning":"おおよそ、約","question_sentence":"The project will take approximately three months.","question_sentence_ja":"プロジェクトはおおよそ3ヶ月かかります。"},
+{"id":"w_l2_091","level":2,"word":"budget","part_of_speech":"noun","meaning":"予算","question_sentence":"The project was completed within the allocated budget.","question_sentence_ja":"プロジェクトは割り当てられた予算内で完了しました。"},
+{"id":"w_l2_092","level":2,"word":"announcement","part_of_speech":"noun","meaning":"お知らせ、発表","question_sentence":"An important announcement was made at the all-staff meeting.","question_sentence_ja":"全社員会議で重要な発表がありました。"},
+{"id":"w_l2_093","level":2,"word":"appointment","part_of_speech":"noun","meaning":"予約、約束","question_sentence":"I have a doctor's appointment on Friday afternoon.","question_sentence_ja":"金曜日の午後に医者の予約が入っています。"},
+{"id":"w_l2_094","level":2,"word":"branch","part_of_speech":"noun","meaning":"支店、支社","question_sentence":"The new branch will open in the spring.","question_sentence_ja":"新しい支店が春にオープンする予定です。"},
+{"id":"w_l2_095","level":2,"word":"client","part_of_speech":"noun","meaning":"クライアント、依頼人","question_sentence":"We held a dinner for our top clients last night.","question_sentence_ja":"昨夜、主要クライアントのためにディナーを開催しました。"},
+{"id":"w_l2_096","level":2,"word":"colleague","part_of_speech":"noun","meaning":"同僚","question_sentence":"He introduced me to his colleagues at the office.","question_sentence_ja":"彼はオフィスで同僚を紹介してくれました。"},
+{"id":"w_l2_097","level":2,"word":"headquarters","part_of_speech":"noun","meaning":"本社、本部","question_sentence":"The headquarters is located in the center of the city.","question_sentence_ja":"本社は市の中心部にあります。"},
+{"id":"w_l2_098","level":2,"word":"deadline","part_of_speech":"noun","meaning":"締め切り","question_sentence":"We must meet the deadline or face penalties.","question_sentence_ja":"締め切りを守らなければペナルティが生じます。"},
+{"id":"w_l2_099","level":2,"word":"profit","part_of_speech":"noun","meaning":"利益、収益","question_sentence":"The company reported record profit this year.","question_sentence_ja":"会社は今年、過去最高の利益を報告しました。"},
+{"id":"w_l2_100","level":2,"word":"training","part_of_speech":"noun","meaning":"研修、トレーニング","question_sentence":"All new hires must complete the safety training program.","question_sentence_ja":"全新入社員は安全研修プログラムを修了しなければなりません。"},
+// ── LEVEL 3（501〜700点）100語・5セット ──────────────────────
+{"id":"w_l3_001","level":3,"word":"implement","part_of_speech":"verb","meaning":"実行する、実施する","question_sentence":"The committee plans to implement the new policy starting next month.","question_sentence_ja":"委員会は来月から新しい方針を実施する予定です。"},
+{"id":"w_l3_002","level":3,"word":"personnel","part_of_speech":"noun","meaning":"人員、職員","question_sentence":"All personnel changes must be approved by the HR department.","question_sentence_ja":"すべての人事異動は人事部の承認が必要です。"},
+{"id":"w_l3_003","level":3,"word":"procedure","part_of_speech":"noun","meaning":"手順、手続き","question_sentence":"Please follow the standard procedure for filing expense reports.","question_sentence_ja":"経費報告書の提出には標準手順に従ってください。"},
+{"id":"w_l3_004","level":3,"word":"allocate","part_of_speech":"verb","meaning":"割り当てる、配分する","question_sentence":"The board decided to allocate more funds to research.","question_sentence_ja":"取締役会は研究により多くの資金を配分することを決定しました。"},
+{"id":"w_l3_005","level":3,"word":"compliance","part_of_speech":"noun","meaning":"コンプライアンス、規則遵守","question_sentence":"All departments are required to ensure compliance with the new regulations.","question_sentence_ja":"全部門は新しい規制の遵守を確保することが求められています。"},
+{"id":"w_l3_006","level":3,"word":"evaluate","part_of_speech":"verb","meaning":"評価する、査定する","question_sentence":"We will evaluate each candidate based on their work samples.","question_sentence_ja":"各候補者を作品サンプルに基づいて評価します。"},
+{"id":"w_l3_007","level":3,"word":"facilitate","part_of_speech":"verb","meaning":"促進する、容易にする","question_sentence":"Technology can facilitate communication between remote teams.","question_sentence_ja":"テクノロジーはリモートチーム間のコミュニケーションを促進できます。"},
+{"id":"w_l3_008","level":3,"word":"obligation","part_of_speech":"noun","meaning":"義務、責務","question_sentence":"It is our obligation to disclose any potential conflicts of interest.","question_sentence_ja":"潜在的な利益相反を開示することが私たちの義務です。"},
+{"id":"w_l3_009","level":3,"word":"retain","part_of_speech":"verb","meaning":"保持する、引き留める","question_sentence":"The company worked hard to retain its top talent.","question_sentence_ja":"会社は優秀な人材を引き留めるために努力しました。"},
+{"id":"w_l3_010","level":3,"word":"substantial","part_of_speech":"adjective","meaning":"かなりの、相当な","question_sentence":"The merger resulted in substantial cost savings.","question_sentence_ja":"合併によって相当なコスト削減が実現しました。"},
+{"id":"w_l3_011","level":3,"word":"revenue","part_of_speech":"noun","meaning":"収益、歳入","question_sentence":"The company's annual revenue exceeded expectations this quarter.","question_sentence_ja":"会社の年間収益は今四半期に予想を上回りました。"},
+{"id":"w_l3_012","level":3,"word":"clarify","part_of_speech":"verb","meaning":"明確にする、解明する","question_sentence":"Could you clarify the instructions in the manual?","question_sentence_ja":"マニュアルの指示を明確にしていただけますか？"},
+{"id":"w_l3_013","level":3,"word":"agenda","part_of_speech":"noun","meaning":"議題、アジェンダ","question_sentence":"The agenda for tomorrow's meeting includes budget review.","question_sentence_ja":"明日の会議の議題には予算審査が含まれています。"},
+{"id":"w_l3_014","level":3,"word":"approve","part_of_speech":"verb","meaning":"承認する、認可する","question_sentence":"The board needs to approve the budget proposal first.","question_sentence_ja":"まず取締役会が予算案を承認する必要があります。"},
+{"id":"w_l3_015","level":3,"word":"productivity","part_of_speech":"noun","meaning":"生産性","question_sentence":"The new software significantly increased staff productivity.","question_sentence_ja":"新しいソフトウェアはスタッフの生産性を大幅に向上させました。"},
+{"id":"w_l3_016","level":3,"word":"minimize","part_of_speech":"verb","meaning":"最小化する、減らす","question_sentence":"We should try to minimize unnecessary spending this quarter.","question_sentence_ja":"今四半期は不必要な支出を最小限に抑えるよう努めるべきです。"},
+{"id":"w_l3_017","level":3,"word":"shortage","part_of_speech":"noun","meaning":"不足、欠乏","question_sentence":"The shortage of skilled workers is a major challenge.","question_sentence_ja":"熟練労働者の不足は重大な課題です。"},
+{"id":"w_l3_018","level":3,"word":"authorize","part_of_speech":"verb","meaning":"権限を与える、認可する","question_sentence":"Only the director can authorize large expense claims.","question_sentence_ja":"大きな経費請求を認可できるのは取締役だけです。"},
+{"id":"w_l3_019","level":3,"word":"mandatory","part_of_speech":"adjective","meaning":"義務的な、強制的な","question_sentence":"The training session is mandatory for all new employees.","question_sentence_ja":"このトレーニングセッションは全新入社員に義務付けられています。"},
+{"id":"w_l3_020","level":3,"word":"initiate","part_of_speech":"verb","meaning":"開始する、始める","question_sentence":"The manager decided to initiate a new training program.","question_sentence_ja":"マネージャーは新しいトレーニングプログラムを開始することを決定しました。"},
+{"id":"w_l3_021","level":3,"word":"restructure","part_of_speech":"verb","meaning":"再編する、組織を変える","question_sentence":"The company decided to restructure its sales division.","question_sentence_ja":"会社は営業部門を再編することを決定しました。"},
+{"id":"w_l3_022","level":3,"word":"streamline","part_of_speech":"verb","meaning":"効率化する、合理化する","question_sentence":"We need to streamline the approval process.","question_sentence_ja":"承認プロセスを効率化する必要があります。"},
+{"id":"w_l3_023","level":3,"word":"prioritize","part_of_speech":"verb","meaning":"優先する、優先順位をつける","question_sentence":"Please prioritize the most urgent tasks first.","question_sentence_ja":"最も緊急のタスクを優先してください。"},
+{"id":"w_l3_024","level":3,"word":"delegate","part_of_speech":"verb","meaning":"委任する、権限を与える","question_sentence":"A good manager knows how to delegate tasks effectively.","question_sentence_ja":"優れたマネージャーはタスクを効果的に委任する方法を知っています。"},
+{"id":"w_l3_025","level":3,"word":"negotiate","part_of_speech":"verb","meaning":"交渉する","question_sentence":"They negotiated a new contract with the vendor.","question_sentence_ja":"彼らはベンダーと新しい契約を交渉しました。"},
+{"id":"w_l3_026","level":3,"word":"coordinate","part_of_speech":"verb","meaning":"調整する、連携する","question_sentence":"The project manager coordinates work across all departments.","question_sentence_ja":"プロジェクトマネージャーは全部門の業務を調整します。"},
+{"id":"w_l3_027","level":3,"word":"incorporate","part_of_speech":"verb","meaning":"取り入れる、統合する","question_sentence":"We will incorporate your suggestions into the final plan.","question_sentence_ja":"ご提案を最終計画に取り入れます。"},
+{"id":"w_l3_028","level":3,"word":"enhance","part_of_speech":"verb","meaning":"高める、向上させる","question_sentence":"Training programs can enhance employee performance.","question_sentence_ja":"研修プログラムは従業員のパフォーマンスを向上させることができます。"},
+{"id":"w_l3_029","level":3,"word":"monitor","part_of_speech":"verb","meaning":"監視する、モニタリングする","question_sentence":"We closely monitor all project expenses.","question_sentence_ja":"すべてのプロジェクト経費を綿密に監視しています。"},
+{"id":"w_l3_030","level":3,"word":"identify","part_of_speech":"verb","meaning":"特定する、見分ける","question_sentence":"We need to identify the root cause of the problem.","question_sentence_ja":"問題の根本原因を特定する必要があります。"},
+{"id":"w_l3_031","level":3,"word":"formulate","part_of_speech":"verb","meaning":"策定する、立案する","question_sentence":"The team worked together to formulate a new strategy.","question_sentence_ja":"チームは新しい戦略を策定するために協力しました。"},
+{"id":"w_l3_032","level":3,"word":"generate","part_of_speech":"verb","meaning":"生み出す、発生させる","question_sentence":"The new campaign is expected to generate more leads.","question_sentence_ja":"新しいキャンペーンはより多くのリードを生み出すと期待されています。"},
+{"id":"w_l3_033","level":3,"word":"execute","part_of_speech":"verb","meaning":"実行する、遂行する","question_sentence":"The team was able to execute the plan successfully.","question_sentence_ja":"チームは計画をうまく実行することができました。"},
+{"id":"w_l3_034","level":3,"word":"optimize","part_of_speech":"verb","meaning":"最適化する","question_sentence":"We are looking for ways to optimize our supply chain.","question_sentence_ja":"サプライチェーンを最適化する方法を模索しています。"},
+{"id":"w_l3_035","level":3,"word":"oversee","part_of_speech":"verb","meaning":"監督する、管理する","question_sentence":"She was appointed to oversee the entire project.","question_sentence_ja":"彼女はプロジェクト全体を監督するために任命されました。"},
+{"id":"w_l3_036","level":3,"word":"workforce","part_of_speech":"noun","meaning":"労働力、従業員","question_sentence":"The company invested in training its entire workforce.","question_sentence_ja":"会社は全従業員の研修に投資しました。"},
+{"id":"w_l3_037","level":3,"word":"initiative","part_of_speech":"noun","meaning":"取り組み、主導権","question_sentence":"The new cost-cutting initiative saved the company millions.","question_sentence_ja":"新しいコスト削減の取り組みにより、会社は数百万ドルを節約しました。"},
+{"id":"w_l3_038","level":3,"word":"framework","part_of_speech":"noun","meaning":"枠組み、フレームワーク","question_sentence":"We need a clear framework for evaluating performance.","question_sentence_ja":"パフォーマンスを評価するための明確な枠組みが必要です。"},
+{"id":"w_l3_039","level":3,"word":"outcome","part_of_speech":"noun","meaning":"成果、結果","question_sentence":"The outcome of the negotiation was very positive.","question_sentence_ja":"交渉の結果はとても好ましいものでした。"},
+{"id":"w_l3_040","level":3,"word":"strategy","part_of_speech":"noun","meaning":"戦略","question_sentence":"The board reviewed the five-year business strategy.","question_sentence_ja":"取締役会は5カ年ビジネス戦略を審査しました。"},
+{"id":"w_l3_041","level":3,"word":"objective","part_of_speech":"noun","meaning":"目的、目標","question_sentence":"The main objective is to increase market share by 10%.","question_sentence_ja":"主な目標は市場シェアを10%増やすことです。"},
+{"id":"w_l3_042","level":3,"word":"milestone","part_of_speech":"noun","meaning":"マイルストーン、重要な節目","question_sentence":"Reaching 1,000 customers was a major milestone for us.","question_sentence_ja":"顧客1,000人の達成は私たちにとって大きなマイルストーンでした。"},
+{"id":"w_l3_043","level":3,"word":"benchmark","part_of_speech":"noun","meaning":"基準、ベンチマーク","question_sentence":"We use industry benchmarks to measure our performance.","question_sentence_ja":"業界の基準を使って自社のパフォーマンスを測定しています。"},
+{"id":"w_l3_044","level":3,"word":"constraint","part_of_speech":"noun","meaning":"制約、制限","question_sentence":"Budget constraints limited the scope of the project.","question_sentence_ja":"予算の制約によりプロジェクトの範囲が限定されました。"},
+{"id":"w_l3_045","level":3,"word":"incentive","part_of_speech":"noun","meaning":"インセンティブ、動機づけ","question_sentence":"Performance bonuses serve as an incentive for employees.","question_sentence_ja":"業績ボーナスは従業員へのインセンティブとして機能します。"},
+{"id":"w_l3_046","level":3,"word":"portfolio","part_of_speech":"noun","meaning":"ポートフォリオ、業績集","question_sentence":"Please bring your portfolio to the design interview.","question_sentence_ja":"デザインの面接にポートフォリオを持参してください。"},
+{"id":"w_l3_047","level":3,"word":"criteria","part_of_speech":"noun","meaning":"基準、判断条件","question_sentence":"The selection criteria for the award were clearly defined.","question_sentence_ja":"賞の選考基準は明確に定義されていました。"},
+{"id":"w_l3_048","level":3,"word":"regulation","part_of_speech":"noun","meaning":"規制、規則","question_sentence":"All products must comply with government regulations.","question_sentence_ja":"すべての製品は政府の規制を遵守しなければなりません。"},
+{"id":"w_l3_049","level":3,"word":"liability","part_of_speech":"noun","meaning":"責任、負債","question_sentence":"The company accepted liability for the defective products.","question_sentence_ja":"会社は欠陥製品に対する責任を認めました。"},
+{"id":"w_l3_050","level":3,"word":"audit","part_of_speech":"noun","meaning":"監査","question_sentence":"An annual audit is required by law for all public companies.","question_sentence_ja":"すべての上場企業には法律により年次監査が義務付けられています。"},
+{"id":"w_l3_051","level":3,"word":"comprehensive","part_of_speech":"adjective","meaning":"包括的な、網羅的な","question_sentence":"We conducted a comprehensive review of the system.","question_sentence_ja":"システムの包括的なレビューを実施しました。"},
+{"id":"w_l3_052","level":3,"word":"consistent","part_of_speech":"adjective","meaning":"一貫した、安定した","question_sentence":"Consistent quality is key to customer satisfaction.","question_sentence_ja":"一貫した品質が顧客満足の鍵です。"},
+{"id":"w_l3_053","level":3,"word":"proactive","part_of_speech":"adjective","meaning":"積極的な、先手を打つ","question_sentence":"A proactive approach helps prevent problems.","question_sentence_ja":"積極的なアプローチは問題を未然に防ぐのに役立ちます。"},
+{"id":"w_l3_054","level":3,"word":"transparent","part_of_speech":"adjective","meaning":"透明性のある","question_sentence":"The company aims to be transparent in its reporting.","question_sentence_ja":"会社は報告において透明性を目指しています。"},
+{"id":"w_l3_055","level":3,"word":"viable","part_of_speech":"adjective","meaning":"実行可能な、実現可能な","question_sentence":"We need to find a viable solution to the issue.","question_sentence_ja":"その問題に対して実行可能な解決策を見つける必要があります。"},
+{"id":"w_l3_056","level":3,"word":"strategic","part_of_speech":"adjective","meaning":"戦略的な","question_sentence":"This is a strategic decision for the company's future.","question_sentence_ja":"これは会社の将来にとって戦略的な決断です。"},
+{"id":"w_l3_057","level":3,"word":"operational","part_of_speech":"adjective","meaning":"運営上の、業務の","question_sentence":"We need to address several operational issues first.","question_sentence_ja":"まずいくつかの業務上の問題に対処する必要があります。"},
+{"id":"w_l3_058","level":3,"word":"critical","part_of_speech":"adjective","meaning":"重要な、批判的な","question_sentence":"This is a critical stage in the product development.","question_sentence_ja":"これは製品開発の重要な段階です。"},
+{"id":"w_l3_059","level":3,"word":"efficient","part_of_speech":"adjective","meaning":"効率的な","question_sentence":"The new process is far more efficient than the old one.","question_sentence_ja":"新しいプロセスは以前のものよりはるかに効率的です。"},
+{"id":"w_l3_060","level":3,"word":"sustainable","part_of_speech":"adjective","meaning":"持続可能な","question_sentence":"The company is committed to sustainable business practices.","question_sentence_ja":"会社は持続可能なビジネス慣行に取り組んでいます。"},
+{"id":"w_l3_061","level":3,"word":"efficiently","part_of_speech":"adverb","meaning":"効率よく","question_sentence":"The team worked efficiently to meet the tight deadline.","question_sentence_ja":"チームはタイトな締め切りを守るために効率よく作業しました。"},
+{"id":"w_l3_062","level":3,"word":"consistently","part_of_speech":"adverb","meaning":"一貫して","question_sentence":"She consistently delivers high-quality work.","question_sentence_ja":"彼女は一貫して高品質の仕事を提供しています。"},
+{"id":"w_l3_063","level":3,"word":"significantly","part_of_speech":"adverb","meaning":"著しく、大幅に","question_sentence":"Profits have increased significantly this year.","question_sentence_ja":"今年は利益が著しく増加しました。"},
+{"id":"w_l3_064","level":3,"word":"substantially","part_of_speech":"adverb","meaning":"大幅に、かなり","question_sentence":"Costs were substantially reduced after the restructuring.","question_sentence_ja":"再編後、コストが大幅に削減されました。"},
+{"id":"w_l3_065","level":3,"word":"accordingly","part_of_speech":"adverb","meaning":"それに応じて、したがって","question_sentence":"Please review the new rules and act accordingly.","question_sentence_ja":"新しいルールを確認し、それに応じて行動してください。"},
+{"id":"w_l3_066","level":3,"word":"expenditure","part_of_speech":"noun","meaning":"支出、経費","question_sentence":"Total expenditure for the project exceeded the budget.","question_sentence_ja":"プロジェクトの総支出が予算を超えました。"},
+{"id":"w_l3_067","level":3,"word":"collaboration","part_of_speech":"noun","meaning":"協力、コラボレーション","question_sentence":"The project was completed through close collaboration.","question_sentence_ja":"プロジェクトは緊密な協力によって完了しました。"},
+{"id":"w_l3_068","level":3,"word":"implementation","part_of_speech":"noun","meaning":"実施、導入","question_sentence":"The implementation of the new system took three months.","question_sentence_ja":"新システムの導入には3ヶ月かかりました。"},
+{"id":"w_l3_069","level":3,"word":"assessment","part_of_speech":"noun","meaning":"評価、査定","question_sentence":"A risk assessment is required before the project begins.","question_sentence_ja":"プロジェクト開始前にリスク評価が必要です。"},
+{"id":"w_l3_070","level":3,"word":"transition","part_of_speech":"noun","meaning":"移行、移り変わり","question_sentence":"The transition to the new system went smoothly.","question_sentence_ja":"新システムへの移行はスムーズに進みました。"},
+{"id":"w_l3_071","level":3,"word":"integration","part_of_speech":"noun","meaning":"統合、一体化","question_sentence":"The integration of the two systems took several weeks.","question_sentence_ja":"2つのシステムの統合には数週間かかりました。"},
+{"id":"w_l3_072","level":3,"word":"authorization","part_of_speech":"noun","meaning":"承認、許可","question_sentence":"You need written authorization to access the server room.","question_sentence_ja":"サーバー室にアクセスするには書面による許可が必要です。"},
+{"id":"w_l3_073","level":3,"word":"specification","part_of_speech":"noun","meaning":"仕様、要件","question_sentence":"The product must meet all technical specifications.","question_sentence_ja":"製品はすべての技術仕様を満たさなければなりません。"},
+{"id":"w_l3_074","level":3,"word":"documentation","part_of_speech":"noun","meaning":"文書化、書類","question_sentence":"Proper documentation is essential for audits.","question_sentence_ja":"適切な文書化は監査に不可欠です。"},
+{"id":"w_l3_075","level":3,"word":"confirmation","part_of_speech":"noun","meaning":"確認、確認書","question_sentence":"Please send a confirmation email once the booking is made.","question_sentence_ja":"予約が完了したら確認メールを送信してください。"},
+{"id":"w_l3_076","level":3,"word":"distribution","part_of_speech":"noun","meaning":"流通、配布","question_sentence":"The distribution network covers the entire country.","question_sentence_ja":"流通ネットワークは全国をカバーしています。"},
+{"id":"w_l3_077","level":3,"word":"consultation","part_of_speech":"noun","meaning":"相談、協議","question_sentence":"A consultation with the legal team is strongly advised.","question_sentence_ja":"法務チームへの相談を強くお勧めします。"},
+{"id":"w_l3_078","level":3,"word":"compensation","part_of_speech":"noun","meaning":"報酬、補償","question_sentence":"The compensation package includes health insurance.","question_sentence_ja":"報酬パッケージには健康保険が含まれています。"},
+{"id":"w_l3_079","level":3,"word":"recruitment","part_of_speech":"noun","meaning":"採用、リクルート","question_sentence":"The recruitment process takes about six weeks.","question_sentence_ja":"採用プロセスには約6週間かかります。"},
+{"id":"w_l3_080","level":3,"word":"performance","part_of_speech":"noun","meaning":"業績、パフォーマンス","question_sentence":"Performance reviews are held twice a year.","question_sentence_ja":"業績評価は年2回行われます。"},
+{"id":"w_l3_081","level":3,"word":"reorganize","part_of_speech":"verb","meaning":"再編成する","question_sentence":"The company plans to reorganize its sales structure.","question_sentence_ja":"会社は営業体制を再編成する計画です。"},
+{"id":"w_l3_082","level":3,"word":"outsource","part_of_speech":"verb","meaning":"外部委託する","question_sentence":"We decided to outsource the IT support function.","question_sentence_ja":"ITサポート機能を外部委託することにしました。"},
+{"id":"w_l3_083","level":3,"word":"benchmark","part_of_speech":"verb","meaning":"基準と比較する","question_sentence":"We benchmark our prices against industry competitors.","question_sentence_ja":"業界の競合他社と自社価格を比較しています。"},
+{"id":"w_l3_084","level":3,"word":"diversify","part_of_speech":"verb","meaning":"多様化する","question_sentence":"The firm plans to diversify its investment portfolio.","question_sentence_ja":"会社は投資ポートフォリオを多様化する計画です。"},
+{"id":"w_l3_085","level":3,"word":"consolidate","part_of_speech":"verb","meaning":"統合する、強化する","question_sentence":"We will consolidate the two offices into one.","question_sentence_ja":"2つのオフィスを1つに統合します。"},
+{"id":"w_l3_086","level":3,"word":"suspend","part_of_speech":"verb","meaning":"一時停止する、中断する","question_sentence":"Operations were suspended due to the equipment failure.","question_sentence_ja":"機器の故障により業務が一時停止されました。"},
+{"id":"w_l3_087","level":3,"word":"verify","part_of_speech":"verb","meaning":"確認する、検証する","question_sentence":"Please verify the figures before presenting them.","question_sentence_ja":"発表する前に数値を確認してください。"},
+{"id":"w_l3_088","level":3,"word":"collaborate","part_of_speech":"verb","meaning":"協力する、共同作業する","question_sentence":"The two departments will collaborate on the new project.","question_sentence_ja":"2つの部署が新しいプロジェクトで協力します。"},
+{"id":"w_l3_089","level":3,"word":"compile","part_of_speech":"verb","meaning":"まとめる、編集する","question_sentence":"Please compile the data into a single report.","question_sentence_ja":"データを1つのレポートにまとめてください。"},
+{"id":"w_l3_090","level":3,"word":"anticipate","part_of_speech":"verb","meaning":"予測する、見越す","question_sentence":"We anticipate strong demand for the new product.","question_sentence_ja":"新製品に対して強い需要が見込まれます。"},
+{"id":"w_l3_091","level":3,"word":"overhead","part_of_speech":"noun","meaning":"経費、間接費","question_sentence":"Reducing overhead costs will improve profitability.","question_sentence_ja":"間接費を削減することで収益性が向上します。"},
+{"id":"w_l3_092","level":3,"word":"turnover","part_of_speech":"noun","meaning":"離職率、売上高","question_sentence":"High employee turnover is a costly problem.","question_sentence_ja":"高い従業員離職率はコストのかかる問題です。"},
+{"id":"w_l3_093","level":3,"word":"projection","part_of_speech":"noun","meaning":"予測、見通し","question_sentence":"Sales projections for next year look very promising.","question_sentence_ja":"来年の売上予測はとても有望に見えます。"},
+{"id":"w_l3_094","level":3,"word":"rollout","part_of_speech":"noun","meaning":"展開、導入","question_sentence":"The nationwide rollout of the new app begins next week.","question_sentence_ja":"新しいアプリの全国展開が来週始まります。"},
+{"id":"w_l3_095","level":3,"word":"workforce","part_of_speech":"noun","meaning":"労働力","question_sentence":"The company expanded its workforce by 20% last year.","question_sentence_ja":"会社は昨年、労働力を20%拡大しました。"},
+{"id":"w_l3_096","level":3,"word":"deadline","part_of_speech":"noun","meaning":"締め切り","question_sentence":"The project deadline has been moved to next Friday.","question_sentence_ja":"プロジェクトの締め切りが来週金曜日に変更されました。"},
+{"id":"w_l3_097","level":3,"word":"revenue","part_of_speech":"noun","meaning":"収益","question_sentence":"Revenue from overseas markets grew by 30% this year.","question_sentence_ja":"今年、海外市場からの収益が30%増加しました。"},
+{"id":"w_l3_098","level":3,"word":"stakeholder","part_of_speech":"noun","meaning":"利害関係者","question_sentence":"All stakeholders were invited to the briefing session.","question_sentence_ja":"すべての利害関係者がブリーフィングセッションに招待されました。"},
+{"id":"w_l3_099","level":3,"word":"logistics","part_of_speech":"noun","meaning":"物流、ロジスティクス","question_sentence":"The logistics team handled all shipping arrangements.","question_sentence_ja":"物流チームがすべての配送手配を担当しました。"},
+{"id":"w_l3_100","level":3,"word":"scalable","part_of_speech":"adjective","meaning":"拡張可能な","question_sentence":"We need a scalable solution that can grow with the business.","question_sentence_ja":"ビジネスの成長に合わせて拡張できるソリューションが必要です。"},
+// ── LEVEL 4（701〜850点）100語・5セット ──────────────────────
+{"id":"w_l4_001","level":4,"word":"subsequent","part_of_speech":"adjective","meaning":"その後の、続く","question_sentence":"The initial proposal was approved, but subsequent revisions were required.","question_sentence_ja":"最初の提案は承認されましたが、その後の修正が必要でした。"},
+{"id":"w_l4_002","level":4,"word":"inherently","part_of_speech":"adverb","meaning":"本質的に、生まれながらに","question_sentence":"The new approach is inherently more cost-effective.","question_sentence_ja":"新しいアプローチは本質的にコスト効率が高いです。"},
+{"id":"w_l4_003","level":4,"word":"synthetic","part_of_speech":"adjective","meaning":"合成の、人工の","question_sentence":"The product is made from synthetic materials to reduce costs.","question_sentence_ja":"この製品はコストを削減するために合成材料から作られています。"},
+{"id":"w_l4_004","level":4,"word":"procurement","part_of_speech":"noun","meaning":"調達、購買","question_sentence":"The procurement department handles all supplier contracts.","question_sentence_ja":"購買部門がすべての仕入れ先との契約を管理しています。"},
+{"id":"w_l4_005","level":4,"word":"mitigate","part_of_speech":"verb","meaning":"緩和する、軽減する","question_sentence":"Insurance can help mitigate the financial risks involved.","question_sentence_ja":"保険は関連する財務リスクの軽減に役立ちます。"},
+{"id":"w_l4_006","level":4,"word":"autonomous","part_of_speech":"adjective","meaning":"自律的な、独立した","question_sentence":"The team operates as an autonomous unit within the organization.","question_sentence_ja":"チームは組織内で自律的なユニットとして機能しています。"},
+{"id":"w_l4_007","level":4,"word":"reimbursement","part_of_speech":"noun","meaning":"払い戻し、返済","question_sentence":"Submit your receipts for travel reimbursement within two weeks.","question_sentence_ja":"出張の払い戻しのために2週間以内に領収書を提出してください。"},
+{"id":"w_l4_008","level":4,"word":"leverage","part_of_speech":"verb","meaning":"活用する、てこにする","question_sentence":"We need to leverage our existing partnerships to enter new markets.","question_sentence_ja":"新市場に参入するために既存のパートナーシップを活用する必要があります。"},
+{"id":"w_l4_009","level":4,"word":"liability","part_of_speech":"noun","meaning":"負債、責任","question_sentence":"The company's liability increased due to the lawsuit.","question_sentence_ja":"訴訟により会社の負債が増加しました。"},
+{"id":"w_l4_010","level":4,"word":"transparency","part_of_speech":"noun","meaning":"透明性、透明度","question_sentence":"Investors value transparency in financial reporting.","question_sentence_ja":"投資家は財務報告における透明性を重視します。"},
+{"id":"w_l4_011","level":4,"word":"scrutinize","part_of_speech":"verb","meaning":"精査する、詳しく調べる","question_sentence":"Auditors will scrutinize all financial records from last year.","question_sentence_ja":"監査人は昨年のすべての財務記録を精査します。"},
+{"id":"w_l4_012","level":4,"word":"expedite","part_of_speech":"verb","meaning":"迅速に処理する、促進する","question_sentence":"Please expedite the approval process to meet the deadline.","question_sentence_ja":"締め切りに間に合わせるために承認プロセスを迅速化してください。"},
+{"id":"w_l4_013","level":4,"word":"feasibility","part_of_speech":"noun","meaning":"実現可能性","question_sentence":"A feasibility study will be conducted before the project begins.","question_sentence_ja":"プロジェクト開始前に実現可能性調査が実施されます。"},
+{"id":"w_l4_014","level":4,"word":"acquisition","part_of_speech":"noun","meaning":"買収、習得","question_sentence":"The acquisition of the rival firm boosted our market share.","question_sentence_ja":"競合他社の買収により、市場シェアが向上しました。"},
+{"id":"w_l4_015","level":4,"word":"accountability","part_of_speech":"noun","meaning":"説明責任","question_sentence":"The new policy promotes individual accountability within each team.","question_sentence_ja":"新しいポリシーは各チーム内の個人の説明責任を促進します。"},
+{"id":"w_l4_016","level":4,"word":"confidential","part_of_speech":"adjective","meaning":"機密の、秘密の","question_sentence":"All client data must be treated as confidential.","question_sentence_ja":"すべてのクライアントデータは機密として扱わなければなりません。"},
+{"id":"w_l4_017","level":4,"word":"unprecedented","part_of_speech":"adjective","meaning":"前例のない","question_sentence":"The company experienced unprecedented growth during the pandemic.","question_sentence_ja":"会社はパンデミック中に前例のない成長を経験しました。"},
+{"id":"w_l4_018","level":4,"word":"arbitrate","part_of_speech":"verb","meaning":"仲裁する","question_sentence":"A neutral party was brought in to arbitrate the dispute.","question_sentence_ja":"紛争を仲裁するために中立な第三者が呼ばれました。"},
+{"id":"w_l4_019","level":4,"word":"adhere","part_of_speech":"verb","meaning":"遵守する、固守する","question_sentence":"All staff must adhere to the company's code of conduct.","question_sentence_ja":"全スタッフは会社の行動規範を遵守しなければなりません。"},
+{"id":"w_l4_020","level":4,"word":"aggregate","part_of_speech":"verb","meaning":"集計する、合計する","question_sentence":"The system can aggregate data from multiple sources.","question_sentence_ja":"そのシステムは複数のソースからデータを集計できます。"},
+{"id":"w_l4_021","level":4,"word":"depreciate","part_of_speech":"verb","meaning":"減価償却する、価値が下がる","question_sentence":"Office equipment depreciates over time.","question_sentence_ja":"事務機器は時間とともに価値が下がります。"},
+{"id":"w_l4_022","level":4,"word":"disseminate","part_of_speech":"verb","meaning":"普及させる、広める","question_sentence":"The team disseminated the new guidelines to all departments.","question_sentence_ja":"チームは新しいガイドラインを全部門に周知しました。"},
+{"id":"w_l4_023","level":4,"word":"endorse","part_of_speech":"verb","meaning":"支持する、承認する","question_sentence":"The committee endorsed the proposed budget plan.","question_sentence_ja":"委員会は提案された予算計画を承認しました。"},
+{"id":"w_l4_024","level":4,"word":"curtail","part_of_speech":"verb","meaning":"削減する、制限する","question_sentence":"The company had to curtail spending due to falling revenues.","question_sentence_ja":"収益の減少により、会社は支出を削減せざるを得ませんでした。"},
+{"id":"w_l4_025","level":4,"word":"circumvent","part_of_speech":"verb","meaning":"回避する、抜け道を探す","question_sentence":"Attempts to circumvent the safety rules were not tolerated.","question_sentence_ja":"安全規則を回避しようとする試みは許容されませんでした。"},
+{"id":"w_l4_026","level":4,"word":"compel","part_of_speech":"verb","meaning":"強制する、余儀なくさせる","question_sentence":"Rising costs compelled the company to raise its prices.","question_sentence_ja":"コストの上昇により、会社は価格を引き上げざるを得ませんでした。"},
+{"id":"w_l4_027","level":4,"word":"constitute","part_of_speech":"verb","meaning":"構成する、〜にあたる","question_sentence":"This conduct may constitute a breach of contract.","question_sentence_ja":"この行為は契約違反にあたる可能性があります。"},
+{"id":"w_l4_028","level":4,"word":"accrue","part_of_speech":"verb","meaning":"蓄積する、生じる","question_sentence":"Interest will accrue on the outstanding balance.","question_sentence_ja":"未払い残高に対して利息が生じます。"},
+{"id":"w_l4_029","level":4,"word":"contravene","part_of_speech":"verb","meaning":"違反する、相反する","question_sentence":"This action would contravene the terms of the agreement.","question_sentence_ja":"この行為は合意の条件に違反することになります。"},
+{"id":"w_l4_030","level":4,"word":"enumerate","part_of_speech":"verb","meaning":"列挙する","question_sentence":"The report enumerates all the risks associated with the project.","question_sentence_ja":"報告書はプロジェクトに関連するすべてのリスクを列挙しています。"},
+{"id":"w_l4_031","level":4,"word":"solvent","part_of_speech":"adjective","meaning":"支払い能力のある","question_sentence":"The company remained solvent throughout the economic downturn.","question_sentence_ja":"会社は経済低迷の間も支払い能力を維持していました。"},
+{"id":"w_l4_032","level":4,"word":"proprietary","part_of_speech":"adjective","meaning":"独占的な、専有の","question_sentence":"This is proprietary information and must not be shared.","question_sentence_ja":"これは独占的な情報であり、共有してはなりません。"},
+{"id":"w_l4_033","level":4,"word":"prospective","part_of_speech":"adjective","meaning":"将来の、見込みのある","question_sentence":"We invited prospective clients to a product demonstration.","question_sentence_ja":"見込みのあるクライアントを製品デモンストレーションに招待しました。"},
+{"id":"w_l4_034","level":4,"word":"equitable","part_of_speech":"adjective","meaning":"公平な、公正な","question_sentence":"The settlement was considered equitable by both parties.","question_sentence_ja":"和解は両者によって公平とみなされました。"},
+{"id":"w_l4_035","level":4,"word":"incumbent","part_of_speech":"adjective","meaning":"現職の、義務として課せられた","question_sentence":"It is incumbent on all managers to enforce the policy.","question_sentence_ja":"すべてのマネージャーはポリシーを施行する義務があります。"},
+{"id":"w_l4_036","level":4,"word":"lucrative","part_of_speech":"adjective","meaning":"利益の多い、もうかる","question_sentence":"The partnership proved to be very lucrative.","question_sentence_ja":"そのパートナーシップは非常に利益が多いことが証明されました。"},
+{"id":"w_l4_037","level":4,"word":"nominal","part_of_speech":"adjective","meaning":"名目上の、わずかな","question_sentence":"There is a nominal fee for the registration process.","question_sentence_ja":"登録手続きにはわずかな手数料がかかります。"},
+{"id":"w_l4_038","level":4,"word":"concurrent","part_of_speech":"adjective","meaning":"同時の、並行する","question_sentence":"The two projects ran concurrent with each other.","question_sentence_ja":"2つのプロジェクトは並行して進められました。"},
+{"id":"w_l4_039","level":4,"word":"tangible","part_of_speech":"adjective","meaning":"有形の、明確な","question_sentence":"We need tangible evidence to support the claim.","question_sentence_ja":"主張を裏付ける明確な証拠が必要です。"},
+{"id":"w_l4_040","level":4,"word":"interim","part_of_speech":"adjective","meaning":"暫定の、中間の","question_sentence":"An interim manager was appointed until a permanent one is found.","question_sentence_ja":"正式なマネージャーが見つかるまで暫定マネージャーが任命されました。"},
+{"id":"w_l4_041","level":4,"word":"solvency","part_of_speech":"noun","meaning":"支払い能力","question_sentence":"The auditors confirmed the company's solvency.","question_sentence_ja":"監査人は会社の支払い能力を確認しました。"},
+{"id":"w_l4_042","level":4,"word":"arbitration","part_of_speech":"noun","meaning":"仲裁","question_sentence":"The dispute was settled through arbitration.","question_sentence_ja":"紛争は仲裁によって解決されました。"},
+{"id":"w_l4_043","level":4,"word":"divestiture","part_of_speech":"noun","meaning":"資産売却","question_sentence":"The divestiture of the subsidiary was completed last quarter.","question_sentence_ja":"子会社の資産売却は前四半期に完了しました。"},
+{"id":"w_l4_044","level":4,"word":"moratorium","part_of_speech":"noun","meaning":"一時停止、猶予期間","question_sentence":"A moratorium on new hiring was announced last month.","question_sentence_ja":"先月、新規採用の一時停止が発表されました。"},
+{"id":"w_l4_045","level":4,"word":"subsidiary","part_of_speech":"noun","meaning":"子会社","question_sentence":"The subsidiary operates independently from the parent company.","question_sentence_ja":"子会社は親会社から独立して運営されています。"},
+{"id":"w_l4_046","level":4,"word":"conglomerate","part_of_speech":"noun","meaning":"複合企業、コングロマリット","question_sentence":"The conglomerate has businesses in over 20 countries.","question_sentence_ja":"その複合企業は20カ国以上でビジネスを展開しています。"},
+{"id":"w_l4_047","level":4,"word":"merger","part_of_speech":"noun","meaning":"合併","question_sentence":"The merger created the largest company in the industry.","question_sentence_ja":"合併により業界最大の企業が誕生しました。"},
+{"id":"w_l4_048","level":4,"word":"dividend","part_of_speech":"noun","meaning":"配当金","question_sentence":"The board voted to increase the annual dividend.","question_sentence_ja":"取締役会は年間配当金の増額を可決しました。"},
+{"id":"w_l4_049","level":4,"word":"collateral","part_of_speech":"noun","meaning":"担保","question_sentence":"The bank required collateral for the business loan.","question_sentence_ja":"銀行はビジネスローンの担保を要求しました。"},
+{"id":"w_l4_050","level":4,"word":"amortization","part_of_speech":"noun","meaning":"償却、分割払い","question_sentence":"The loan amortization schedule spans ten years.","question_sentence_ja":"ローンの償却スケジュールは10年にわたります。"},
+{"id":"w_l4_051","level":4,"word":"equitably","part_of_speech":"adverb","meaning":"公平に","question_sentence":"Profits were equitably distributed among the partners.","question_sentence_ja":"利益はパートナー間で公平に分配されました。"},
+{"id":"w_l4_052","level":4,"word":"concurrently","part_of_speech":"adverb","meaning":"同時に、並行して","question_sentence":"Both teams worked concurrently on the development.","question_sentence_ja":"両チームが開発に並行して取り組みました。"},
+{"id":"w_l4_053","level":4,"word":"nominally","part_of_speech":"adverb","meaning":"名目上は","question_sentence":"He is nominally in charge but has little real authority.","question_sentence_ja":"彼は名目上は責任者ですが、実権はほとんどありません。"},
+{"id":"w_l4_054","level":4,"word":"tentatively","part_of_speech":"adverb","meaning":"暫定的に、仮に","question_sentence":"The meeting has been tentatively scheduled for Thursday.","question_sentence_ja":"会議は暫定的に木曜日に予定されています。"},
+{"id":"w_l4_055","level":4,"word":"retrospectively","part_of_speech":"adverb","meaning":"遡及的に","question_sentence":"The new policy was applied retrospectively to all cases.","question_sentence_ja":"新しいポリシーはすべての案件に遡及的に適用されました。"},
+{"id":"w_l4_056","level":4,"word":"delineate","part_of_speech":"verb","meaning":"明確にする、概説する","question_sentence":"The contract clearly delineates each party's responsibilities.","question_sentence_ja":"契約書は各当事者の責任を明確に規定しています。"},
+{"id":"w_l4_057","level":4,"word":"promulgate","part_of_speech":"verb","meaning":"公布する、普及させる","question_sentence":"New safety regulations were promulgated by the government.","question_sentence_ja":"政府は新しい安全規制を公布しました。"},
+{"id":"w_l4_058","level":4,"word":"adjudicate","part_of_speech":"verb","meaning":"裁定する、判決を下す","question_sentence":"An independent panel was appointed to adjudicate the case.","question_sentence_ja":"独立したパネルが事件を裁定するために任命されました。"},
+{"id":"w_l4_059","level":4,"word":"ratify","part_of_speech":"verb","meaning":"批准する、承認する","question_sentence":"The board voted to ratify the new governance policy.","question_sentence_ja":"取締役会は新しいガバナンス方針を批准する投票を行いました。"},
+{"id":"w_l4_060","level":4,"word":"divest","part_of_speech":"verb","meaning":"売却する、手放す","question_sentence":"The firm plans to divest non-core business units.","question_sentence_ja":"会社はコア事業以外の事業部門を売却する計画です。"},
+{"id":"w_l4_061","level":4,"word":"fiscal","part_of_speech":"adjective","meaning":"財政上の、会計の","question_sentence":"The fiscal year ends on March 31st.","question_sentence_ja":"会計年度は3月31日に終わります。"},
+{"id":"w_l4_062","level":4,"word":"viable","part_of_speech":"adjective","meaning":"実行可能な","question_sentence":"Is there a viable alternative to the current approach?","question_sentence_ja":"現在のアプローチに代わる実行可能な代替手段はありますか？"},
+{"id":"w_l4_063","level":4,"word":"bilateral","part_of_speech":"adjective","meaning":"双方の、二国間の","question_sentence":"A bilateral trade agreement was signed between the two nations.","question_sentence_ja":"両国間で二国間貿易協定が締結されました。"},
+{"id":"w_l4_064","level":4,"word":"reciprocal","part_of_speech":"adjective","meaning":"相互の、互恵的な","question_sentence":"The two firms agreed on a reciprocal partnership.","question_sentence_ja":"2社は相互のパートナーシップに合意しました。"},
+{"id":"w_l4_065","level":4,"word":"discretionary","part_of_speech":"adjective","meaning":"裁量的な、任意の","question_sentence":"The manager has discretionary authority over small purchases.","question_sentence_ja":"マネージャーは少額の購入について裁量権を持っています。"},
+{"id":"w_l4_066","level":4,"word":"portfolio","part_of_speech":"noun","meaning":"投資ポートフォリオ","question_sentence":"The firm manages a diverse portfolio of assets.","question_sentence_ja":"会社は多様な資産ポートフォリオを管理しています。"},
+{"id":"w_l4_067","level":4,"word":"equity","part_of_speech":"noun","meaning":"株式、自己資本","question_sentence":"The startup raised equity funding from investors.","question_sentence_ja":"スタートアップは投資家から株式資金を調達しました。"},
+{"id":"w_l4_068","level":4,"word":"venture","part_of_speech":"noun","meaning":"事業、ベンチャー","question_sentence":"The joint venture was established to expand into Asia.","question_sentence_ja":"合弁事業はアジアへの進出を目的として設立されました。"},
+{"id":"w_l4_069","level":4,"word":"mandate","part_of_speech":"noun","meaning":"命令、権限","question_sentence":"The new CEO has a mandate to improve profitability.","question_sentence_ja":"新CEOは収益性を改善する使命を持っています。"},
+{"id":"w_l4_070","level":4,"word":"overhead","part_of_speech":"noun","meaning":"経費、間接費","question_sentence":"Reducing overhead is one of our key objectives this year.","question_sentence_ja":"間接費の削減は今年の主要目標の1つです。"},
+{"id":"w_l4_071","level":4,"word":"incentivize","part_of_speech":"verb","meaning":"奨励する、動機づける","question_sentence":"Bonuses are used to incentivize high performance.","question_sentence_ja":"ボーナスは高いパフォーマンスを奨励するために使われます。"},
+{"id":"w_l4_072","level":4,"word":"benchmark","part_of_speech":"noun","meaning":"基準値、指標","question_sentence":"Our KPIs are benchmarks for measuring success.","question_sentence_ja":"私たちのKPIは成功を測るための基準値です。"},
+{"id":"w_l4_073","level":4,"word":"infrastructure","part_of_speech":"noun","meaning":"インフラ、基盤","question_sentence":"Investment in infrastructure is critical for long-term growth.","question_sentence_ja":"インフラへの投資は長期的な成長に不可欠です。"},
+{"id":"w_l4_074","level":4,"word":"stakeholder","part_of_speech":"noun","meaning":"利害関係者","question_sentence":"We must consider the interests of all stakeholders.","question_sentence_ja":"すべての利害関係者の利益を考慮しなければなりません。"},
+{"id":"w_l4_075","level":4,"word":"quarterly","part_of_speech":"adjective","meaning":"四半期ごとの","question_sentence":"Quarterly financial reviews help track our progress.","question_sentence_ja":"四半期ごとの財務レビューで進捗を確認できます。"},
+{"id":"w_l4_076","level":4,"word":"consolidate","part_of_speech":"verb","meaning":"統合する、強固にする","question_sentence":"We plan to consolidate our regional offices into one hub.","question_sentence_ja":"地域オフィスを1つのハブに統合する計画です。"},
+{"id":"w_l4_077","level":4,"word":"oversight","part_of_speech":"noun","meaning":"監督、見落とし","question_sentence":"The board provides oversight of all major decisions.","question_sentence_ja":"取締役会はすべての主要な決定を監督します。"},
+{"id":"w_l4_078","level":4,"word":"governance","part_of_speech":"noun","meaning":"ガバナンス、統治","question_sentence":"Good corporate governance builds trust with investors.","question_sentence_ja":"優れた企業ガバナンスは投資家との信頼を築きます。"},
+{"id":"w_l4_079","level":4,"word":"benchmark","part_of_speech":"verb","meaning":"基準と照合する","question_sentence":"We benchmark our costs against industry averages.","question_sentence_ja":"コストを業界平均と照合しています。"},
+{"id":"w_l4_080","level":4,"word":"volatility","part_of_speech":"noun","meaning":"変動性、不安定さ","question_sentence":"Market volatility made planning difficult this year.","question_sentence_ja":"今年は市場の変動性により計画が困難になりました。"},
+{"id":"w_l4_081","level":4,"word":"capitalize","part_of_speech":"verb","meaning":"資本化する、活用する","question_sentence":"We must capitalize on emerging market opportunities.","question_sentence_ja":"新興市場のチャンスを活用しなければなりません。"},
+{"id":"w_l4_082","level":4,"word":"appraise","part_of_speech":"verb","meaning":"査定する、評価する","question_sentence":"The property was appraised at a higher value than expected.","question_sentence_ja":"不動産は予想より高い価値で査定されました。"},
+{"id":"w_l4_083","level":4,"word":"liquidate","part_of_speech":"verb","meaning":"清算する、現金化する","question_sentence":"The firm was forced to liquidate its assets.","question_sentence_ja":"会社は資産を清算せざるを得ませんでした。"},
+{"id":"w_l4_084","level":4,"word":"hedge","part_of_speech":"verb","meaning":"リスクをヘッジする、回避する","question_sentence":"The company hedged its currency risks with futures.","question_sentence_ja":"会社は先物取引で通貨リスクをヘッジしました。"},
+{"id":"w_l4_085","level":4,"word":"comply","part_of_speech":"verb","meaning":"従う、応じる","question_sentence":"All vendors must comply with our data security standards.","question_sentence_ja":"すべてのベンダーは当社のデータセキュリティ基準に従わなければなりません。"},
+{"id":"w_l4_086","level":4,"word":"allocate","part_of_speech":"verb","meaning":"配分する","question_sentence":"Resources were carefully allocated across all departments.","question_sentence_ja":"リソースは全部門にわたって慎重に配分されました。"},
+{"id":"w_l4_087","level":4,"word":"outsource","part_of_speech":"verb","meaning":"外部委託する","question_sentence":"We decided to outsource payroll processing to a third party.","question_sentence_ja":"給与処理を第三者に外部委託することにしました。"},
+{"id":"w_l4_088","level":4,"word":"restructure","part_of_speech":"verb","meaning":"再構築する","question_sentence":"The company restructured its debt to improve cash flow.","question_sentence_ja":"会社はキャッシュフローを改善するために負債を再構築しました。"},
+{"id":"w_l4_089","level":4,"word":"deem","part_of_speech":"verb","meaning":"〜とみなす","question_sentence":"Any unmarked item will be deemed as approved.","question_sentence_ja":"マークのないアイテムは承認済みとみなされます。"},
+{"id":"w_l4_090","level":4,"word":"waive","part_of_speech":"verb","meaning":"放棄する、免除する","question_sentence":"The company agreed to waive the cancellation fee.","question_sentence_ja":"会社はキャンセル料を免除することに同意しました。"},
+{"id":"w_l4_091","level":4,"word":"deficit","part_of_speech":"noun","meaning":"赤字、不足","question_sentence":"The company reported a deficit for the second year running.","question_sentence_ja":"会社は2年連続で赤字を報告しました。"},
+{"id":"w_l4_092","level":4,"word":"surplus","part_of_speech":"noun","meaning":"余剰、黒字","question_sentence":"A budget surplus allowed for extra investment in R&D.","question_sentence_ja":"予算の余剰により研究開発への追加投資が可能になりました。"},
+{"id":"w_l4_093","level":4,"word":"creditor","part_of_speech":"noun","meaning":"債権者","question_sentence":"The company negotiated new terms with its creditors.","question_sentence_ja":"会社は債権者と新しい条件を交渉しました。"},
+{"id":"w_l4_094","level":4,"word":"asset","part_of_speech":"noun","meaning":"資産","question_sentence":"Knowledge and experience are valuable assets in any field.","question_sentence_ja":"知識と経験はどの分野でも貴重な資産です。"},
+{"id":"w_l4_095","level":4,"word":"revenue","part_of_speech":"noun","meaning":"収益","question_sentence":"Revenue from digital products grew by 40% last year.","question_sentence_ja":"昨年、デジタル製品からの収益が40%増加しました。"},
+{"id":"w_l4_096","level":4,"word":"turnaround","part_of_speech":"noun","meaning":"好転、転換","question_sentence":"The new CEO led a remarkable turnaround of the business.","question_sentence_ja":"新CEOはビジネスの著しい好転を牽引しました。"},
+{"id":"w_l4_097","level":4,"word":"forecast","part_of_speech":"noun","meaning":"予測、見通し","question_sentence":"The sales forecast for next year looks optimistic.","question_sentence_ja":"来年の売上予測は楽観的に見えます。"},
+{"id":"w_l4_098","level":4,"word":"litigation","part_of_speech":"noun","meaning":"訴訟","question_sentence":"The company faces ongoing litigation over the patent dispute.","question_sentence_ja":"会社は特許紛争をめぐる継続的な訴訟に直面しています。"},
+{"id":"w_l4_099","level":4,"word":"insolvency","part_of_speech":"noun","meaning":"支払い不能、破綻","question_sentence":"The firm filed for protection from insolvency.","question_sentence_ja":"会社は支払い不能からの保護を申請しました。"},
+{"id":"w_l4_100","level":4,"word":"valuation","part_of_speech":"noun","meaning":"評価額、バリュエーション","question_sentence":"The startup's valuation reached one billion dollars.","question_sentence_ja":"そのスタートアップの評価額は10億ドルに達しました。"},
+// ── LEVEL 5（851〜990点）100語・5セット ──────────────────────
+{"id":"w_l5_001","level":5,"word":"stringent","part_of_speech":"adjective","meaning":"厳しい、厳格な","question_sentence":"The new environmental laws are far more stringent than before.","question_sentence_ja":"新しい環境法は以前よりはるかに厳格です。"},
+{"id":"w_l5_002","level":5,"word":"jeopardize","part_of_speech":"verb","meaning":"危険にさらす","question_sentence":"Cutting the budget further could jeopardize the entire project.","question_sentence_ja":"予算をさらに削減するとプロジェクト全体が危険にさらされる可能性があります。"},
+{"id":"w_l5_003","level":5,"word":"paradigm","part_of_speech":"noun","meaning":"パラダイム、典型例","question_sentence":"The new management model represents a shift in paradigm.","question_sentence_ja":"新しい経営モデルはパラダイムの転換を表しています。"},
+{"id":"w_l5_004","level":5,"word":"exacerbate","part_of_speech":"verb","meaning":"悪化させる","question_sentence":"Poor communication tends to exacerbate conflicts within teams.","question_sentence_ja":"コミュニケーション不足はチーム内の対立を悪化させる傾向があります。"},
+{"id":"w_l5_005","level":5,"word":"pragmatic","part_of_speech":"adjective","meaning":"実用的な、現実的な","question_sentence":"The CEO is known for taking a pragmatic approach to problem-solving.","question_sentence_ja":"CEOは問題解決に実用的なアプローチをとることで知られています。"},
+{"id":"w_l5_006","level":5,"word":"proliferate","part_of_speech":"verb","meaning":"急増する、普及する","question_sentence":"Online platforms continue to proliferate in emerging markets.","question_sentence_ja":"オンラインプラットフォームは新興市場で急増し続けています。"},
+{"id":"w_l5_007","level":5,"word":"imminent","part_of_speech":"adjective","meaning":"差し迫った、切迫した","question_sentence":"A leadership change is imminent following the CEO's resignation.","question_sentence_ja":"CEOの辞任に伴い、リーダーシップの交代が差し迫っています。"},
+{"id":"w_l5_008","level":5,"word":"disparity","part_of_speech":"noun","meaning":"格差、不均衡","question_sentence":"The disparity in wages between regions needs to be addressed.","question_sentence_ja":"地域間の賃金格差に対処する必要があります。"},
+{"id":"w_l5_009","level":5,"word":"concede","part_of_speech":"verb","meaning":"認める、譲歩する","question_sentence":"Management had to concede that the strategy needed revision.","question_sentence_ja":"経営陣は戦略の見直しが必要だと認めざるを得ませんでした。"},
+{"id":"w_l5_010","level":5,"word":"ambiguous","part_of_speech":"adjective","meaning":"曖昧な、不明確な","question_sentence":"The contract terms were ambiguous and led to a dispute.","question_sentence_ja":"契約条件が曖昧だったため、紛争が生じました。"},
+{"id":"w_l5_011","level":5,"word":"mandate","part_of_speech":"verb","meaning":"義務付ける、命令する","question_sentence":"New regulations mandate annual safety inspections for all facilities.","question_sentence_ja":"新しい規制はすべての施設に対して年次安全検査を義務付けています。"},
+{"id":"w_l5_012","level":5,"word":"consortium","part_of_speech":"noun","meaning":"共同企業体、コンソーシアム","question_sentence":"A consortium of investors backed the ambitious development project.","question_sentence_ja":"投資家のコンソーシアムが野心的な開発プロジェクトを支援しました。"},
+{"id":"w_l5_013","level":5,"word":"meticulous","part_of_speech":"adjective","meaning":"細心の、入念な","question_sentence":"She is meticulous about documenting every step of the process.","question_sentence_ja":"彼女はプロセスのすべてのステップを入念に記録しています。"},
+{"id":"w_l5_014","level":5,"word":"impede","part_of_speech":"verb","meaning":"妨げる、阻害する","question_sentence":"Technical problems could impede the launch of the new system.","question_sentence_ja":"技術的な問題が新しいシステムの立ち上げを妨げる可能性があります。"},
+{"id":"w_l5_015","level":5,"word":"pivotal","part_of_speech":"adjective","meaning":"中枢の、決定的に重要な","question_sentence":"This deal is pivotal to the company's future growth.","question_sentence_ja":"この取引は会社の将来の成長に決定的に重要です。"},
+{"id":"w_l5_016","level":5,"word":"obsolete","part_of_speech":"adjective","meaning":"時代遅れの、廃れた","question_sentence":"Many traditional skills have become obsolete with automation.","question_sentence_ja":"自動化により多くの伝統的なスキルが時代遅れになりました。"},
+{"id":"w_l5_017","level":5,"word":"stipulate","part_of_speech":"verb","meaning":"規定する、条件として定める","question_sentence":"The agreement clearly stipulates the payment terms.","question_sentence_ja":"契約書には支払い条件が明確に規定されています。"},
+{"id":"w_l5_018","level":5,"word":"trajectory","part_of_speech":"noun","meaning":"軌跡、進路","question_sentence":"The company's growth trajectory has impressed investors worldwide.","question_sentence_ja":"会社の成長軌跡は世界中の投資家を感心させています。"},
+{"id":"w_l5_019","level":5,"word":"scrutiny","part_of_speech":"noun","meaning":"精密な調査、監視","question_sentence":"The proposal is under intense scrutiny from regulators.","question_sentence_ja":"提案は規制当局から厳しい調査を受けています。"},
+{"id":"w_l5_020","level":5,"word":"alleviate","part_of_speech":"verb","meaning":"軽減する、和らげる","question_sentence":"New policies aim to alleviate the financial burden on small businesses.","question_sentence_ja":"新しい政策は中小企業の財政的負担を軽減することを目的としています。"},
+{"id":"w_l5_021","level":5,"word":"deterrent","part_of_speech":"noun","meaning":"抑止力、妨げになるもの","question_sentence":"Higher fines serve as a deterrent against regulatory violations.","question_sentence_ja":"より高い罰金は規制違反に対する抑止力として機能します。"},
+{"id":"w_l5_022","level":5,"word":"acumen","part_of_speech":"noun","meaning":"洞察力、鋭敏さ","question_sentence":"Her business acumen enabled the company to navigate the crisis.","question_sentence_ja":"彼女のビジネス洞察力が会社の危機を乗り越えることを可能にしました。"},
+{"id":"w_l5_023","level":5,"word":"leverage","part_of_speech":"noun","meaning":"影響力、てこの力","question_sentence":"Strong brand recognition gives us significant leverage in negotiations.","question_sentence_ja":"強いブランド認知度は交渉において大きな影響力をもたらします。"},
+{"id":"w_l5_024","level":5,"word":"eminent","part_of_speech":"adjective","meaning":"著名な、卓越した","question_sentence":"An eminent economist was invited to speak at the conference.","question_sentence_ja":"著名な経済学者が会議でスピーチするために招待されました。"},
+{"id":"w_l5_025","level":5,"word":"corroborate","part_of_speech":"verb","meaning":"裏付ける、確証する","question_sentence":"New evidence helped to corroborate the original findings.","question_sentence_ja":"新しい証拠が最初の調査結果を裏付けるのに役立ちました。"},
+{"id":"w_l5_026","level":5,"word":"abate","part_of_speech":"verb","meaning":"弱まる、軽減する","question_sentence":"The storm abated by morning, allowing flights to resume.","question_sentence_ja":"嵐は朝までに弱まり、フライトが再開できました。"},
+{"id":"w_l5_027","level":5,"word":"ameliorate","part_of_speech":"verb","meaning":"改善する、好転させる","question_sentence":"Measures were taken to ameliorate working conditions.","question_sentence_ja":"労働条件を改善するための措置が講じられました。"},
+{"id":"w_l5_028","level":5,"word":"arbitrage","part_of_speech":"noun","meaning":"裁定取引、アービトラージ","question_sentence":"Traders exploited the arbitrage opportunity between two markets.","question_sentence_ja":"トレーダーは2つの市場間の裁定取引の機会を活用しました。"},
+{"id":"w_l5_029","level":5,"word":"assiduous","part_of_speech":"adjective","meaning":"勤勉な、精力的な","question_sentence":"Her assiduous attention to detail impressed everyone on the team.","question_sentence_ja":"細部への勤勉な注意はチームの全員を感心させました。"},
+{"id":"w_l5_030","level":5,"word":"burgeoning","part_of_speech":"adjective","meaning":"急成長している、急増する","question_sentence":"The burgeoning tech sector attracted many investors.","question_sentence_ja":"急成長しているテクノロジーセクターは多くの投資家を引き付けました。"},
+{"id":"w_l5_031","level":5,"word":"capitulate","part_of_speech":"verb","meaning":"降伏する、妥協する","question_sentence":"The company finally capitulated to shareholder pressure.","question_sentence_ja":"会社はついに株主の圧力に降伏しました。"},
+{"id":"w_l5_032","level":5,"word":"clandestine","part_of_speech":"adjective","meaning":"秘密の、内密の","question_sentence":"A clandestine meeting was held to discuss the takeover.","question_sentence_ja":"買収について議論するために秘密会議が開催されました。"},
+{"id":"w_l5_033","level":5,"word":"coalesce","part_of_speech":"verb","meaning":"合体する、まとまる","question_sentence":"The various factions eventually coalesced around a single leader.","question_sentence_ja":"様々な派閥はついに1人のリーダーのもとにまとまりました。"},
+{"id":"w_l5_034","level":5,"word":"commensurate","part_of_speech":"adjective","meaning":"釣り合った、相応の","question_sentence":"Pay should be commensurate with experience and qualifications.","question_sentence_ja":"給与は経験と資格に相応であるべきです。"},
+{"id":"w_l5_035","level":5,"word":"contiguous","part_of_speech":"adjective","meaning":"隣接する、連続した","question_sentence":"The two offices are located in contiguous buildings.","question_sentence_ja":"2つのオフィスは隣接する建物に位置しています。"},
+{"id":"w_l5_036","level":5,"word":"culminate","part_of_speech":"verb","meaning":"最高潮に達する、〜で終わる","question_sentence":"Years of hard work culminated in a successful IPO.","question_sentence_ja":"長年の努力が成功したIPOで最高潮に達しました。"},
+{"id":"w_l5_037","level":5,"word":"debilitate","part_of_speech":"verb","meaning":"弱体化させる、衰弱させる","question_sentence":"Repeated setbacks debilitated the company's recovery efforts.","question_sentence_ja":"度重なる挫折が会社の回復努力を弱体化させました。"},
+{"id":"w_l5_038","level":5,"word":"deft","part_of_speech":"adjective","meaning":"器用な、巧みな","question_sentence":"The negotiator showed deft handling of a difficult situation.","question_sentence_ja":"交渉担当者は難しい状況を巧みに処理しました。"},
+{"id":"w_l5_039","level":5,"word":"devoid","part_of_speech":"adjective","meaning":"欠如した、〜がない","question_sentence":"The report was devoid of any concrete evidence.","question_sentence_ja":"その報告書には具体的な証拠が全くありませんでした。"},
+{"id":"w_l5_040","level":5,"word":"disingenuous","part_of_speech":"adjective","meaning":"不誠実な、真意を隠した","question_sentence":"His apology seemed disingenuous to most observers.","question_sentence_ja":"彼の謝罪はほとんどの観察者には不誠実に見えました。"},
+{"id":"w_l5_041","level":5,"word":"dissent","part_of_speech":"noun","meaning":"異議、反対意見","question_sentence":"There was notable dissent among board members over the proposal.","question_sentence_ja":"提案について取締役会のメンバー間で顕著な異議がありました。"},
+{"id":"w_l5_042","level":5,"word":"ebullient","part_of_speech":"adjective","meaning":"活発な、生き生きとした","question_sentence":"The CEO was ebullient after the successful product launch.","question_sentence_ja":"製品発売の成功後、CEOは生き生きとしていました。"},
+{"id":"w_l5_043","level":5,"word":"egregious","part_of_speech":"adjective","meaning":"ひどい、言語道断の","question_sentence":"The auditors found an egregious accounting error.","question_sentence_ja":"監査人はひどい会計ミスを発見しました。"},
+{"id":"w_l5_044","level":5,"word":"endemic","part_of_speech":"adjective","meaning":"特有の、はびこっている","question_sentence":"Inefficiency was endemic to the old organizational structure.","question_sentence_ja":"非効率性は古い組織構造に特有のものでした。"},
+{"id":"w_l5_045","level":5,"word":"equivocate","part_of_speech":"verb","meaning":"曖昧な言い方をする、言葉を濁す","question_sentence":"The CEO equivocated when asked about the merger plans.","question_sentence_ja":"CEOは合併計画について聞かれると言葉を濁しました。"},
+{"id":"w_l5_046","level":5,"word":"extenuate","part_of_speech":"verb","meaning":"軽減する、言い訳にする","question_sentence":"Personal difficulties do not extenuate a breach of policy.","question_sentence_ja":"個人的な困難はポリシー違反の言い訳にはなりません。"},
+{"id":"w_l5_047","level":5,"word":"fervent","part_of_speech":"adjective","meaning":"熱心な、熱烈な","question_sentence":"He was a fervent advocate for workplace diversity.","question_sentence_ja":"彼は職場の多様性の熱烈な支持者でした。"},
+{"id":"w_l5_048","level":5,"word":"frugal","part_of_speech":"adjective","meaning":"倹約的な、節約家の","question_sentence":"A frugal approach to spending helped the startup survive.","question_sentence_ja":"支出への倹約的なアプローチがスタートアップの生き残りを助けました。"},
+{"id":"w_l5_049","level":5,"word":"galvanize","part_of_speech":"verb","meaning":"刺激する、奮起させる","question_sentence":"The new vision statement galvanized the entire workforce.","question_sentence_ja":"新しいビジョンステートメントが全従業員を奮起させました。"},
+{"id":"w_l5_050","level":5,"word":"groundbreaking","part_of_speech":"adjective","meaning":"画期的な、革新的な","question_sentence":"The company introduced groundbreaking technology to the market.","question_sentence_ja":"会社は市場に画期的な技術を導入しました。"},
+{"id":"w_l5_051","level":5,"word":"impeccable","part_of_speech":"adjective","meaning":"非の打ちどころのない","question_sentence":"Her impeccable attention to detail set her apart.","question_sentence_ja":"彼女の非の打ちどころのない細部への注意力が際立っていました。"},
+{"id":"w_l5_052","level":5,"word":"impetuous","part_of_speech":"adjective","meaning":"衝動的な、性急な","question_sentence":"An impetuous decision led to significant financial loss.","question_sentence_ja":"衝動的な決断が大きな財務損失につながりました。"},
+{"id":"w_l5_053","level":5,"word":"inadvertent","part_of_speech":"adjective","meaning":"不注意による、意図しない","question_sentence":"An inadvertent error in the report caused confusion.","question_sentence_ja":"報告書の不注意なミスが混乱を招きました。"},
+{"id":"w_l5_054","level":5,"word":"incisive","part_of_speech":"adjective","meaning":"鋭い、洞察力のある","question_sentence":"Her incisive analysis impressed the board of directors.","question_sentence_ja":"彼女の鋭い分析は取締役会を感心させました。"},
+{"id":"w_l5_055","level":5,"word":"incontrovertible","part_of_speech":"adjective","meaning":"反論の余地のない","question_sentence":"The data provided incontrovertible evidence of the trend.","question_sentence_ja":"データはそのトレンドの反論の余地のない証拠を提供しました。"},
+{"id":"w_l5_056","level":5,"word":"indemnify","part_of_speech":"verb","meaning":"補償する、免責にする","question_sentence":"The contract includes a clause to indemnify either party.","question_sentence_ja":"契約にはいずれかの当事者を補償する条項が含まれています。"},
+{"id":"w_l5_057","level":5,"word":"insolvent","part_of_speech":"adjective","meaning":"支払い不能の、破綻した","question_sentence":"The firm was declared insolvent after months of losses.","question_sentence_ja":"数ヶ月の損失の後、会社は支払い不能と宣言されました。"},
+{"id":"w_l5_058","level":5,"word":"intangible","part_of_speech":"adjective","meaning":"無形の、捉えにくい","question_sentence":"Brand reputation is a valuable intangible asset.","question_sentence_ja":"ブランドの評判は価値ある無形資産です。"},
+{"id":"w_l5_059","level":5,"word":"judicious","part_of_speech":"adjective","meaning":"賢明な、分別のある","question_sentence":"Judicious use of resources is critical in a downturn.","question_sentence_ja":"景気後退時にはリソースの賢明な使用が重要です。"},
+{"id":"w_l5_060","level":5,"word":"languish","part_of_speech":"verb","meaning":"低迷する、衰える","question_sentence":"The stock price languished for months after the scandal.","question_sentence_ja":"スキャンダル後、株価は数ヶ月間低迷しました。"},
+{"id":"w_l5_061","level":5,"word":"malleable","part_of_speech":"adjective","meaning":"柔軟な、順応性のある","question_sentence":"A malleable strategy can adapt to changing conditions.","question_sentence_ja":"柔軟な戦略は変化する状況に適応できます。"},
+{"id":"w_l5_062","level":5,"word":"nascent","part_of_speech":"adjective","meaning":"発展途上の、まだ生まれたばかりの","question_sentence":"The company is a nascent player in the electric vehicle market.","question_sentence_ja":"その会社は電気自動車市場の新興プレーヤーです。"},
+{"id":"w_l5_063","level":5,"word":"obfuscate","part_of_speech":"verb","meaning":"曖昧にする、煙に巻く","question_sentence":"The report seemed to obfuscate rather than clarify the issue.","question_sentence_ja":"その報告書は問題を明確にするよりも曖昧にしているようでした。"},
+{"id":"w_l5_064","level":5,"word":"omnipresent","part_of_speech":"adjective","meaning":"いたるところにある、遍在する","question_sentence":"Smartphones have become omnipresent in modern workplaces.","question_sentence_ja":"スマートフォンは現代の職場にいたるところに存在しています。"},
+{"id":"w_l5_065","level":5,"word":"onerous","part_of_speech":"adjective","meaning":"過重な、厄介な","question_sentence":"The new reporting requirements are considered onerous by many firms.","question_sentence_ja":"新しい報告要件は多くの会社にとって過重とみなされています。"},
+{"id":"w_l5_066","level":5,"word":"ostensibly","part_of_speech":"adverb","meaning":"表向きは、見かけ上は","question_sentence":"The meeting was ostensibly about budget review.","question_sentence_ja":"会議は表向きは予算審査についてでした。"},
+{"id":"w_l5_067","level":5,"word":"overarching","part_of_speech":"adjective","meaning":"包括的な、全体にわたる","question_sentence":"The overarching goal is to achieve carbon neutrality.","question_sentence_ja":"包括的な目標はカーボンニュートラルを達成することです。"},
+{"id":"w_l5_068","level":5,"word":"pervasive","part_of_speech":"adjective","meaning":"広く行き渡る、蔓延する","question_sentence":"A pervasive culture of innovation drives the company forward.","question_sentence_ja":"広く行き渡るイノベーションの文化が会社を前進させています。"},
+{"id":"w_l5_069","level":5,"word":"precipitate","part_of_speech":"verb","meaning":"引き起こす、急速に進める","question_sentence":"The scandal precipitated a crisis in leadership.","question_sentence_ja":"スキャンダルはリーダーシップの危機を引き起こしました。"},
+{"id":"w_l5_070","level":5,"word":"prerogative","part_of_speech":"noun","meaning":"特権、専権事項","question_sentence":"Approving the final budget is the CEO's prerogative.","question_sentence_ja":"最終予算の承認はCEOの専権事項です。"},
+{"id":"w_l5_071","level":5,"word":"profligate","part_of_speech":"adjective","meaning":"浪費的な、放漫な","question_sentence":"Profligate spending contributed to the company's collapse.","question_sentence_ja":"浪費的な支出が会社の崩壊につながりました。"},
+{"id":"w_l5_072","level":5,"word":"propitious","part_of_speech":"adjective","meaning":"好都合な、吉兆の","question_sentence":"Market conditions are propitious for a new product launch.","question_sentence_ja":"市場状況は新製品の発売に好都合です。"},
+{"id":"w_l5_073","level":5,"word":"recalcitrant","part_of_speech":"adjective","meaning":"反抗的な、言うことを聞かない","question_sentence":"The recalcitrant vendor refused to meet the new standards.","question_sentence_ja":"反抗的なベンダーは新しい基準を満たすことを拒否しました。"},
+{"id":"w_l5_074","level":5,"word":"rectify","part_of_speech":"verb","meaning":"修正する、是正する","question_sentence":"Steps were taken to rectify the errors in the financial report.","question_sentence_ja":"財務報告書の誤りを是正するための措置が講じられました。"},
+{"id":"w_l5_075","level":5,"word":"remunerate","part_of_speech":"verb","meaning":"報酬を支払う","question_sentence":"Employees should be remunerated fairly for their contributions.","question_sentence_ja":"従業員は貢献に対して公正に報酬を支払われるべきです。"},
+{"id":"w_l5_076","level":5,"word":"repudiate","part_of_speech":"verb","meaning":"否定する、拒絶する","question_sentence":"The company repudiated the allegations made in the press.","question_sentence_ja":"会社はプレスでなされた申し立てを否定しました。"},
+{"id":"w_l5_077","level":5,"word":"resilient","part_of_speech":"adjective","meaning":"回復力のある、強靭な","question_sentence":"A resilient business model withstands economic shocks.","question_sentence_ja":"回復力のあるビジネスモデルは経済的なショックに耐えます。"},
+{"id":"w_l5_078","level":5,"word":"reticent","part_of_speech":"adjective","meaning":"無口な、控えめな","question_sentence":"The CEO was reticent about the company's expansion plans.","question_sentence_ja":"CEOは会社の拡大計画について口を閉ざしていました。"},
+{"id":"w_l5_079","level":5,"word":"salient","part_of_speech":"adjective","meaning":"顕著な、最も重要な","question_sentence":"Please highlight the salient points in your presentation.","question_sentence_ja":"プレゼンテーションで最も重要なポイントを強調してください。"},
+{"id":"w_l5_080","level":5,"word":"scrupulous","part_of_speech":"adjective","meaning":"几帳面な、誠実な","question_sentence":"She was scrupulous in following every legal requirement.","question_sentence_ja":"彼女はすべての法的要件を几帳面に遵守していました。"},
+{"id":"w_l5_081","level":5,"word":"spurious","part_of_speech":"adjective","meaning":"偽の、根拠のない","question_sentence":"The claims turned out to be entirely spurious.","question_sentence_ja":"主張は完全に根拠のないものであることが判明しました。"},
+{"id":"w_l5_082","level":5,"word":"stagnate","part_of_speech":"verb","meaning":"停滞する、不振になる","question_sentence":"Sales began to stagnate in the third year.","question_sentence_ja":"3年目に売上が停滞し始めました。"},
+{"id":"w_l5_083","level":5,"word":"statutory","part_of_speech":"adjective","meaning":"法定の、法令上の","question_sentence":"Employees are entitled to statutory minimum paid leave.","question_sentence_ja":"従業員は法定最低有給休暇を取得する権利があります。"},
+{"id":"w_l5_084","level":5,"word":"subvert","part_of_speech":"verb","meaning":"転覆させる、損なう","question_sentence":"Internal politics can subvert even the best strategies.","question_sentence_ja":"内部政治は最善の戦略さえも損なう可能性があります。"},
+{"id":"w_l5_085","level":5,"word":"succinct","part_of_speech":"adjective","meaning":"簡潔な、簡明な","question_sentence":"The executive summary should be succinct and to the point.","question_sentence_ja":"エグゼクティブサマリーは簡潔で要点を押さえたものにすべきです。"},
+{"id":"w_l5_086","level":5,"word":"superfluous","part_of_speech":"adjective","meaning":"余分な、不必要な","question_sentence":"Remove any superfluous details from the final report.","question_sentence_ja":"最終報告書から余分な詳細を取り除いてください。"},
+{"id":"w_l5_087","level":5,"word":"supplant","part_of_speech":"verb","meaning":"取って代わる","question_sentence":"Digital tools have supplanted many traditional processes.","question_sentence_ja":"デジタルツールが多くの従来のプロセスに取って代わりました。"},
+{"id":"w_l5_088","level":5,"word":"tenacious","part_of_speech":"adjective","meaning":"粘り強い、執拗な","question_sentence":"Her tenacious pursuit of quality impressed all stakeholders.","question_sentence_ja":"彼女の品質への粘り強い追求はすべての利害関係者を感心させました。"},
+{"id":"w_l5_089","level":5,"word":"tenuous","part_of_speech":"adjective","meaning":"薄弱な、もろい","question_sentence":"The connection between the two events is tenuous at best.","question_sentence_ja":"2つの出来事の間の関連性は良くて薄弱です。"},
+{"id":"w_l5_090","level":5,"word":"truncate","part_of_speech":"verb","meaning":"短縮する、切り詰める","question_sentence":"Due to time constraints, the meeting was truncated.","question_sentence_ja":"時間の制約により、会議は短縮されました。"},
+{"id":"w_l5_091","level":5,"word":"ubiquitous","part_of_speech":"adjective","meaning":"いたるところにある","question_sentence":"Email has become ubiquitous in modern business communication.","question_sentence_ja":"メールは現代のビジネスコミュニケーションにいたるところで使われています。"},
+{"id":"w_l5_092","level":5,"word":"unequivocal","part_of_speech":"adjective","meaning":"明確な、疑いのない","question_sentence":"The board gave its unequivocal support for the new strategy.","question_sentence_ja":"取締役会は新しい戦略への明確な支持を示しました。"},
+{"id":"w_l5_093","level":5,"word":"vacillate","part_of_speech":"verb","meaning":"ぐらつく、優柔不断になる","question_sentence":"He vacillated on the decision for weeks before acting.","question_sentence_ja":"彼は行動する前に数週間その決断でぐらつきました。"},
+{"id":"w_l5_094","level":5,"word":"vanguard","part_of_speech":"noun","meaning":"先頭、先駆者","question_sentence":"The company is in the vanguard of sustainable technology.","question_sentence_ja":"その会社は持続可能な技術の先頭に立っています。"},
+{"id":"w_l5_095","level":5,"word":"veracious","part_of_speech":"adjective","meaning":"正直な、真実の","question_sentence":"A veracious account of events was essential for the audit.","question_sentence_ja":"監査には出来事の正直な説明が不可欠でした。"},
+{"id":"w_l5_096","level":5,"word":"vindicate","part_of_speech":"verb","meaning":"正しいと証明する、潔白を示す","question_sentence":"The results vindicated the company's long-term strategy.","question_sentence_ja":"結果は会社の長期戦略が正しかったことを証明しました。"},
+{"id":"w_l5_097","level":5,"word":"volatile","part_of_speech":"adjective","meaning":"変動しやすい、不安定な","question_sentence":"Currency markets remain volatile amid global uncertainty.","question_sentence_ja":"世界的な不確実性の中、通貨市場は依然として不安定です。"},
+{"id":"w_l5_098","level":5,"word":"wane","part_of_speech":"verb","meaning":"衰える、弱まる","question_sentence":"Enthusiasm for the initiative began to wane after the setbacks.","question_sentence_ja":"挫折の後、その取り組みへの熱意が衰え始めました。"},
+{"id":"w_l5_099","level":5,"word":"watershed","part_of_speech":"noun","meaning":"転換点、画期的な出来事","question_sentence":"The merger was a watershed moment for the entire industry.","question_sentence_ja":"合併は業界全体にとって転換点となりました。"},
+{"id":"w_l5_100","level":5,"word":"zealous","part_of_speech":"adjective","meaning":"熱心な、熱烈な","question_sentence":"She was zealous in her commitment to customer service excellence.","question_sentence_ja":"彼女は顧客サービスの卓越性への取り組みに熱心でした。"},
+];
+
+// ============================================================
+// CONFIG
+// ============================================================
+const LEVEL_CONFIG = {
+  1: { name: "レベル1", score: "〜300点", color: "var(--level1)", words: 100, description: "中学・高校基礎、超基本ビジネス語" },
+  2: { name: "レベル2", score: "301〜500点", color: "var(--level2)", words: 100, description: "日常ビジネス・一般生活" },
+  3: { name: "レベル3", score: "501〜700点", color: "var(--level3)", words: 100, description: "業務連絡・オフィス関連" },
+  4: { name: "レベル4", score: "701〜850点", color: "var(--level4)", words: 100, description: "経営・組織・少し硬い表現" },
+  5: { name: "レベル5", score: "851〜990点", color: "var(--level5)", words: 100, description: "専門的なビジネス・抽象語" },
+};
+const TOTAL_WORDS = 500;
+const SET_SIZE = 20;
+const STORAGE_KEY = "toeic_quiz_progress_v3";
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function loadProgress() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { correct_word_ids: [], set_stats: {} };
+  // set_stats key: "lv{level}_set{setIdx}" → { score, cleared }
+}
+function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+// ============================================================
+// STATE
+// ============================================================
+let currentLevel = null, currentSetIdx = null;
+let questions = [], currentIdx = 0, answers = [], answered = false;
+
+// ============================================================
+// HELPERS
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function formatPct(v) { return Math.round(v) + "%"; }
+function posLabel(pos) {
+  return { noun: "名詞", verb: "動詞", adjective: "形容詞", adverb: "副詞" }[pos] || pos;
+}
+
+// レベルの全単語をセット（20語ずつ）に分割
+function getSets(level) {
+  const pool = WORDS.filter(w => w.level === level);
+  const sets = [];
+  for (let i = 0; i < pool.length; i += SET_SIZE) sets.push(pool.slice(i, i + SET_SIZE));
+  return sets;
+}
+
+// 同レベルの単語から日本語選択肢を4つ生成
+function buildChoices(word, allLevelWords) {
+  const distractors = shuffle(allLevelWords.filter(w => w.id !== word.id)).slice(0, 3);
+  return shuffle([
+    { text: word.meaning, is_correct: true },
+    ...distractors.map(d => ({ text: d.meaning, is_correct: false }))
+  ]).map((c, i) => ({ ...c, id: String.fromCharCode(65 + i) }));
+}
+
+function setKey(level, setIdx) { return `lv${level}_set${setIdx}`; }
+
+// ============================================================
+// PAGE
+// ============================================================
+function showPage(name) {
+  document.getElementById("page-quiz").classList.toggle("visible", name === "quiz");
+  document.getElementById("page-dash").classList.toggle("visible", name === "dashboard");
+  document.getElementById("nav-quiz").classList.toggle("active", name === "quiz");
+  document.getElementById("nav-dash").classList.toggle("active", name === "dashboard");
+  if (name === "dashboard") renderDashboard();
+  if (name === "quiz") backToSelect();
+}
+
+// ============================================================
+// LEVEL SELECT
+// ============================================================
+function renderLevelSelect() {
+  const p = loadProgress();
+  const grid = document.getElementById("level-grid");
+  grid.innerHTML = "";
+  for (let lv = 1; lv <= 5; lv++) {
+    const cfg = LEVEL_CONFIG[lv];
+    const sets = getSets(lv);
+    const total = sets.length;
+    const doneCount = sets.filter((_, i) => p.set_stats[setKey(lv, i)]?.cleared).length;
+    const allDone = total > 0 && doneCount === total;
+
+    const card = document.createElement("div");
+    card.className = "level-card" + (allDone ? " cleared" : "");
+    card.innerHTML = `
+      <span class="badge" style="background:${cfg.color}">${cfg.name}</span>
+      <h3>${cfg.score}</h3>
+      <div class="meta">${cfg.description}</div>
+      <div class="meta" style="margin-top:6px;">${cfg.words.toLocaleString()}語登録 ／ ${total}セット</div>
+      <div class="best" style="color:${allDone ? 'var(--success)' : (doneCount > 0 ? cfg.color : 'var(--muted)')}; margin-top:10px; font-size:13px; font-weight:600;">
+        ${allDone ? '✅ 全セット完了！' : doneCount > 0 ? `✓ ${doneCount} / ${total} セット完了` : '未挑戦'}
+      </div>`;
+    card.onclick = () => showSetSelect(lv);
+    grid.appendChild(card);
+  }
+}
+
+// ============================================================
+// SET SELECT
+// ============================================================
+function showSetSelect(level) {
+  currentLevel = level;
+  const cfg = LEVEL_CONFIG[level];
+  const sets = getSets(level);
+  const p = loadProgress();
+
+  document.getElementById("level-select").style.display = "none";
+  document.getElementById("set-select").style.display = "block";
+  document.getElementById("quiz-area").style.display = "none";
+  document.getElementById("result-area").style.display = "none";
+
+  document.getElementById("set-title").textContent = `${cfg.name}（${cfg.score}）`;
+  const doneCount = sets.filter((_, i) => p.set_stats[setKey(level, i)]?.cleared).length;
+  document.getElementById("set-sub").textContent =
+    `全${sets.length}セット・各20問。クリア条件：80%以上正解　　完了：${doneCount} / ${sets.length}セット`;
+
+  const grid = document.getElementById("set-grid");
+  grid.innerHTML = "";
+  sets.forEach((setWords, i) => {
+    const stat = p.set_stats[setKey(level, i)];
+    const cleared = stat?.cleared;
+    const score = stat?.score;
+    const start = i * SET_SIZE + 1;
+    const end = start + setWords.length - 1;
+
+    const card = document.createElement("div");
+    card.className = "set-card" + (cleared ? " done" : "");
+    card.innerHTML = `
+      ${cleared ? '<span class="set-check">✅</span>' : ''}
+      <div class="set-num">セット ${i + 1}</div>
+      <div class="set-range">No.${start}〜${end}</div>
+      <div class="set-score" style="color:${cleared ? 'var(--success)' : score != null ? 'var(--warn)' : 'var(--muted)'}">
+        ${score != null ? formatPct(score) : '未挑戦'}
+      </div>`;
+    card.onclick = () => startQuiz(level, i);
+    grid.appendChild(card);
+  });
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+function startQuiz(level, setIdx) {
+  currentLevel = level;
+  currentSetIdx = setIdx;
+  const allLevelWords = WORDS.filter(w => w.level === level);
+  const sets = getSets(level);
+  const setWords = sets[setIdx];
+
+  // セット内の単語をシャッフルして出題（固定セットだが毎回順番はランダム）
+  questions = shuffle(setWords).map(q => ({
+    ...q, generatedChoices: buildChoices(q, allLevelWords)
+  }));
+  currentIdx = 0; answers = []; answered = false;
+
+  document.getElementById("set-select").style.display = "none";
+  document.getElementById("quiz-area").style.display = "block";
+  document.getElementById("result-area").style.display = "none";
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[currentIdx];
+  const total = questions.length;
+
+  document.getElementById("prog-fill").style.width = ((currentIdx / total) * 100) + "%";
+  document.getElementById("q-counter").textContent = `${currentIdx + 1} / ${total} 問`;
+  document.getElementById("q-word").textContent = q.word;
+  document.getElementById("q-pos").textContent = posLabel(q.part_of_speech);
+
+  const choicesEl = document.getElementById("choices");
+  choicesEl.innerHTML = "";
+  q.generatedChoices.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "choice-btn";
+    btn.innerHTML = `<span class="choice-id">${c.id}</span>${c.text}`;
+    btn.onclick = () => selectAnswer(c, btn, q);
+    choicesEl.appendChild(btn);
+  });
+
+  document.getElementById("answer-feedback").style.display = "none";
+  document.getElementById("next-btn").style.display = "none";
+}
+
+function selectAnswer(choice, btn, q) {
+  if (answered) return;
+  answered = true;
+  const isCorrect = choice.is_correct;
+  answers.push({ word_id: q.id, word: q.word, meaning: q.meaning, correct: isCorrect });
+
+  document.querySelectorAll(".choice-btn").forEach(b => {
+    b.disabled = true;
+    const id = b.querySelector(".choice-id").textContent;
+    const ch = q.generatedChoices.find(c => c.id === id);
+    if (ch && ch.is_correct) b.classList.add("correct");
+  });
+  if (!isCorrect) btn.classList.add("wrong");
+
+  const fb = document.getElementById("answer-feedback");
+  fb.style.display = "block";
+  const hdr = document.getElementById("feedback-header");
+  if (isCorrect) {
+    hdr.className = "feedback-header ok";
+    hdr.textContent = `✅ 正解！　${q.word} ＝ ${q.meaning}`;
+  } else {
+    hdr.className = "feedback-header ng";
+    hdr.textContent = `❌ 不正解。正解は「${q.meaning}」`;
+  }
+  document.getElementById("example-en").textContent = q.question_sentence;
+  document.getElementById("example-ja").textContent = q.question_sentence_ja;
+
+  const nb = document.getElementById("next-btn");
+  nb.style.display = "block";
+  nb.textContent = currentIdx + 1 < questions.length ? "次の問題へ →" : "結果を見る";
+}
+
+function nextQuestion() {
+  currentIdx++;
+  if (currentIdx < questions.length) renderQuestion();
+  else showResult();
+}
+
+function showResult() {
+  document.getElementById("quiz-area").style.display = "none";
+  document.getElementById("result-area").style.display = "block";
+
+  const correct = answers.filter(a => a.correct).length;
+  const total = answers.length;
+  const pct = Math.round((correct / total) * 100);
+  const cleared = pct >= 80;
+
+  // 進捗保存
+  const p = loadProgress();
+  const sk = setKey(currentLevel, currentSetIdx);
+  const prev = p.set_stats[sk];
+  p.set_stats[sk] = { score: Math.max(pct, prev?.score ?? 0), cleared: cleared || (prev?.cleared ?? false) };
+  answers.filter(a => a.correct).forEach(a => {
+    if (!p.correct_word_ids.includes(a.word_id)) p.correct_word_ids.push(a.word_id);
+  });
+  saveProgress(p);
+
+  document.getElementById("res-score").textContent = formatPct(pct);
+  document.getElementById("res-score").style.color = cleared ? "var(--success)" : "var(--warn)";
+  document.getElementById("res-badge").innerHTML = cleared
+    ? `<span class="clear-badge">🎉 クリア！（${correct}/${total}問正解）</span>`
+    : `<span class="fail-badge">あと少し！（${correct}/${total}問正解）</span>`;
+
+  const sets = getSets(currentLevel);
+  const nextIdx = currentSetIdx + 1;
+  const hasNext = nextIdx < sets.length;
+  const wrap = document.getElementById("result-next-btn-wrap");
+  if (hasNext) {
+    wrap.innerHTML = `<button class="btn-primary" style="width:100%;padding:16px;font-size:17px;"
+      onclick="startQuiz(${currentLevel}, ${nextIdx})">
+      ▶ セット ${nextIdx + 1} に進む →
+    </button>`;
+  } else {
+    wrap.innerHTML = `<div style="text-align:center;padding:14px;background:#f0fdf4;border-radius:8px;color:var(--success);font-weight:700;">
+      🏆 このレベルの全セット完了！
+    </div>`;
+  }
+
+  document.getElementById("res-detail-text").textContent =
+    `このセットの最高スコア：${formatPct(p.set_stats[sk].score)}　　セット ${currentSetIdx + 1} / ${sets.length}`;
+
+  const tbody = document.getElementById("res-tbody");
+  tbody.innerHTML = answers.map((a, i) =>
+    `<tr><td>${i+1}</td><td>${a.word}</td><td>${a.meaning}</td>
+     <td class="${a.correct ? 'tag-correct' : 'tag-wrong'}">${a.correct ? '○' : '✕'}</td></tr>`
+  ).join("");
+}
+
+function confirmBack() {
+  if (answered || currentIdx === 0) { backToSetSelect(); return; }
+  if (confirm("問題の途中です。セット一覧に戻りますか？（進捗は保存されません）")) backToSetSelect();
+}
+
+function backToSetSelect() {
+  document.getElementById("result-area").style.display = "none";
+  document.getElementById("quiz-area").style.display = "none";
+  if (currentLevel) showSetSelect(currentLevel);
+  else backToSelect();
+}
+
+function backToSelect() {
+  document.getElementById("result-area").style.display = "none";
+  document.getElementById("quiz-area").style.display = "none";
+  document.getElementById("set-select").style.display = "none";
+  document.getElementById("level-select").style.display = "block";
+  renderLevelSelect();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const p = loadProgress();
+  const n = p.correct_word_ids.length;
+  const pct = Math.min((n / TOTAL_WORDS) * 100, 100);
+  document.getElementById("dash-count").textContent = `${n.toLocaleString()} / ${TOTAL_WORDS.toLocaleString()} 語`;
+  document.getElementById("dash-bar").style.width = pct + "%";
+  document.getElementById("dash-pct").textContent = pct.toFixed(1) + "%";
+
+  const lp = document.getElementById("level-progress");
+  lp.innerHTML = "";
+  let cleared = 0, totalBest = 0, attempted = 0;
+  for (let lv = 1; lv <= 5; lv++) {
+    const cfg = LEVEL_CONFIG[lv], stat = p.level_stats[`level_${lv}`];
+    const best = stat.highest_score_percent;
+    if (best > 0) { totalBest += best; attempted++; }
+    if (stat.is_cleared) cleared++;
+    let sc = "not-started", st = "未挑戦";
+    if (stat.is_cleared) { sc = "cleared"; st = "クリア"; }
+    else if (best > 0) { sc = "progress"; st = "挑戦中"; }
+    const row = document.createElement("div");
+    row.className = "level-row";
+    row.innerHTML = `
+      <span class="lname" style="color:${cfg.color}">${cfg.name}</span>
+      <div class="lbar-wrap"><div class="lbar-fill" style="width:${best}%;background:${cfg.color}"></div></div>
+      <span class="lscore" style="color:${cfg.color}">${best > 0 ? formatPct(best) : '---'}</span>
+      <span class="lstatus ${sc}">${st}</span>`;
+    lp.appendChild(row);
+  }
+
+  const avg = attempted > 0 ? Math.round(totalBest / attempted) : 0;
+  document.getElementById("stat-grid").innerHTML = [
+    { val: cleared + "/5", label: "クリア済みレベル" },
+    { val: avg > 0 ? formatPct(avg) : "---", label: "平均スコア" },
+    { val: n.toLocaleString(), label: "習得単語数" },
+    { val: pct.toFixed(1) + "%", label: "全体進捗" },
+  ].map(s => `<div class="stat-card"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join("");
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderLevelSelect();
+</script>
+</body>
+</html>
