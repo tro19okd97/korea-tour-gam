@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>引越し準備チェックリスト</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --primary-dark: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --bg: #f0f7ff;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --checked-text: #94a3b8;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(37,99,235,.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #0891b2 100%);
+    color: #fff;
+    padding: 28px 20px 24px;
+    text-align: center;
+  }
+  header h1 { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; letter-spacing: .02em; }
+  header p { margin-top: 6px; font-size: .9rem; opacity: .85; }
+
+  /* ── Date picker ── */
+  .date-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .date-row label {
+    font-size: .85rem;
+    font-weight: 600;
+    opacity: .9;
+    white-space: nowrap;
+  }
+  .date-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,.15);
+    border: 1.5px solid rgba(255,255,255,.4);
+    border-radius: 99px;
+    padding: 6px 14px;
+    backdrop-filter: blur(4px);
+  }
+  .date-input-wrap input[type="date"] {
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: .9rem;
+    font-family: inherit;
+    cursor: pointer;
+    min-width: 130px;
+  }
+  .date-input-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+    opacity: .8;
+  }
+  .date-clear {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,.6);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    display: none;
+  }
+  .date-clear.show { display: block; }
+  .date-clear:hover { color: #fff; }
+  .moving-day-badge {
+    background: rgba(255,255,255,.2);
+    border-radius: 99px;
+    padding: 4px 12px;
+    font-size: .8rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity .3s;
+    white-space: nowrap;
+  }
+  .moving-day-badge.show { opacity: 1; }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .progress-label { font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+  .progress-pct { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+  .progress-bar-bg {
+    background: var(--primary-light);
+    border-radius: 99px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #06b6d4);
+    border-radius: 99px;
+    width: 0%;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-bar-fill.complete { background: linear-gradient(90deg, #16a34a, #22d3ee); }
+
+  /* ── Tab nav ── */
+  .tab-nav {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .2s, border-color .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tab-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 99px;
+    padding: 1px 8px;
+    font-size: .75rem;
+    font-weight: 700;
+    min-width: 28px;
+    text-align: center;
+    transition: background .2s, color .2s;
+  }
+  .tab-btn.active .tab-badge {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  /* ── Main layout ── */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  /* ── Tab panels ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section group ── */
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, var(--primary-light), #f0f9ff);
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon { font-size: 1.3rem; }
+  .section-title { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+  .section-sub { font-size: .78rem; color: var(--text-muted); margin-top: 1px; }
+
+  /* ── Check items ── */
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: background .15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item:hover { background: #f8fafc; }
+  .check-item:active { background: #f1f5f9; }
+
+  .check-item input[type="checkbox"] { display: none; }
+
+  .check-box {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 7px;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all .2s;
+    background: #fff;
+  }
+  .check-box svg {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .check-item.done .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .check-item.done .check-box svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .check-label {
+    font-size: .93rem;
+    line-height: 1.5;
+    color: var(--text);
+    transition: color .2s;
+    flex: 1;
+  }
+  .check-item.done .check-label {
+    color: var(--checked-text);
+    text-decoration: line-through;
+  }
+
+  /* ── Goods items ── */
+  .goods-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .goods-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    background: var(--surface);
+  }
+  .goods-card:hover { border-color: #93c5fd; background: #f8fbff; }
+  .goods-card:active { background: #f0f7ff; }
+  .goods-card input[type="checkbox"] { display: none; }
+
+  .goods-check {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all .2s;
+    background: #fff;
+  }
+  .goods-check svg {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .goods-card.done .goods-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .goods-card.done .goods-check svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .goods-info { flex: 1; }
+  .goods-name {
+    font-size: .93rem;
+    font-weight: 600;
+    color: var(--text);
+    transition: color .2s;
+    line-height: 1.4;
+  }
+  .goods-note {
+    font-size: .78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .goods-card.done .goods-name {
+    color: var(--checked-text);
+    text-decoration: line-through;
+  }
+  .goods-card.done .goods-note { color: #c0ccd8; }
+
+  /* ── Reset button ── */
+  .reset-wrap {
+    text-align: center;
+    padding: 8px 16px 16px;
+  }
+  .reset-btn {
+    padding: 10px 28px;
+    border: 2px solid #e2e8f0;
+    border-radius: 99px;
+    background: none;
+    color: var(--text-muted);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .reset-btn:hover {
+    border-color: #f87171;
+    color: #ef4444;
+    background: #fff5f5;
+  }
+
+  /* ── Completion banner ── */
+  .complete-banner {
+    display: none;
+    background: var(--green-light);
+    border: 2px solid #86efac;
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .complete-banner.show { display: block; }
+  .complete-banner .emoji { font-size: 2rem; }
+  .complete-banner p { color: var(--green); font-weight: 700; margin-top: 6px; font-size: 1rem; }
+
+  @keyframes popIn {
+    from { transform: scale(.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── Deadline chip ── */
+  .deadline-chip {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .deadline-chip.show { display: flex; }
+  .deadline-chip.status-ok   { background: #dcfce7; color: #15803d; }
+  .deadline-chip.status-soon { background: #fef9c3; color: #a16207; }
+  .deadline-chip.status-urgent { background: #fee2e2; color: #b91c1c; }
+  .deadline-chip.status-done { background: #f1f5f9; color: #64748b; }
+
+  /* ── City Hall Search ── */
+  .cityhall-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 2px solid transparent;
+    transition: border-color .2s;
+  }
+  .cityhall-card.has-result { border-color: #bfdbfe; }
+
+  .cityhall-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .cityhall-header-left { display: flex; align-items: center; gap: 10px; }
+  .cityhall-title { font-size: .95rem; font-weight: 700; color: var(--primary-dark); }
+  .cityhall-sub   { font-size: .75rem; color: var(--text-muted); margin-top: 1px; }
+  .cityhall-toggle {
+    font-size: .8rem;
+    color: var(--text-muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .cityhall-toggle.open { transform: rotate(180deg); }
+
+  .cityhall-body { padding: 16px 18px; display: none; }
+  .cityhall-body.open { display: block; }
+
+  /* API key section */
+  .api-key-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    font-size: .8rem;
+  }
+  .api-key-row.ok { background: #f0fdf4; border-color: #86efac; }
+  .api-key-row svg { flex-shrink: 0; }
+  .api-key-row span { color: var(--text-muted); flex: 1; }
+  .api-key-row.ok span { color: #15803d; }
+  .api-key-toggle {
+    background: none; border: none; font-size: .78rem; font-weight: 600;
+    color: var(--primary); cursor: pointer; white-space: nowrap; padding: 0;
+  }
+  .api-key-input-wrap {
+    display: none;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .api-key-input-wrap.show { display: flex; }
+  .api-key-input-wrap input {
+    flex: 1; padding: 8px 12px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: .82rem; font-family: monospace; outline: none;
+  }
+  .api-key-input-wrap input:focus { border-color: var(--primary); }
+  .api-key-save {
+    padding: 8px 14px; background: var(--primary); color: #fff;
+    border: none; border-radius: 8px; font-size: .82rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* Search row */
+  .search-row {
+    display: flex; gap: 8px; margin-bottom: 12px;
+  }
+  .search-row input {
+    flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 99px; font-size: .9rem; font-family: inherit; outline: none;
+  }
+  .search-row input:focus { border-color: var(--primary); }
+  .search-row input::placeholder { color: #cbd5e1; }
+  .search-btn {
+    padding: 10px 18px; background: var(--primary); color: #fff;
+    border: none; border-radius: 99px; font-size: .88rem; font-weight: 700;
+    cursor: pointer; transition: background .2s; white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .search-btn:hover { background: var(--primary-dark); }
+  .search-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+  .search-btn .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    display: none;
+  }
+  .search-btn.loading .spinner { display: block; }
+  .search-btn.loading .search-icon { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Result card */
+  .ch-result {
+    display: none;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeIn .3s ease;
+  }
+  .ch-result.show { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .ch-result-head {
+    background: linear-gradient(135deg, var(--primary-light), #e0f2fe);
+    padding: 12px 16px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  }
+  .ch-name { font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+  .ch-addr { font-size: .78rem; color: var(--text-muted); margin-top: 3px; }
+  .ch-map-link {
+    font-size: .75rem; color: var(--primary); font-weight: 600;
+    text-decoration: none; white-space: nowrap; padding: 4px 10px;
+    border: 1.5px solid var(--primary); border-radius: 99px;
+    transition: all .2s; flex-shrink: 0;
+  }
+  .ch-map-link:hover { background: var(--primary); color: #fff; }
+
+  .ch-result-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .ch-info-row { display: flex; align-items: flex-start; gap: 10px; }
+  .ch-info-icon { font-size: 1rem; margin-top: 1px; flex-shrink: 0; }
+  .ch-info-content { flex: 1; }
+  .ch-info-label { font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+  .ch-info-value { font-size: .88rem; color: var(--text); margin-top: 2px; }
+  .ch-info-value a { color: var(--primary); text-decoration: none; word-break: break-all; }
+  .ch-info-value a:hover { text-decoration: underline; }
+
+  .ch-hours-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    font-size: .82rem;
+  }
+  .ch-day { color: var(--text-muted); font-weight: 600; }
+  .ch-time { color: var(--text); }
+  .ch-time.today { color: var(--green); font-weight: 700; }
+  .ch-time.closed { color: #ef4444; }
+  .ch-day.today-label { color: var(--green); font-weight: 700; }
+
+  .ch-status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 99px;
+    font-size: .75rem; font-weight: 700; margin-bottom: 4px;
+  }
+  .ch-status-pill.open  { background: #dcfce7; color: #15803d; }
+  .ch-status-pill.closed { background: #fee2e2; color: #b91c1c; }
+
+  .ch-error {
+    display: none; padding: 12px 14px;
+    background: #fff5f5; border: 1.5px solid #fca5a5;
+    border-radius: 10px; color: #b91c1c; font-size: .85rem;
+    animation: fadeIn .3s ease;
+  }
+  .ch-error.show { display: block; }
+
+  /* attribution element (Maps API requires this) */
+  #map-attribution { display: none; }
+
+  /* ── Sub-label divider ── */
+  .sub-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px 6px;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border-top: 1px solid #f1f5f9;
+    background: #fafcff;
+  }
+  .sub-label:first-of-type { border-top: none; }
+  .sub-label .sub-label-icon { font-size: .9rem; }
+
+  /* ── Responsive ── */
+  @media (min-width: 640px) {
+    .goods-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (min-width: 800px) {
+    .tab-nav { display: none; }
+    .tab-panel { display: block !important; }
+    .main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    .complete-banner { grid-column: 1 / -1; }
+    .reset-wrap { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏠 引越し準備チェックリスト</h1>
+  <p>やること・便利グッズを確認しながら、スムーズな引越しを！</p>
+  <div class="date-row">
+    <label for="movingDate">📦 引越し予定日</label>
+    <div class="date-input-wrap">
+      <input type="date" id="movingDate" onchange="onDateChange()">
+      <button class="date-clear" id="dateClear" onclick="clearDate()" title="日付をクリア">✕</button>
+    </div>
+    <span class="moving-day-badge" id="movingBadge"></span>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-header">
+    <span class="progress-label">全体の進捗</span>
+    <span class="progress-pct" id="pct">0% 完了</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="bar"></div>
+  </div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" data-tab="todo" onclick="switchTab('todo')">
+    📋 やることリスト
+    <span class="tab-badge" id="badge-todo">0</span>
+  </button>
+  <button class="tab-btn" data-tab="goods" onclick="switchTab('goods')">
+    🛒 便利グッズ
+    <span class="tab-badge" id="badge-goods">0</span>
+  </button>
+</div>
+
+<div class="main">
+
+  <!-- ── やることリスト ── -->
+  <div class="tab-panel active" id="panel-todo">
+
+    <!-- 役所情報検索カード -->
+    <div class="cityhall-card" id="cityhallCard">
+      <div class="cityhall-header" onclick="toggleCityHall()">
+        <div class="cityhall-header-left">
+          <span style="font-size:1.3rem">🏛️</span>
+          <div>
+            <div class="cityhall-title">役所情報を調べる</div>
+            <div class="cityhall-sub" id="cityhallSub">市区町村名を入力 → 公式サイト・営業時間を取得</div>
+          </div>
+        </div>
+        <span class="cityhall-toggle" id="cityhallToggle">▼</span>
+      </div>
+      <div class="cityhall-body open" id="cityhallBody">
+
+        <!-- API Key 設定 -->
+        <div class="api-key-row" id="apiKeyRow">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M11 1a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM7.4 7.4 2 12.8V15h2.2l1-1v-1.5H6.7V11H8L9.6 9.4A4 4 0 0 1 7.4 7.4z" stroke="#d97706" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          <span id="apiKeyStatus">Google Maps APIキーを設定してください</span>
+          <button class="api-key-toggle" onclick="toggleApiKeyInput()">設定</button>
+        </div>
+        <div class="api-key-input-wrap" id="apiKeyInputWrap">
+          <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
+          <button class="api-key-save" onclick="saveApiKey()">保存</button>
+        </div>
+
+        <!-- 検索 -->
+        <div class="search-row">
+          <input type="text" id="municipalityInput" placeholder="例：渋谷区、横浜市中区、大阪市北区"
+            onkeydown="if(event.key==='Enter')searchCityHall()">
+          <button class="search-btn" id="searchBtn" onclick="searchCityHall()">
+            <span class="search-icon">🔍 検索</span>
+            <span class="spinner"></span>
+          </button>
+        </div>
+
+        <!-- エラー -->
+        <div class="ch-error" id="chError"></div>
+
+        <!-- 結果 -->
+        <div class="ch-result" id="chResult">
+          <div class="ch-result-head">
+            <div>
+              <div class="ch-name" id="chName"></div>
+              <div class="ch-addr" id="chAddr"></div>
+            </div>
+            <a class="ch-map-link" id="chMapLink" target="_blank" rel="noopener">地図</a>
+          </div>
+          <div class="ch-result-body">
+            <div class="ch-info-row" id="chWebsiteRow">
+              <span class="ch-info-icon">🌐</span>
+              <div class="ch-info-content">
+                <div class="ch-info-label">公式サイト</div>
+                <div class="ch-info-value"><a id="chWebsite" href="#" target="_blank" rel="noopener"></a></div>
+              </div>
+            </div>
+            <div class="ch-info-row" id="chPhoneRow">
+              <span class="ch-info-icon">📞</span>
+              <div class="ch-info-content">
+                <div class="ch-info-label">電話番号</div>
+                <div class="ch-info-value" id="chPhone"></div>
+              </div>
+            </div>
+            <div class="ch-info-row" id="chHoursRow">
+              <span class="ch-info-icon">🕐</span>
+              <div class="ch-info-content">
+                <div class="ch-info-label">営業時間</div>
+                <div id="chStatusPill"></div>
+                <div class="ch-hours-grid" id="chHoursGrid"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="map-attribution"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" data-offset="-30" id="sh-1month">
+        <span class="section-icon">📅</span>
+        <div>
+          <div class="section-title">引越しが決まったらすぐ（1ヶ月前〜）</div>
+          <div class="section-sub">最優先で動くべきことをまず片付けよう</div>
+        </div>
+        <span class="deadline-chip" id="dc-1month"></span>
+      </div>
+      <label class="check-item" data-id="t1">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">賃貸物件の解約予告通知（管理会社や大家さんへ）</span>
+      </label>
+      <label class="check-item" data-id="t2">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">引越し業者の選定・予約（見積もり比較、日程確定）</span>
+      </label>
+      <label class="check-item" data-id="t3">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">不用品の処分・売却（粗大ゴミの回収予約）</span>
+      </label>
+      <label class="check-item" data-id="t4">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">賃貸契約・駐車場解約の確認</span>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-header" data-offset="-1" id="sh-2weeks">
+        <span class="section-icon">📝</span>
+        <div>
+          <div class="section-title">2週間前〜前日までに</div>
+          <div class="section-sub">手続きと荷造りをコツコツ進めよう</div>
+        </div>
+        <span class="deadline-chip" id="dc-2weeks"></span>
+      </div>
+      <div class="sub-label"><span class="sub-label-icon">🏛️</span>役所関係（転出手続き）</div>
+      <label class="check-item" data-id="t5a">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">転出届の提出（旧住所の市区町村窓口へ、本人確認書類持参）</span>
+      </label>
+      <label class="check-item" data-id="t5b">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">印鑑登録の廃止（転出届と同時に自動廃止される自治体も多い、要確認）</span>
+      </label>
+      <label class="check-item" data-id="t5c">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">マイナンバーカードの転出手続き・転出証明書の受け取り</span>
+      </label>
+      <label class="check-item" data-id="t5d">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">国民健康保険の資格喪失届（自営業・無職の方のみ、会社員は不要）</span>
+      </label>
+      <label class="check-item" data-id="t5e">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">国民年金の住所変更（第1号被保険者のみ、会社員・第3号は会社経由）</span>
+      </label>
+      <label class="check-item" data-id="t5f">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">児童手当・各種給付金の転出手続き（受給中の方のみ）</span>
+      </label>
+      <div class="sub-label"><span class="sub-label-icon">📋</span>その他の手続き</div>
+      <label class="check-item" data-id="t6">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">インフラ・ライフラインの転居手続き（電気・ガス・水道の解約・新居開通、ネット移転）</span>
+      </label>
+      <label class="check-item" data-id="t7">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">郵便・配送・金融機関の手続き（郵便局の転居届、銀行・クレカ等の住所変更）</span>
+      </label>
+      <label class="check-item" data-id="t8">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">荷造りの開始（シーズンオフのものから梱包、ダンボールに中身と配置場所を記載）</span>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-header" data-offset="0" id="sh-moving-day">
+        <span class="section-icon">🚚</span>
+        <div>
+          <div class="section-title">前日・当日の作業</div>
+          <div class="section-sub">忘れるとあとで困る！当日タスク</div>
+        </div>
+        <span class="deadline-chip" id="dc-moving-day"></span>
+      </div>
+      <label class="check-item" data-id="t9">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">冷蔵庫・洗濯機の水抜き（前日までに空にして電源を抜く）</span>
+      </label>
+      <label class="check-item" data-id="t10">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">旧居の明け渡し（バルブ・ブレーカー落とし、管理会社立ち会い、鍵返却）</span>
+      </label>
+      <label class="check-item" data-id="t11">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">新居の手続き・確認（鍵の受け取り、入居時の傷・汚れの写真撮影記録）</span>
+      </label>
+    </div>
+
+    <div class="section">
+      <div class="section-header" data-offset="14" id="sh-after">
+        <span class="section-icon">🏛️</span>
+        <div>
+          <div class="section-title">引越し後（〜14日以内）</div>
+          <div class="section-sub">期限があるので早めに済ませよう</div>
+        </div>
+        <span class="deadline-chip" id="dc-after"></span>
+      </div>
+      <div class="sub-label"><span class="sub-label-icon">🏛️</span>役所窓口（優先・期限あり）</div>
+      <label class="check-item" data-id="t12a">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">転入届／転居届の提出（新住所の役所、転出証明書持参、14日以内）</span>
+      </label>
+      <label class="check-item" data-id="t12b">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">マイナンバーカードの住所変更（転入届と同日・同窓口で手続き可）</span>
+      </label>
+      <label class="check-item" data-id="t12c">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">印鑑登録の新規申請（新住所地で登録し直し、本人確認書類と印鑑を持参）</span>
+      </label>
+      <label class="check-item" data-id="t12d">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">国民健康保険への加入手続き（資格取得日から14日以内、保険証を受け取る）</span>
+      </label>
+      <label class="check-item" data-id="t12e">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">国民年金の住所変更届（第1号被保険者のみ、年金手帳またはマイナンバー持参）</span>
+      </label>
+      <div class="sub-label"><span class="sub-label-icon">🚗</span>免許・証明書類</div>
+      <label class="check-item" data-id="t12f">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">運転免許証の住所変更（最寄りの警察署または運転免許センター、住民票持参）</span>
+      </label>
+      <label class="check-item" data-id="t12g">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">パスポートへの新住所記載（旅券事務所または一部市区町村窓口、有効期限内のみ）</span>
+      </label>
+      <label class="check-item" data-id="t12h">
+        <input type="checkbox"><div class="check-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="check-label">住民票の取得（銀行・職場・各種手続き用に数枚まとめて取得しておく）</span>
+      </label>
+    </div>
+
+  </div><!-- /panel-todo -->
+
+  <!-- ── 便利グッズ ── -->
+  <div class="tab-panel" id="panel-goods">
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🛒</span>
+        <div>
+          <div class="section-title">荷造り・引越し作業にあると便利</div>
+          <div class="section-sub">タップして購入済み・準備済みにチェック</div>
+        </div>
+      </div>
+      <div class="goods-grid">
+        <label class="goods-card" data-id="g1">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">🎀 養生テープ / マスキングテープ</div>
+            <div class="goods-note">引き出し固定、メモ用。剥がしやすいものを選ぼう</div>
+          </div>
+        </label>
+        <label class="goods-card" data-id="g2">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">🌀 ハンディラップ</div>
+            <div class="goods-note">延長コードや本、小物をまとめるのに便利</div>
+          </div>
+        </label>
+        <label class="goods-card" data-id="g3">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">🧤 軍手</div>
+            <div class="goods-note">滑り止め付き、できればスマホ対応のものが◎</div>
+          </div>
+        </label>
+        <label class="goods-card" data-id="g4">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">✂️ カッター・ハサミ</div>
+            <div class="goods-note">荷解き用。すぐ出せる場所に入れておこう</div>
+          </div>
+        </label>
+        <label class="goods-card" data-id="g5">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">🗑️ ゴミ袋（45L〜70L）</div>
+            <div class="goods-note">多めに用意しておくと安心</div>
+          </div>
+        </label>
+        <label class="goods-card" data-id="g6">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">🔧 工具セット</div>
+            <div class="goods-note">ベッドやデスクの解体・組み立て用のドライバーなど</div>
+          </div>
+        </label>
+        <label class="goods-card" data-id="g7">
+          <input type="checkbox">
+          <div class="goods-check"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="goods-info">
+            <div class="goods-name">🛍️ ビニール袋＋輪ゴム</div>
+            <div class="goods-note">解体した家具のネジや部品を本体に貼ってまとめる用</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+  </div><!-- /panel-goods -->
+
+  <div class="complete-banner" id="completeBanner">
+    <div class="emoji">🎉</div>
+    <p>すべての項目が完了しました！<br>引越し準備はバッチリです！</p>
+  </div>
+
+  <div class="reset-wrap">
+    <button class="reset-btn" onclick="resetAll()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1 0 1.2-3.6M1 2v3h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      すべてリセット
+    </button>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const STORAGE_KEY = 'moving_checklist_v1';
+const DATE_KEY    = 'moving_checklist_date';
+
+// ── deadline sections: [chipId, offsetDays, label]
+const DEADLINE_SECTIONS = [
+  ['dc-1month',    -30, '1ヶ月前までに'],
+  ['dc-2weeks',    -1,  '前日までに'],
+  ['dc-moving-day', 0,  '当日'],
+  ['dc-after',     14,  '引越し後14日以内'],
+];
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function daysDiff(from, to) {
+  return Math.round((to - from) / 86400000);
+}
+function fmtDate(d) {
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function updateDeadlines() {
+  const val = document.getElementById('movingDate').value;
+  if (!val) {
+    DEADLINE_SECTIONS.forEach(([id]) => {
+      const chip = document.getElementById(id);
+      chip.className = 'deadline-chip';
+      chip.textContent = '';
+    });
+    document.getElementById('movingBadge').classList.remove('show');
+    document.getElementById('dateClear').classList.remove('show');
+    return;
+  }
+
+  // moving date at midnight local time
+  const [y, m, d] = val.split('-').map(Number);
+  const movingDate = new Date(y, m-1, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // moving day badge in header
+  const daysToMove = daysDiff(today, movingDate);
+  const badge = document.getElementById('movingBadge');
+  badge.classList.add('show');
+  if (daysToMove > 0)       badge.textContent = `引越しまであと ${daysToMove} 日`;
+  else if (daysToMove === 0) badge.textContent = '🚛 今日が引越し日！';
+  else                       badge.textContent = `引越しから ${-daysToMove} 日経過`;
+
+  document.getElementById('dateClear').classList.add('show');
+
+  DEADLINE_SECTIONS.forEach(([id, offset, label]) => {
+    const deadline = addDays(movingDate, offset);
+    const diff = daysDiff(today, deadline);
+    const chip = document.getElementById(id);
+    chip.classList.add('show');
+
+    let status, text;
+    if (diff < 0) {
+      status = 'status-urgent';
+      text = `⚠ 期限切れ（${fmtDate(deadline)}）`;
+    } else if (diff === 0) {
+      status = 'status-urgent';
+      text = `🔴 今日が期限（${fmtDate(deadline)}）`;
+    } else if (diff <= 3) {
+      status = 'status-urgent';
+      text = `🔴 あと${diff}日（${fmtDate(deadline)}）`;
+    } else if (diff <= 7) {
+      status = 'status-soon';
+      text = `🟡 あと${diff}日（${fmtDate(deadline)}）`;
+    } else {
+      status = 'status-ok';
+      text = `🟢 ${fmtDate(deadline)}まで`;
+    }
+    chip.className = `deadline-chip show ${status}`;
+    chip.textContent = text;
+  });
+}
+
+function onDateChange() {
+  const val = document.getElementById('movingDate').value;
+  localStorage.setItem(DATE_KEY, val);
+  updateDeadlines();
+}
+
+function clearDate() {
+  document.getElementById('movingDate').value = '';
+  localStorage.removeItem(DATE_KEY);
+  updateDeadlines();
+}
+
+function restoreDate() {
+  const saved = localStorage.getItem(DATE_KEY);
+  if (saved) {
+    document.getElementById('movingDate').value = saved;
+    updateDeadlines();
+  }
+}
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function applyState() {
+  const state = loadState();
+  document.querySelectorAll('[data-id]').forEach(el => {
+    if (state[el.dataset.id]) {
+      el.classList.add('done');
+      el.querySelector('input').checked = true;
+    }
+  });
+  updateProgress();
+  updateBadges();
+}
+
+function updateProgress() {
+  const all = document.querySelectorAll('[data-id]');
+  const done = document.querySelectorAll('[data-id].done');
+  const total = all.length;
+  const pct = total === 0 ? 0 : Math.round(done.length / total * 100);
+
+  document.getElementById('pct').textContent = pct + '% 完了';
+  const bar = document.getElementById('bar');
+  bar.style.width = pct + '%';
+  bar.classList.toggle('complete', pct === 100);
+
+  document.getElementById('completeBanner').classList.toggle('show', pct === 100);
+}
+
+function updateBadges() {
+  const todoDone = document.querySelectorAll('#panel-todo [data-id].done').length;
+  const todoTotal = document.querySelectorAll('#panel-todo [data-id]').length;
+  const goodsDone = document.querySelectorAll('#panel-goods [data-id].done').length;
+  const goodsTotal = document.querySelectorAll('#panel-goods [data-id]').length;
+
+  document.getElementById('badge-todo').textContent = todoTotal - todoDone === 0
+    ? '✓' : (todoTotal - todoDone) + '件';
+  document.getElementById('badge-goods').textContent = goodsTotal - goodsDone === 0
+    ? '✓' : (goodsTotal - goodsDone) + '件';
+}
+
+document.querySelectorAll('[data-id]').forEach(el => {
+  el.addEventListener('click', () => {
+    const state = loadState();
+    const id = el.dataset.id;
+    if (el.classList.contains('done')) {
+      el.classList.remove('done');
+      el.querySelector('input').checked = false;
+      delete state[id];
+    } else {
+      el.classList.add('done');
+      el.querySelector('input').checked = true;
+      state[id] = true;
+    }
+    saveState(state);
+    updateProgress();
+    updateBadges();
+  });
+});
+
+function resetAll() {
+  if (!confirm('すべてのチェックを外しますか？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('[data-id]').forEach(el => {
+    el.classList.remove('done');
+    el.querySelector('input').checked = false;
+  });
+  updateProgress();
+  updateBadges();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+}
+
+// ────────────────────────────────────────
+// 役所情報検索 (Google Maps Places API)
+// ────────────────────────────────────────
+const APIKEY_STORAGE = 'moving_gmaps_key';
+const DAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
+
+let mapsLoaded = false;
+let mapsLoadPromise = null;
+
+function loadMapsAPI(key) {
+  if (mapsLoaded) return Promise.resolve();
+  if (mapsLoadPromise) return mapsLoadPromise;
+  mapsLoadPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=ja`;
+    s.onload = () => { mapsLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error('Maps API の読み込みに失敗しました'));
+    document.head.appendChild(s);
+  });
+  return mapsLoadPromise;
+}
+
+function getSavedApiKey() {
+  return localStorage.getItem(APIKEY_STORAGE) || '';
+}
+
+function restoreApiKey() {
+  const key = getSavedApiKey();
+  if (key) {
+    setApiKeyUI(true);
+  }
+}
+
+function setApiKeyUI(hasKey) {
+  const row = document.getElementById('apiKeyRow');
+  const status = document.getElementById('apiKeyStatus');
+  if (hasKey) {
+    row.classList.add('ok');
+    status.textContent = 'APIキー設定済み（変更する場合は「変更」をクリック）';
+    document.querySelector('#apiKeyRow .api-key-toggle').textContent = '変更';
+  } else {
+    row.classList.remove('ok');
+    status.textContent = 'Google Maps APIキーを設定してください';
+    document.querySelector('#apiKeyRow .api-key-toggle').textContent = '設定';
+  }
+}
+
+function toggleApiKeyInput() {
+  const wrap = document.getElementById('apiKeyInputWrap');
+  const showing = wrap.classList.contains('show');
+  wrap.classList.toggle('show', !showing);
+  if (!showing) document.getElementById('apiKeyInput').focus();
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val) return;
+  localStorage.setItem(APIKEY_STORAGE, val);
+  mapsLoaded = false;
+  mapsLoadPromise = null;
+  document.getElementById('apiKeyInputWrap').classList.remove('show');
+  document.getElementById('apiKeyInput').value = '';
+  setApiKeyUI(true);
+}
+
+function toggleCityHall() {
+  const body = document.getElementById('cityhallBody');
+  const toggle = document.getElementById('cityhallToggle');
+  const open = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+async function searchCityHall() {
+  const query = document.getElementById('municipalityInput').value.trim();
+  if (!query) {
+    document.getElementById('municipalityInput').focus();
+    return;
+  }
+  const apiKey = getSavedApiKey();
+  if (!apiKey) {
+    showChError('先にGoogle Maps APIキーを設定してください。');
+    return;
+  }
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  hideChResult();
+  hideChError();
+
+  try {
+    await loadMapsAPI(apiKey);
+    const service = new google.maps.places.PlacesService(document.getElementById('map-attribution'));
+
+    // まず "市役所/区役所/町役場/村役場" を自動補完して検索
+    const suffix = query.endsWith('市') ? '市役所'
+                 : query.endsWith('区') ? '区役所'
+                 : query.endsWith('町') ? '町役場'
+                 : query.endsWith('村') ? '村役場'
+                 : '役所';
+    const searchQuery = query + suffix;
+
+    const place = await new Promise((resolve, reject) => {
+      service.textSearch({ query: searchQuery, language: 'ja' }, (results, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !results?.length) {
+          reject(new Error(`「${searchQuery}」が見つかりませんでした。市区町村名を確認してください。`));
+          return;
+        }
+        service.getDetails({
+          placeId: results[0].place_id,
+          fields: ['name', 'website', 'opening_hours', 'formatted_address',
+                   'formatted_phone_number', 'url', 'business_status'],
+          language: 'ja',
+        }, (detail, ds) => {
+          if (ds === google.maps.places.PlacesServiceStatus.OK) resolve(detail);
+          else reject(new Error('詳細情報の取得に失敗しました: ' + ds));
+        });
+      });
+    });
+
+    renderChResult(place, query);
+
+    // セクションのサブタイトルを更新
+    document.getElementById('cityhallSub').textContent = `📍 ${query} の役所情報を表示中`;
+    document.getElementById('cityhallCard').classList.add('has-result');
+
+  } catch (e) {
+    showChError(e.message || '検索中にエラーが発生しました。');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+function renderChResult(place, query) {
+  document.getElementById('chName').textContent = place.name || query + '役所';
+  document.getElementById('chAddr').textContent = place.formatted_address || '';
+
+  const mapLink = document.getElementById('chMapLink');
+  mapLink.href = place.url || `https://www.google.com/maps/search/${encodeURIComponent(place.name || query+'役所')}`;
+
+  // 公式サイト
+  const websiteRow = document.getElementById('chWebsiteRow');
+  if (place.website) {
+    const a = document.getElementById('chWebsite');
+    a.href = place.website;
+    a.textContent = place.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    websiteRow.style.display = 'flex';
+  } else {
+    websiteRow.style.display = 'none';
+  }
+
+  // 電話番号
+  const phoneRow = document.getElementById('chPhoneRow');
+  if (place.formatted_phone_number) {
+    document.getElementById('chPhone').textContent = place.formatted_phone_number;
+    phoneRow.style.display = 'flex';
+  } else {
+    phoneRow.style.display = 'none';
+  }
+
+  // 営業時間
+  const hoursRow = document.getElementById('chHoursRow');
+  const pill = document.getElementById('chStatusPill');
+  const grid = document.getElementById('chHoursGrid');
+  grid.innerHTML = '';
+
+  if (place.opening_hours) {
+    const isOpen = place.opening_hours.isOpen?.();
+    pill.innerHTML = isOpen
+      ? '<span class="ch-status-pill open">● 現在営業中</span>'
+      : '<span class="ch-status-pill closed">● 現在営業時間外</span>';
+
+    const todayIdx = new Date().getDay(); // 0=Sun
+    const weekdayText = place.opening_hours.weekday_text || [];
+
+    // weekday_text は月曜始まり (0=月) なので日曜は index 6
+    // Googleの曜日順: 月火水木金土日 (0-6) → 実際のgetDay() 0=日,1=月...
+    weekdayText.forEach((line, i) => {
+      // i: 0=月,1=火,...,6=日  →  getDay相当: 1,2,...,0
+      const dayOfWeek = (i + 1) % 7;
+      const isToday = dayOfWeek === todayIdx;
+
+      const dayEl = document.createElement('div');
+      dayEl.className = 'ch-day' + (isToday ? ' today-label' : '');
+      dayEl.textContent = DAY_NAMES[dayOfWeek] + (isToday ? '（今日）' : '');
+
+      const timeEl = document.createElement('div');
+      const timePart = line.replace(/^[^:：]+[：:]\s*/, '');
+      const isClosed = /休|closed/i.test(timePart);
+      timeEl.className = 'ch-time' + (isToday ? ' today' : '') + (isClosed ? ' closed' : '');
+      timeEl.textContent = timePart;
+
+      grid.appendChild(dayEl);
+      grid.appendChild(timeEl);
+    });
+
+    hoursRow.style.display = 'flex';
+  } else {
+    pill.innerHTML = '';
+    hoursRow.style.display = 'none';
+  }
+
+  document.getElementById('chResult').classList.add('show');
+}
+
+function showChError(msg) {
+  const el = document.getElementById('chError');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+}
+function hideChError() { document.getElementById('chError').classList.remove('show'); }
+function hideChResult() { document.getElementById('chResult').classList.remove('show'); }
+
+applyState();
+restoreDate();
+restoreApiKey();
+</script>
+</body>
+</html>
