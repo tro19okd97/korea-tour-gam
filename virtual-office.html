@@ -1109,11 +1109,12 @@ function ProfilePopover({ user, now, isMe, onWave, onClose }) {
 /* ============================================================
    マイパネル（表示名・ひとこと・セッション操作）
    ============================================================ */
-function MyPanel({ me, now, onSetComment, onSetDisplayName, onEnterFocus, onResume, onOpenCheckout, onDiscard }) {
+function MyPanel({ me, now, onSetComment, onSetDisplayName, onEnterFocus, onResume, onRest, onOpenCheckout, onDiscard }) {
   const [draft, setDraft] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const resting = me.status === 'resting';
+  const studying = me.status === 'studying';
 
   return (
     <div className="rounded-3xl border border-amber-200 bg-white p-5 shadow-sm">
@@ -1159,27 +1160,65 @@ function MyPanel({ me, now, onSetComment, onSetDisplayName, onEnterFocus, onResu
         )}
       </div>
 
-      {/* ひとこと（あつ森風の吹き出しに反映） */}
-      <label className="mb-1 block text-xs font-bold text-slate-500">💬 ひとこと（頭の上の吹き出しに残ります）</label>
-      <form
-        className="mb-2 flex gap-2"
-        onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { onSetComment(draft.trim()); setDraft(''); } }}
-      >
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={me.comment || '例：今日もがんばるぞ〜'}
-          maxLength={25}
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-        />
-        <button type="submit" disabled={!draft.trim()} className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-amber-900 transition hover:bg-amber-500 disabled:opacity-40">
-          つぶやく
-        </button>
-      </form>
-      {me.comment && (
-        <button onClick={() => onSetComment('')} className="mb-3 text-[11px] text-slate-400 underline-offset-2 hover:underline">
-          吹き出しを消す
-        </button>
+      {/* ひとこと（集中モード中は非表示＝交流オフ） */}
+      {!studying && (
+        <React.Fragment>
+          <label className="mb-1 block text-xs font-bold text-slate-500">💬 ひとこと（頭の上の吹き出しに残ります）</label>
+          <form
+            className="mb-2 flex gap-2"
+            onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { onSetComment(draft.trim()); setDraft(''); } }}
+          >
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={me.comment || '例：今日もがんばるぞ〜'}
+              maxLength={25}
+              className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+            />
+            <button type="submit" disabled={!draft.trim()} className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-amber-900 transition hover:bg-amber-500 disabled:opacity-40">
+              つぶやく
+            </button>
+          </form>
+          {me.comment && (
+            <button onClick={() => onSetComment('')} className="mb-3 text-[11px] text-slate-400 underline-offset-2 hover:underline">
+              吹き出しを消す
+            </button>
+          )}
+        </React.Fragment>
+      )}
+
+      {/* 集中モード：タイマーとセッション操作 */}
+      {studying && (
+        <div className="mb-2 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-4 text-center">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-orange-500/20 px-3 py-1 text-xs font-bold text-orange-300">
+            🔥 集中モード
+            <span className="h-1.5 w-1.5 animate-pulseSoft rounded-full bg-orange-400"></span>
+          </div>
+          <p className="font-mono text-4xl font-bold tracking-wider text-white">{fmtElapsed(elapsedMs(me, now))}</p>
+          <p className="mb-3 mt-1 text-[10px] text-slate-400">実質勉強時間（休憩中はカウント停止）</p>
+          <div className="mb-3 rounded-xl bg-white/5 p-3 text-left">
+            <p className="text-[10px] font-bold tracking-wide text-slate-400">今日の目標</p>
+            <p className="text-sm font-bold leading-snug text-white">{me.currentTodo}</p>
+            <div className="mt-1.5"><GenreBadge genre={me.genre} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={onRest} className="rounded-xl bg-sky-500 py-2.5 text-sm font-bold text-white transition hover:bg-sky-600">
+              ☕ 休憩する
+            </button>
+            <button onClick={onOpenCheckout} className="rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600">
+              🚪 退出して記録
+            </button>
+          </div>
+          <button
+            onClick={() => { if (confirm('ログを残さずに退出します。よろしいですか？')) onDiscard(); }}
+            className="mt-2 text-[11px] text-slate-500 underline-offset-2 transition hover:text-slate-300 hover:underline"
+          >
+            セッションを消去して退出
+          </button>
+          <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+            🤫 集中モード中はつぶやき・タイムライン・話しかけがオフになります（まわりの様子は見えます）
+          </p>
+        </div>
       )}
 
       <div className="mt-2 space-y-2">
@@ -1231,7 +1270,7 @@ function CheckInModal({ onCheckIn, onCancel }) {
       <div className="w-full max-w-md animate-fadeUp rounded-3xl bg-white p-6 shadow-2xl">
         <h3 className="mb-1 text-lg font-bold text-slate-800">🚪 集中スペースに入る</h3>
         <p className="mb-4 text-xs text-slate-500">
-          入室中はまわりの様子が見えなくなり、誰にも話しかけられません 🤫
+          入室中はタイマーが動きます。つぶやき・タイムライン・話しかけはオフになりますが、まわりの様子は見えたままです 🤫
         </p>
 
         <label className="mb-1 block text-xs font-bold text-slate-500">勉強するジャンル</label>
@@ -1409,60 +1448,6 @@ function CheckoutModal({ me, studyMinutes, onSave, onCancel }) {
   );
 }
 
-function FocusRoom({ me, now, onRest, onCheckout, onDiscard }) {
-  const [showModal, setShowModal] = useState(false);
-  const ms = elapsedMs(me, now);
-
-  return (
-    <main className="mx-auto flex max-w-2xl flex-col items-center px-4 py-10">
-      <div className="w-full animate-fadeUp rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 text-center shadow-2xl">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-500/20 px-4 py-1.5 text-sm font-bold text-orange-300">
-          🔥 集中モード
-          <span className="h-2 w-2 animate-pulseSoft rounded-full bg-orange-400"></span>
-        </div>
-
-        <p className="mb-2 font-mono text-6xl font-bold tracking-wider text-white">{fmtElapsed(ms)}</p>
-        <p className="mb-6 text-xs text-slate-400">実質勉強時間（休憩中はカウント停止）</p>
-
-        <div className="mb-6 rounded-2xl bg-white/5 p-4 text-left">
-          <p className="mb-1 text-[11px] font-bold tracking-wide text-slate-400">今日の目標</p>
-          <p className="text-lg font-bold leading-snug text-white">{me.currentTodo}</p>
-          <div className="mt-2"><GenreBadge genre={me.genre} /></div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button onClick={onRest} className="rounded-xl bg-sky-500 py-3.5 font-bold text-white transition hover:bg-sky-600">
-            ☕ カフェで休憩する
-          </button>
-          <button onClick={() => setShowModal(true)} className="rounded-xl bg-emerald-500 py-3.5 font-bold text-white transition hover:bg-emerald-600">
-            🚪 退出する（記録する）
-          </button>
-        </div>
-
-        <button
-          onClick={() => { if (confirm('ログを残さずに退出します。よろしいですか？')) onDiscard(); }}
-          className="mt-4 text-xs text-slate-500 underline-offset-2 transition hover:text-slate-300 hover:underline"
-        >
-          セッションを消去して退出
-        </button>
-      </div>
-
-      <p className="mt-6 text-center text-xs text-slate-400">
-        🤫 集中スペースでは、まわりの様子は見えず、誰もあなたに話しかけられません
-      </p>
-
-      {showModal && (
-        <CheckoutModal
-          me={me}
-          studyMinutes={Math.max(1, Math.round(ms / 60000))}
-          onSave={(done) => { setShowModal(false); onCheckout(done, Math.max(1, Math.round(ms / 60000))); }}
-          onCancel={() => setShowModal(false)}
-        />
-      )}
-    </main>
-  );
-}
-
 /* ============================================================
    アプリ本体
    ============================================================ */
@@ -1614,6 +1599,10 @@ function App() {
   /* ---- エレベーターでフロア移動（4Fは会員限定） ---- */
   const handleMoveFloor = (f) => {
     if (f === (me.floor || 2)) return;
+    if (me.status === 'studying') {
+      showToast('🔥 集中モード中はフロア移動できません（休憩してから移動してね）');
+      return;
+    }
     if (FLOOR_INFO[f].memberOnly && me.plan !== 'invited') {
       showToast('🔒 4F メンバーズバーは会員限定フロアです（招待コードで解放されます）');
       return;
@@ -1700,6 +1689,10 @@ function App() {
 
   /* ---- アバタークリック ---- */
   const handleAvatarClick = (user, inFocus) => {
+    if (user.username !== currentName && me && me.status === 'studying') {
+      showToast('🔥 集中モード中は話しかけられません（休憩すると交流できます）');
+      return;
+    }
     if (inFocus && user.username !== currentName) {
       showToast('🤫 ' + dispName(user.username) + ' さんは集中モード中。話しかけられません');
       return;
@@ -1730,16 +1723,6 @@ function App() {
           </div>
         )}
       </React.Fragment>
-    );
-  }
-
-  if (me.status === 'studying') {
-    /* 集中スペース：外の様子は見えない */
-    return (
-      <div className="min-h-screen">
-        <Header me={me} users={users} onSwitch={handleLogin} onLogout={handleLogout} />
-        <FocusRoom me={me} now={now} onRest={handleRest} onCheckout={handleCheckout} onDiscard={handleDiscard} />
-      </div>
     );
   }
 
@@ -1786,22 +1769,35 @@ function App() {
               onSetDisplayName={handleSetDisplayName}
               onEnterFocus={() => setShowCheckIn(true)}
               onResume={handleResume}
+              onRest={handleRest}
               onOpenCheckout={() => setShowCheckout(true)}
               onDiscard={handleDiscard}
             />
           </div>
           <section className="lg:col-span-3">
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-800">🏆 みんなの成果タイムライン</h2>
-            <div className="space-y-3">
-              {sortedLogs.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-400">
-                  まだログがありません
+            {me.status === 'studying' ? (
+              /* 集中モード中はタイムライン非表示 */
+              <div className="flex h-full min-h-[160px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
+                <p className="text-sm leading-relaxed text-slate-400">
+                  🤫 集中モード中はタイムラインをお休みしています<br />
+                  <span className="text-xs">退出（または休憩）するとまた見られます</span>
                 </p>
-              )}
-              {sortedLogs.map(log => (
-                <TimelineItem key={log.id} log={log} name={dispName(log.username)} me={me} onReact={handleReact} dispName={dispName} />
-              ))}
-            </div>
+              </div>
+            ) : (
+              <React.Fragment>
+                <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-800">🏆 みんなの成果タイムライン</h2>
+                <div className="space-y-3">
+                  {sortedLogs.length === 0 && (
+                    <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-400">
+                      まだログがありません
+                    </p>
+                  )}
+                  {sortedLogs.map(log => (
+                    <TimelineItem key={log.id} log={log} name={dispName(log.username)} me={me} onReact={handleReact} dispName={dispName} />
+                  ))}
+                </div>
+              </React.Fragment>
+            )}
           </section>
         </div>
       </main>
@@ -1810,7 +1806,7 @@ function App() {
       {showCheckIn && (
         <CheckInModal onCheckIn={handleCheckIn} onCancel={() => setShowCheckIn(false)} />
       )}
-      {showCheckout && me.status === 'resting' && (
+      {showCheckout && (me.status === 'resting' || me.status === 'studying') && (
         <CheckoutModal
           me={me}
           studyMinutes={Math.max(1, Math.round(elapsedMs(me, now) / 60000))}
