@@ -101,18 +101,25 @@
       repeating-linear-gradient(0deg, rgba(100,116,139,.10) 0 1px, transparent 1px 44px),
       linear-gradient(180deg, #eef3f8 0%, #dde6ee 100%);
   }
-  /* 4F バー：ダークフロア */
+  /* 4F バー：ダークだが暗すぎないフロア */
   .bar-floor {
     background:
-      radial-gradient(ellipse at 30% 15%, rgba(217,70,239,.14), transparent 55%),
-      radial-gradient(ellipse at 75% 80%, rgba(99,102,241,.10), transparent 55%),
-      linear-gradient(180deg, #2b2144 0%, #1b142e 100%);
+      radial-gradient(ellipse at 30% 15%, rgba(240,171,252,.20), transparent 55%),
+      radial-gradient(ellipse at 75% 80%, rgba(129,140,248,.16), transparent 55%),
+      linear-gradient(180deg, #4a3c72 0%, #372b58 100%);
   }
-  /* 5F ルーフトップ：ウッドデッキ */
+  /* 5F ルーフトップ：ウッドデッキ（昼） */
   .deck-floor {
     background:
       repeating-linear-gradient(90deg, rgba(120,80,40,.18) 0 2px, transparent 2px 48px),
       linear-gradient(180deg, #ecc084 0%, #dda766 100%);
+  }
+  /* 5F ルーフトップ：ウッドデッキ（夜・ほんのり暗め） */
+  .deck-floor-night {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(253,224,71,.10), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(60,40,20,.22) 0 2px, transparent 2px 48px),
+      linear-gradient(180deg, #c69a63 0%, #b0854e 100%);
   }
   /* ネオンサイン */
   .neon-text {
@@ -724,22 +731,22 @@ function OpenDecor() {
 function BarDecor() {
   return (
     <React.Fragment>
-      {/* 壁：夜景とネオン */}
-      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-[#191331] to-[#241a3d]">
-        <div className="absolute left-[6%] top-[16%] flex h-14 w-[20%] items-center justify-center rounded-lg border-2 border-slate-500/50 bg-gradient-to-b from-[#0e1a3a] to-[#13234d] text-xl shadow-inner sm:h-16">🌃</div>
-        <div className="absolute right-[8%] top-[16%] flex h-14 w-[20%] items-center justify-center rounded-lg border-2 border-slate-500/50 bg-gradient-to-b from-[#0e1a3a] to-[#13234d] text-xl shadow-inner sm:h-16">🌙</div>
+      {/* 壁：夜景とネオン（ダークだが明るめのパープル） */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-[#3b2f63] to-[#493a77]">
+        <div className="absolute left-[6%] top-[16%] flex h-14 w-[20%] items-center justify-center rounded-lg border-2 border-slate-400/50 bg-gradient-to-b from-[#1c3264] to-[#28437e] text-xl shadow-inner sm:h-16">🌃</div>
+        <div className="absolute right-[8%] top-[16%] flex h-14 w-[20%] items-center justify-center rounded-lg border-2 border-slate-400/50 bg-gradient-to-b from-[#1c3264] to-[#28437e] text-xl shadow-inner sm:h-16">🌙</div>
         <p className="neon-text absolute left-1/2 top-[26%] -translate-x-1/2 whitespace-nowrap text-sm font-bold tracking-[.3em]">🍸 MEMBERS BAR</p>
       </div>
       {/* 床：ダーク */}
       <div className="bar-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
       {/* バーカウンター＆ボトル棚 */}
-      <div className="absolute left-[4%] top-[30%] z-[5] w-[36%] rounded-xl border-2 border-amber-500/30 bg-gradient-to-b from-[#3d2a18] to-[#2a1c0e] px-2 py-1 shadow-lg">
+      <div className="absolute left-[4%] top-[30%] z-[5] w-[36%] rounded-xl border-2 border-amber-400/40 bg-gradient-to-b from-[#5c4126] to-[#463019] px-2 py-1 shadow-lg">
         <p className="text-center text-sm leading-tight">🍾🥃🍷🍹</p>
         <p className="text-center text-[9px] font-bold tracking-widest text-amber-200/80">B A R</p>
       </div>
       {/* スツール */}
       {[10, 18, 26, 34].map(x => (
-        <div key={x} className="absolute h-5 w-5 rounded-full border-2 border-amber-500/40 bg-[#4a3320] shadow" style={{ left: x + '%', top: '44%' }}></div>
+        <div key={x} className="absolute h-5 w-5 rounded-full border-2 border-amber-400/50 bg-[#6b4c2c] shadow" style={{ left: x + '%', top: '44%' }}></div>
       ))}
       {/* ベルベットソファ＆キャンドルテーブル */}
       <div className="absolute left-[6%] top-[64%] h-[10%] w-[15%] rounded-lg border-2 border-fuchsia-900/40 bg-gradient-to-b from-purple-700 to-purple-900 shadow-md">
@@ -748,8 +755,8 @@ function BarDecor() {
       <div className="absolute left-[40%] top-[70%] h-[9%] w-[12%] rounded-lg border-2 border-fuchsia-900/40 bg-gradient-to-b from-purple-700 to-purple-900 shadow-md">
         <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-fuchsia-900/40 bg-purple-800"></div>
       </div>
-      <div className="absolute left-[24%] top-[70%] flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/40 bg-[#241a3d] text-sm shadow">🕯️</div>
-      <div className="absolute left-[55%] top-[52%] flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/40 bg-[#241a3d] text-sm shadow">🕯️</div>
+      <div className="absolute left-[24%] top-[70%] flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/50 bg-[#3c3060] text-sm shadow">🕯️</div>
+      <div className="absolute left-[55%] top-[52%] flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/50 bg-[#3c3060] text-sm shadow">🕯️</div>
       {/* 装飾 */}
       <span className="absolute bottom-[6%] left-[55%] text-3xl drop-shadow">🎷</span>
       <span className="absolute bottom-[5%] left-[2%] text-3xl drop-shadow">🪴</span>
@@ -758,21 +765,46 @@ function BarDecor() {
   );
 }
 
-/* 5F ルーフトップテラス */
-function RooftopDecor() {
+/* 5F ルーフトップテラス（昼は夕焼け・夜は夜景） */
+function RooftopDecor({ night }) {
   return (
     <React.Fragment>
-      {/* 空：夕焼け */}
-      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-sky-300 via-orange-200 to-amber-100">
-        <span className="absolute left-[10%] top-[20%] text-2xl">☁️</span>
-        <span className="absolute left-[45%] top-[10%] text-3xl">🌇</span>
-        <span className="absolute right-[12%] top-[26%] text-xl">🕊️</span>
-        <span className="absolute right-[30%] top-[8%] text-xl">☁️</span>
-        {/* 手すり */}
-        <div className="absolute inset-x-0 bottom-0 h-2 bg-slate-500/50"></div>
-      </div>
+      {night ? (
+        /* 空：夜景 */
+        <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-[#232a55] via-[#2e3566] to-[#454168]">
+          <span className="absolute left-[8%] top-[12%] text-xl">⭐</span>
+          <span className="absolute left-[26%] top-[30%] text-sm">✨</span>
+          <span className="absolute left-[26%] top-[26%] text-3xl drop-shadow">🌕</span>
+          <span className="absolute right-[28%] top-[22%] text-sm">✨</span>
+          <span className="absolute right-[10%] top-[12%] text-xl">⭐</span>
+          {/* 街の灯り（スカイライン） */}
+          <span className="absolute bottom-1 left-[6%] text-2xl">🌃</span>
+          <span className="absolute bottom-1 left-[34%] text-2xl">🏙️</span>
+          <span className="absolute bottom-1 right-[8%] text-2xl">🌃</span>
+          {/* 手すり */}
+          <div className="absolute inset-x-0 bottom-0 h-2 bg-slate-500/60"></div>
+        </div>
+      ) : (
+        /* 空：夕焼け */
+        <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-sky-300 via-orange-200 to-amber-100">
+          <span className="absolute left-[10%] top-[20%] text-2xl">☁️</span>
+          <span className="absolute left-[45%] top-[10%] text-3xl">🌇</span>
+          <span className="absolute right-[12%] top-[26%] text-xl">🕊️</span>
+          <span className="absolute right-[30%] top-[8%] text-xl">☁️</span>
+          {/* 手すり */}
+          <div className="absolute inset-x-0 bottom-0 h-2 bg-slate-500/50"></div>
+        </div>
+      )}
       {/* 床：ウッドデッキ */}
-      <div className="deck-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
+      <div className={(night ? 'deck-floor-night' : 'deck-floor') + ' absolute inset-x-0 bottom-0 h-[72%]'}></div>
+      {/* 夜だけの明かり（ちょうちん＆キャンドル） */}
+      {night && (
+        <React.Fragment>
+          <span className="absolute left-[9%] top-[36%] z-[6] text-2xl drop-shadow-[0_0_8px_rgba(253,224,71,.8)]">🏮</span>
+          <span className="absolute left-[36%] top-[42%] z-[6] text-2xl drop-shadow-[0_0_8px_rgba(253,224,71,.8)]">🏮</span>
+          <span className="absolute left-[58%] top-[62%] z-[6] text-xl drop-shadow-[0_0_8px_rgba(253,224,71,.8)]">🕯️</span>
+        </React.Fragment>
+      )}
       {/* パラソル席 ×2 */}
       <span className="absolute left-[14%] top-[34%] z-[6] text-5xl drop-shadow">⛱️</span>
       <div className="absolute left-[16%] top-[52%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-900/20 bg-amber-100 text-base shadow">🍹</div>
@@ -790,11 +822,11 @@ function RooftopDecor() {
   );
 }
 
-function FloorDecor({ floor }) {
+function FloorDecor({ floor, night }) {
   if (floor === 1) return <LobbyDecor />;
   if (floor === 3) return <OpenDecor />;
   if (floor === 4) return <BarDecor />;
-  if (floor === 5) return <RooftopDecor />;
+  if (floor === 5) return <RooftopDecor night={night} />;
   return <CafeDecor />;
 }
 
@@ -802,14 +834,14 @@ function FloorDecor({ floor }) {
 function FocusZone({ dark }) {
   return (
     <div className={'absolute bottom-0 right-0 top-[28%] w-[32%] border-l-4 backdrop-blur-[1px] ' +
-      (dark ? 'border-fuchsia-900/50 bg-slate-900/50' : 'border-slate-400/50 bg-slate-200/55')}>
+      (dark ? 'border-fuchsia-700/40 bg-slate-700/40' : 'border-slate-400/50 bg-slate-200/55')}>
       <div className="absolute inset-x-0 top-1 text-center">
         <span className="rounded-full bg-slate-700/80 px-2.5 py-0.5 text-[10px] font-bold text-white">🤫 集中スペース</span>
       </div>
       {FOCUS_SEATS.map((s, i) => (
         <div key={i} className="absolute -translate-x-1/2" style={{ left: ((s.x - 68) / 32 * 100) + '%', top: ((s.y - 28) / 72 * 100 - 12) + '%' }}>
-          <div className={'h-5 w-16 rounded-t-lg ' + (dark ? 'bg-slate-600/80' : 'bg-slate-400/70')}></div>
-          <div className={'flex h-6 w-16 items-center justify-center rounded-b-md text-sm ' + (dark ? 'bg-slate-700/90' : 'bg-slate-500/80')}>🖥️</div>
+          <div className={'h-5 w-16 rounded-t-lg ' + (dark ? 'bg-slate-500/80' : 'bg-slate-400/70')}></div>
+          <div className={'flex h-6 w-16 items-center justify-center rounded-b-md text-sm ' + (dark ? 'bg-slate-600/90' : 'bg-slate-500/80')}>🖥️</div>
         </div>
       ))}
       <span className="absolute bottom-[3%] right-[4%] text-3xl">🪴</span>
@@ -854,11 +886,15 @@ function AvatarSprite({ user, dispName, pos, bubble, isMe, seated, dragging, onC
   );
 }
 
-function OfficeScene({ users, me, bubbles, dispName, onAvatarClick, onEnterFocus, onMoveMe, onMoveFloor }) {
+function OfficeScene({ users, me, bubbles, dispName, autoNight, onAvatarClick, onEnterFocus, onMoveMe, onMoveFloor }) {
   const sceneRef = useRef(null);
   const [drag, setDrag] = useState(null); // { x, y, startX, startY, moved }
   const dragRef = useRef(null);
   const setD = (v) => { dragRef.current = v; setDrag(v); };
+
+  /* 5Fの空：時刻で自動切り替え＋手動トグル */
+  const [skyOverride, setSkyOverride] = useState(null); // null=自動
+  const night = skyOverride === null ? autoNight : skyOverride;
 
   const floor = me.floor || 2;
   const sameFloor = (u) => (u.floor || 2) === floor;
@@ -921,10 +957,21 @@ function OfficeScene({ users, me, bubbles, dispName, onAvatarClick, onEnterFocus
       style={{ aspectRatio: '16/9', minHeight: 320, background: 'linear-gradient(180deg,#fdf6e3 0%,#faeed2 100%)' }}
     >
       {/* ===== フロアごとの内装 ===== */}
-      <FloorDecor floor={floor} />
+      <FloorDecor floor={floor} night={night} />
 
       {/* ===== 集中スペース（全フロア共通） ===== */}
-      <FocusZone dark={floor === 4} />
+      <FocusZone dark={floor === 4 || (floor === 5 && night)} />
+
+      {/* 5F：昼夜の切り替えボタン */}
+      {floor === 5 && (
+        <button
+          onClick={() => setSkyOverride(!night)}
+          title={night ? '昼の景色にする' : '夜景にする'}
+          className="absolute right-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-slate-300/60 bg-white/85 text-lg shadow-md backdrop-blur transition hover:scale-110"
+        >
+          {night ? '☀️' : '🌙'}
+        </button>
+      )}
 
       {/* フロア名バナー */}
       <div className="absolute left-1/2 top-1.5 z-20 -translate-x-1/2">
@@ -1719,6 +1766,7 @@ function App() {
           me={me}
           bubbles={bubbles}
           dispName={dispName}
+          autoNight={(() => { const h = new Date(now).getHours(); return h >= 18 || h < 6; })()}
           onAvatarClick={handleAvatarClick}
           onEnterFocus={() => (me.status === 'resting' ? handleResume() : setShowCheckIn(true))}
           onMoveMe={handleMoveMe}
