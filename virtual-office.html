@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バーチャル自習室 📚</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+  // 自動ランタイム(react/jsx-runtime のimport)を避け、React.createElement 方式でJSXを変換する
+  Babel.registerPreset('jsx-classic', {
+    presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]],
+  });
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['-apple-system', 'BlinkMacSystemFont', 'Hiragino Sans', 'Yu Gothic UI', 'sans-serif'],
+        },
+        keyframes: {
+          fadeUp: { from: { opacity: 0, transform: 'translateY(12px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+          pulseSoft: { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.55 } },
+          sway: { '0%,100%': { transform: 'rotate(-3deg)' }, '50%': { transform: 'rotate(3deg)' } },
+          popIn: { from: { opacity: 0, transform: 'scale(.7) translateY(6px)' }, to: { opacity: 1, transform: 'scale(1) translateY(0)' } },
+        },
+        animation: {
+          fadeUp: 'fadeUp .4s ease both',
+          pulseSoft: 'pulseSoft 2s ease-in-out infinite',
+          sway: 'sway 4s ease-in-out infinite',
+          popIn: 'popIn .25s ease both',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  body { background: #f1f5f9; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  /* あつ森風のふきだし（しっぽ付き） */
+  .ac-bubble {
+    position: relative;
+    background: #fffdf5;
+    border: 2px solid #3f3a2f;
+    border-radius: 14px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3f3a2f;
+    box-shadow: 0 2px 6px rgba(63,58,47,.18);
+    white-space: nowrap;
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ac-bubble::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #3f3a2f;
+    border-bottom: none;
+  }
+  .ac-bubble::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #fffdf5;
+    border-bottom: none;
+    z-index: 1;
+  }
+
+  /* 床の木目（2F カフェ） */
+  .cafe-floor {
+    background:
+      repeating-linear-gradient(90deg, rgba(146,104,58,.10) 0 2px, transparent 2px 64px),
+      repeating-linear-gradient(0deg, rgba(146,104,58,.06) 0 1px, transparent 1px 22px),
+      linear-gradient(180deg, #f3ddb6 0%, #eccf9f 100%);
+  }
+  /* 1F ロビー：大理石 */
+  .marble-floor {
+    background:
+      repeating-linear-gradient(45deg, rgba(170,160,140,.10) 0 2px, transparent 2px 30px),
+      repeating-linear-gradient(-45deg, rgba(170,160,140,.07) 0 2px, transparent 2px 30px),
+      linear-gradient(180deg, #f7f2e8 0%, #e9e0cc 100%);
+  }
+  /* 3F オープンスペース：タイルカーペット */
+  .open-floor {
+    background:
+      repeating-linear-gradient(90deg, rgba(100,116,139,.10) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(0deg, rgba(100,116,139,.10) 0 1px, transparent 1px 44px),
+      linear-gradient(180deg, #eef3f8 0%, #dde6ee 100%);
+  }
+  /* 4F バー：ダークフロア */
+  .bar-floor {
+    background:
+      radial-gradient(ellipse at 30% 15%, rgba(217,70,239,.14), transparent 55%),
+      radial-gradient(ellipse at 75% 80%, rgba(99,102,241,.10), transparent 55%),
+      linear-gradient(180deg, #2b2144 0%, #1b142e 100%);
+  }
+  /* 5F ルーフトップ：ウッドデッキ */
+  .deck-floor {
+    background:
+      repeating-linear-gradient(90deg, rgba(120,80,40,.18) 0 2px, transparent 2px 48px),
+      linear-gradient(180deg, #ecc084 0%, #dda766 100%);
+  }
+  /* ネオンサイン */
+  .neon-text {
+    color: #f0abfc;
+    text-shadow: 0 0 6px rgba(240,171,252,.9), 0 0 18px rgba(217,70,239,.7), 0 0 30px rgba(217,70,239,.5);
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="jsx-classic">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ============================================================
+   localStorage 模擬データベース
+   ============================================================ */
+const DB_USERS = 'study_room_users';
+const DB_LOGS = 'study_room_global_logs';
+const DB_CURRENT = 'study_room_current_user';
+
+/* 招待コード（入力すると無料プランになる） */
+const INVITE_CODES = ['STUDY2026', 'CAFE-FRIEND'];
+
+/* タイムラインに送れる「いいねスタンプ」 */
+const STAMPS = ['👏', '🔥', '💯', '❤️'];
+
+/* フロア構成（エレベーターは上から表示） */
+const FLOOR_LIST = [5, 4, 3, 2, 1];
+const FLOOR_INFO = {
+  1: { icon: '🛎️', label: '受付ロビー' },
+  2: { icon: '☕', label: 'カフェ' },
+  3: { icon: '💡', label: 'オープンスペース' },
+  4: { icon: '🍸', label: 'メンバーズバー', memberOnly: true },
+  5: { icon: '🌇', label: 'ルーフトップ' },
+};
+
+const GENRES = ['韓国語', 'スペイン語', '日本語', '英語', 'プログラミング', 'その他'];
+
+const GENRE_STYLE = {
+  '韓国語':       { emoji: '🇰🇷', badge: 'bg-pink-100 text-pink-700' },
+  'スペイン語':   { emoji: '🇪🇸', badge: 'bg-amber-100 text-amber-700' },
+  '日本語':       { emoji: '🇯🇵', badge: 'bg-red-100 text-red-700' },
+  '英語':         { emoji: '🇬🇧', badge: 'bg-blue-100 text-blue-700' },
+  'プログラミング': { emoji: '💻', badge: 'bg-emerald-100 text-emerald-700' },
+  'その他':       { emoji: '📖', badge: 'bg-slate-200 text-slate-700' },
+};
+
+const PRESET_USERS = [
+  { username: 'Takumi', avatar: '🧑‍💻', bio: '韓国語・スペイン語を勉強中' },
+  { username: 'Min-ji', avatar: '👩‍🎓', bio: '日本語を勉強中' },
+  { username: 'Carlos', avatar: '🧔', bio: '英語を勉強中' },
+];
+const PRESET_NAMES = PRESET_USERS.map(p => p.username);
+
+/* モックユーザーがつぶやくセリフ */
+const MOCK_PHRASES = {
+  'Carlos': ['コーヒーおかわり☕', '長文むずかしい…', 'あと10分休んだら戻る！', 'このソファ最高〜'],
+  'Emma':   ['卓球やる人〜？🏓', '今日はゆるっと作業', 'ホワイトボード使お', 'BGMなに流そうかな🎵'],
+  'Min-ji': ['文法おわった〜！', '次は漢字やろうかな'],
+  'Yuki':   ['ビルド通った…！', 'コーヒー飲みすぎた'],
+  'Hana':   ['ようこそ！🛎️', '5Fのテラスもおすすめです', 'ごゆっくりどうぞ😊'],
+  'Leo':    ['今夜も静かでいい感じ🍸', '大人の勉強時間🥃', 'ここは会員だけの特等席'],
+};
+
+const AVATAR_POOL = ['🦊', '🐻', '🐰', '🐱', '🦉', '🐧', '🐼', '🦁', '🐨', '🐯'];
+const avatarFor = (name) => {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return AVATAR_POOL[h % AVATAR_POOL.length];
+};
+
+const nowIso = () => new Date().toISOString();
+const minsAgo = (m) => new Date(Date.now() - m * 60000).toISOString();
+const daysAgo = (d, hhmm) => {
+  const t = new Date(Date.now() - d * 86400000);
+  return t.toISOString().slice(0, 10) + 'T' + hhmm;
+};
+
+/* ラウンジ内のランダム位置（初期配置用） */
+const randLoungePoint = () => ({
+  x: 8 + Math.random() * 48,
+  y: 46 + Math.random() * 40,
+});
+
+/* ---------- 初期モックデータ ---------- */
+function seedUsers() {
+  return [
+    {
+      username: 'Takumi', displayName: 'Takumi', avatar: '🧑‍💻', bio: '韓国語・スペイン語を勉強中', plan: 'invited',
+      isOnline: false, status: 'offline', genre: '', currentTodo: '', comment: '', floor: 2,
+      pos: { x: 48, y: 54 },
+      sessionStartTime: null, restStartedAt: null, totalRestMs: 0,
+    },
+    {
+      username: 'Min-ji', displayName: 'Min-ji', avatar: '👩‍🎓', bio: '日本語を勉強中', plan: 'invited',
+      isOnline: true, status: 'studying', genre: '日本語',
+      currentTodo: 'N2文法の復習を2章ぶん進める', comment: '', floor: 2,
+      pos: { x: 20, y: 60 },
+      sessionStartTime: minsAgo(42), restStartedAt: null, totalRestMs: 5 * 60000,
+    },
+    {
+      username: 'Carlos', displayName: 'Carlos', avatar: '🧔', bio: '英語を勉強中', plan: 'invited',
+      isOnline: true, status: 'resting', genre: '英語',
+      currentTodo: '英語の長文読解を1題解く', comment: 'このソファ最高〜', floor: 2,
+      pos: { x: 11, y: 68 },
+      sessionStartTime: minsAgo(65), restStartedAt: minsAgo(4), totalRestMs: 8 * 60000,
+    },
+    {
+      username: 'Yuki', displayName: 'Yuki', avatar: '🦊', bio: 'プログラミングを勉強中', plan: 'standard',
+      isOnline: true, status: 'studying', genre: 'プログラミング',
+      currentTodo: 'Reactのカスタムフックを1本書く', comment: '', floor: 3,
+      pos: { x: 30, y: 55 },
+      sessionStartTime: minsAgo(18), restStartedAt: null, totalRestMs: 0,
+    },
+    {
+      username: 'Emma', displayName: 'Emma', avatar: '👩‍🎨', bio: 'イラストの勉強中', plan: 'standard',
+      isOnline: true, status: 'lounge', genre: '', currentTodo: '', comment: '卓球やる人〜？🏓', floor: 3,
+      pos: { x: 38, y: 62 },
+      sessionStartTime: null, restStartedAt: null, totalRestMs: 0,
+    },
+    {
+      username: 'Hana', displayName: 'Hana', avatar: '👩‍💼', bio: 'コンシェルジュ', plan: 'invited',
+      isOnline: true, status: 'lounge', genre: '', currentTodo: '', comment: 'ようこそ！🛎️', floor: 1,
+      pos: { x: 33, y: 52 },
+      sessionStartTime: null, restStartedAt: null, totalRestMs: 0,
+    },
+    {
+      username: 'Leo', displayName: 'Leo', avatar: '🧑‍🎤', bio: 'バーテンダー見習い', plan: 'invited',
+      isOnline: true, status: 'lounge', genre: '', currentTodo: '', comment: '今夜も静かでいい感じ🍸', floor: 4,
+      pos: { x: 26, y: 58 },
+      sessionStartTime: null, restStartedAt: null, totalRestMs: 0,
+    },
+  ];
+}
+
+function seedLogs() {
+  return [
+    {
+      id: 'log-seed-006', username: 'Min-ji', avatar: '👩‍🎓',
+      date: daysAgo(0, '01:20:00Z'), genre: '日本語',
+      todo: '漢字ドリルを3ページやる',
+      done: '3ページ完了！読めなかった漢字をアプリに登録した',
+      actualStudyTimeMinutes: 50,
+    },
+    {
+      id: 'log-seed-005', username: 'Carlos', avatar: '🧔',
+      date: daysAgo(1, '13:05:00Z'), genre: '英語',
+      todo: '英語の長文読解を1題解く',
+      done: '長文を解き終えて、わからない単語をノートにまとめた',
+      actualStudyTimeMinutes: 45,
+    },
+    {
+      id: 'log-seed-004', username: 'Takumi', avatar: '🧑‍💻',
+      date: daysAgo(1, '11:30:00Z'), genre: '韓国語',
+      todo: '単語帳を10ページ進める',
+      done: '単語帳を12ページ進めて、ミニテストで満点を取った！',
+      actualStudyTimeMinutes: 60,
+    },
+    {
+      id: 'log-seed-003', username: 'Yuki', avatar: '🦊',
+      date: daysAgo(2, '09:10:00Z'), genre: 'プログラミング',
+      todo: 'TypeScriptの型パズル問題を3問解く',
+      done: '2問解けた。残り1問は明日リベンジする',
+      actualStudyTimeMinutes: 75,
+    },
+    {
+      id: 'log-seed-002', username: 'Takumi', avatar: '🧑‍💻',
+      date: daysAgo(2, '14:00:00Z'), genre: 'スペイン語',
+      todo: '点過去の活用を覚える',
+      done: '規則動詞は完璧。不規則動詞はあと半分',
+      actualStudyTimeMinutes: 40,
+    },
+    {
+      id: 'log-seed-001', username: 'Min-ji', avatar: '👩‍🎓',
+      date: daysAgo(3, '10:45:00Z'), genre: '日本語',
+      todo: '敬語の使い分けをまとめる',
+      done: '尊敬語・謙譲語の一覧表を自作できた',
+      actualStudyTimeMinutes: 55,
+    },
+  ];
+}
+
+/* 初期ログに付けておくデモ用スタンプ */
+const DEMO_REACTIONS = {
+  'log-seed-006': { '👏': ['Carlos'], '🔥': ['Takumi', 'Yuki'] },
+  'log-seed-004': { '💯': ['Min-ji'], '👏': ['Emma'] },
+  'log-seed-003': { '🔥': ['Takumi'] },
+  'log-seed-001': { '❤️': ['Carlos', 'Emma'] },
+};
+
+/* ---------- DB 読み書き＆旧バージョンからの移行 ---------- */
+function migrateLogs(list) {
+  return list.map(l => ({ ...l, reactions: l.reactions || DEMO_REACTIONS[l.id] || {} }));
+}
+
+function migrateUsers(list) {
+  const names = new Set(list.map(u => u.username));
+  for (const s of seedUsers()) {
+    if (!names.has(s.username)) list.push(s);
+  }
+  return list.map(u => ({
+    comment: '',
+    ...u,
+    displayName: u.displayName || u.username,
+    plan: u.plan || (PRESET_NAMES.includes(u.username) ? 'invited' : 'standard'),
+    pos: u.pos || randLoungePoint(),
+    floor: u.floor || 2,
+  }));
+}
+
+function loadDB(key, seeder, migrate) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      let data = JSON.parse(raw);
+      if (migrate) {
+        data = migrate(data);
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+      return data;
+    }
+  } catch (e) { /* 壊れていたら作り直す */ }
+  const seeded = seeder();
+  localStorage.setItem(key, JSON.stringify(seeded));
+  return seeded;
+}
+const saveDB = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+
+/* ---------- 時間ユーティリティ ---------- */
+function elapsedMs(user, now) {
+  if (!user.sessionStartTime) return 0;
+  let ms = now - new Date(user.sessionStartTime).getTime() - (user.totalRestMs || 0);
+  if (user.status === 'resting' && user.restStartedAt) {
+    ms -= now - new Date(user.restStartedAt).getTime();
+  }
+  return Math.max(0, ms);
+}
+function fmtElapsed(ms) {
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return (h > 0 ? String(h) + ':' : '') + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
+function fmtLogDate(iso) {
+  const d = new Date(iso);
+  const today = new Date();
+  const diffDays = Math.floor((new Date(today.toDateString()) - new Date(d.toDateString())) / 86400000);
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  if (diffDays === 0) return '今日 ' + hm;
+  if (diffDays === 1) return '昨日 ' + hm;
+  return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+}
+
+/* ============================================================
+   共通パーツ
+   ============================================================ */
+function GenreBadge({ genre }) {
+  if (!genre) return null;
+  const st = GENRE_STYLE[genre] || GENRE_STYLE['その他'];
+  return (
+    <span className={'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ' + st.badge}>
+      {st.emoji} {genre}
+    </span>
+  );
+}
+
+function PlanBadge({ plan }) {
+  if (plan !== 'invited') return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
+      🎟️ 招待メンバー（無料）
+    </span>
+  );
+}
+
+function statusLabel(status) {
+  return {
+    lounge: '🌿 カフェでまったり中',
+    studying: '🔥 集中スペースで勉強中',
+    resting: '☕ 休憩中（セッション継続中）',
+    offline: '🌙 オフライン',
+  }[status] || status;
+}
+
+/* ============================================================
+   [A] ログイン＆新規登録画面
+   ============================================================ */
+function LoginScreen({ users, onLogin, onRegister }) {
+  const [uname, setUname] = useState('');
+  const [dname, setDname] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState(null);
+  const presets = PRESET_USERS.map(p => users.find(u => u.username === p.username) || p);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError(null);
+    const u = uname.trim();
+    const c = code.trim().toUpperCase();
+    if (!/^[A-Za-z0-9_-]{2,20}$/.test(u)) {
+      setError('ユーザー名（ID）は2〜20文字の半角英数字・ハイフン・アンダースコアで入力してください');
+      return;
+    }
+    if (users.some(x => x.username.toLowerCase() === u.toLowerCase())) {
+      setError('このユーザー名はすでに使われています');
+      return;
+    }
+    if (c && !INVITE_CODES.includes(c)) {
+      setError('招待コードが正しくありません');
+      return;
+    }
+    onRegister(u, dname.trim() || u, c ? 'invited' : 'standard');
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-amber-50 to-orange-100 p-4">
+      <div className="w-full max-w-md animate-fadeUp rounded-3xl bg-white p-8 shadow-xl">
+        <div className="mb-8 text-center">
+          <div className="mb-2 text-5xl">🪴📚☕</div>
+          <h1 className="text-2xl font-bold text-slate-800">バーチャル自習室</h1>
+          <p className="mt-1 text-sm text-slate-500">植物とコーヒーのあるカフェ風オフィスで、いっしょに勉強しよう</p>
+        </div>
+
+        <p className="mb-3 text-xs font-bold tracking-wide text-slate-400">アカウントを選んでログイン</p>
+        <div className="mb-6 space-y-2">
+          {presets.map(u => (
+            <button
+              key={u.username}
+              onClick={() => onLogin(u.username)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+            >
+              <span className="text-3xl">{u.avatar}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold text-slate-800">
+                  {u.displayName || u.username}
+                  <span className="ml-1.5 text-[11px] font-normal text-slate-400">@{u.username}</span>
+                </span>
+                <span className="block text-xs text-slate-500">{u.bio}</span>
+              </span>
+              {u.isOnline && (
+                <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-600">在室中</span>
+              )}
+              <span className="text-slate-300">→</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="mb-3 flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px flex-1 bg-slate-200"></span>
+          新規登録
+          <span className="h-px flex-1 bg-slate-200"></span>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-bold text-slate-500">ユーザー名（ID・半角英数）<span className="text-red-400">＊</span></label>
+            <input
+              value={uname}
+              onChange={(e) => setUname(e.target.value)}
+              placeholder="例：sakura_22"
+              maxLength={20}
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-slate-500">表示名（あとから変更できます）</label>
+            <input
+              value={dname}
+              onChange={(e) => setDname(e.target.value)}
+              placeholder="例：さくら（未入力ならIDと同じ）"
+              maxLength={20}
+              className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-slate-500">🎟️ 招待コード（お持ちの方のみ・無料でご利用いただけます）</label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="例：XXXX0000"
+              maxLength={20}
+              className="w-full rounded-xl border border-violet-200 bg-violet-50/50 px-4 py-2.5 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+          {error && (
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-500">⚠️ {error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={!uname.trim()}
+            className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-40"
+          >
+            登録して参加する
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   ヘッダー
+   ============================================================ */
+function Header({ me, users, onSwitch, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const others = PRESET_USERS.filter(p => p.username !== me.username)
+    .map(p => users.find(u => u.username === p.username) || p);
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-amber-200/60 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🪴</span>
+          <span className="font-bold text-slate-800">バーチャル自習室</span>
+          <span className="hidden text-xs text-slate-400 sm:inline">— café office —</span>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-3 transition hover:bg-slate-100"
+          >
+            <span className="text-xl">{me.avatar}</span>
+            <span className="text-sm font-bold text-slate-700">{me.displayName}</span>
+            <span className="text-xs text-slate-400">▾</span>
+          </button>
+          {open && (
+            <div className="absolute right-0 mt-2 w-60 animate-fadeUp rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+              <p className="px-3 py-1 text-[11px] text-slate-400">@{me.username} でログイン中</p>
+              <div className="my-1 h-px bg-slate-100"></div>
+              <p className="px-3 py-1 text-[11px] font-bold text-slate-400">アカウント切り替え</p>
+              {others.map(u => (
+                <button
+                  key={u.username}
+                  onClick={() => { setOpen(false); onSwitch(u.username); }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition hover:bg-emerald-50"
+                >
+                  <span className="text-lg">{u.avatar}</span>
+                  <span className="font-bold text-slate-700">{u.displayName || u.username}</span>
+                  {u.isOnline && <span className="ml-auto text-[10px] font-bold text-emerald-500">在室中</span>}
+                </button>
+              ))}
+              <div className="my-1 h-px bg-slate-100"></div>
+              <button
+                onClick={() => { setOpen(false); onLogout(); }}
+                className="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-500 transition hover:bg-slate-50"
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ============================================================
+   オフィスシーン（カフェ風・自分のアバターはドラッグで移動）
+   ============================================================ */
+
+/* 集中スペースのデスク座席（シーン内の%座標） */
+const FOCUS_SEATS = [
+  { x: 76, y: 54 }, { x: 90, y: 54 },
+  { x: 76, y: 82 }, { x: 90, y: 82 },
+];
+
+/* ラウンジ内のドラッグ可能範囲 */
+const LOUNGE_BOUNDS = { xMin: 4, xMax: 63, yMin: 36, yMax: 92 };
+
+/* ---------- 各フロアの内装 ---------- */
+
+/* 1F 高級ホテルの受付ロビー */
+function LobbyDecor() {
+  return (
+    <React.Fragment>
+      {/* 壁：クリーム＆ゴールド、アーチ窓 */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-[#f8f0dd] to-[#efe2c4]">
+        <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300"></div>
+        <div className="absolute left-[6%] top-[14%] h-14 w-[16%] rounded-t-full border-4 border-amber-200 bg-gradient-to-b from-sky-200 to-sky-100 shadow-inner sm:h-16"></div>
+        <div className="absolute right-[6%] top-[14%] h-14 w-[16%] rounded-t-full border-4 border-amber-200 bg-gradient-to-b from-sky-200 to-sky-100 shadow-inner sm:h-16"></div>
+        <span className="absolute left-1/2 top-[8%] -translate-x-1/2 text-3xl drop-shadow">✨</span>
+        <span className="absolute left-[30%] top-[30%] text-xl">✨</span>
+        <span className="absolute right-[30%] top-[30%] text-xl">✨</span>
+      </div>
+      {/* 床：大理石 */}
+      <div className="marble-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
+      {/* レッドカーペット */}
+      <div className="absolute bottom-0 left-[28%] top-[40%] w-[16%] rounded-t-lg bg-gradient-to-b from-red-700/80 to-red-800/80 shadow-inner"></div>
+      {/* レセプションカウンター */}
+      <div className="absolute left-[24%] top-[30%] z-[5] w-[24%] rounded-xl border-2 border-amber-300 bg-gradient-to-b from-[#7a5c3a] to-[#5f4426] px-2 py-1 shadow-lg">
+        <p className="text-center text-[10px] font-bold tracking-widest text-amber-100">🛎️ RECEPTION</p>
+        <p className="text-center text-sm leading-tight">📋🔑💐</p>
+      </div>
+      {/* グランドピアノ＆ラグジュアリーソファ */}
+      <span className="absolute left-[52%] top-[36%] text-4xl drop-shadow">🎹</span>
+      <div className="absolute left-[6%] top-[56%] h-[9%] w-[13%] rounded-lg border-2 border-amber-700/30 bg-gradient-to-b from-amber-200 to-amber-300 shadow-md">
+        <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-amber-700/30 bg-amber-300"></div>
+      </div>
+      <div className="absolute left-[48%] top-[62%] h-[9%] w-[13%] rounded-lg border-2 border-amber-700/30 bg-gradient-to-b from-amber-200 to-amber-300 shadow-md">
+        <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-amber-700/30 bg-amber-300"></div>
+      </div>
+      {/* 大きな観葉植物（パーム） */}
+      <span className="absolute bottom-[6%] left-[3%] text-5xl drop-shadow">🌴</span>
+      <span className="absolute left-[58%] top-[33%] text-3xl drop-shadow">🌴</span>
+      <span className="absolute bottom-[5%] left-[52%] text-3xl drop-shadow">🪴</span>
+      <div className="absolute bottom-[10%] left-[16%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-700/20 bg-amber-100 text-base shadow">🫖</div>
+    </React.Fragment>
+  );
+}
+
+/* 2F カフェ */
+function CafeDecor() {
+  return (
+    <React.Fragment>
+      {/* 壁と窓（開放的な採光） */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-amber-50 to-amber-100/60">
+        <div className="absolute inset-x-0 top-[8%] flex justify-around px-[3%]">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="relative h-14 w-[26%] rounded-xl border-4 border-white bg-gradient-to-b from-sky-200 to-sky-100 shadow-inner sm:h-20">
+              <span className="absolute left-2 top-1 text-lg">{['🌤️', '🕊️', '☀️'][i]}</span>
+              <div className="absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 bg-white"></div>
+            </div>
+          ))}
+        </div>
+        <span className="absolute left-[22%] top-0 animate-sway text-2xl" style={{ transformOrigin: 'top' }}>🌿</span>
+        <span className="absolute left-[55%] top-0 animate-sway text-2xl" style={{ transformOrigin: 'top', animationDelay: '1.2s' }}>🌿</span>
+      </div>
+      {/* 床 */}
+      <div className="cafe-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
+      {/* カフェカウンター */}
+      <div className="absolute left-[2%] top-[29%] z-[5] w-[20%] rounded-xl border-2 border-amber-900/30 bg-gradient-to-b from-amber-700 to-amber-800 px-2 py-1 shadow-md">
+        <p className="text-center text-[10px] font-bold tracking-widest text-amber-100">☕ CAFE</p>
+        <p className="text-center text-sm leading-tight">🫖🧋🍩</p>
+      </div>
+      {/* オープン作業スペース */}
+      <div className="absolute left-[38%] top-[29%] z-[5] w-[26%] rounded-xl border-2 border-amber-900/20 bg-amber-100/90 px-2 py-1 shadow-md">
+        <p className="text-center text-[9px] font-bold tracking-wide text-amber-700">💻 作業スペース</p>
+        <p className="flex justify-around text-sm leading-tight"><span>💻</span><span>📓</span><span>💻</span></p>
+      </div>
+      <span className="absolute left-[25%] top-[30%] text-2xl">📚</span>
+      {/* ソファーコーナー */}
+      <div className="absolute left-[3%] top-[58%] h-[32%] w-[22%] rounded-[45%] bg-orange-300/25"></div>
+      <div className="absolute left-[4%] top-[62%] h-[10%] w-[15%] rounded-lg border-2 border-orange-900/25 bg-orange-400 shadow-md">
+        <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-orange-900/25 bg-orange-500"></div>
+        <div className="absolute inset-y-1 left-1 w-1 rounded bg-orange-300/70"></div>
+        <div className="absolute inset-y-1 right-1 w-1 rounded bg-orange-300/70"></div>
+      </div>
+      <div className="absolute left-[4%] top-[78%] h-[8%] w-[7%] rounded-lg border-2 border-orange-900/25 bg-orange-400 shadow-md">
+        <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-orange-900/25 bg-orange-500"></div>
+      </div>
+      <div className="absolute left-[14%] top-[79%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-amber-900/20 bg-amber-200 text-sm shadow">🍵</div>
+      <span className="absolute left-[1%] top-[55%] text-[9px] font-bold text-orange-800/60">🛋️ リラックス</span>
+      {/* 卓球台 */}
+      <div className="absolute left-[30%] top-[62%] h-[20%] w-[21%] rounded-lg border-4 border-emerald-900/30 bg-emerald-500 shadow-md">
+        <div className="absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 bg-white/90"></div>
+        <div className="absolute inset-1 rounded border border-white/50"></div>
+        <span className="absolute -left-2 -top-3 text-lg">🏓</span>
+        <span className="absolute -bottom-3 -right-2 text-lg">🏓</span>
+      </div>
+      {/* カフェテーブル＆植物 */}
+      <div className="absolute left-[56%] top-[50%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-900/20 bg-amber-200 text-base shadow">🍰</div>
+      <div className="absolute left-[57%] top-[76%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-900/20 bg-amber-200 text-base shadow">☕</div>
+      <span className="absolute bottom-[40%] left-[33%] text-3xl drop-shadow">🌵</span>
+      <span className="absolute bottom-[3%] left-[24%] text-4xl drop-shadow">🪴</span>
+      <span className="absolute bottom-[4%] left-[49%] text-3xl drop-shadow">🎍</span>
+    </React.Fragment>
+  );
+}
+
+/* 3F コワーキング風オープンスペース */
+function OpenDecor() {
+  return (
+    <React.Fragment>
+      {/* 壁：ホワイトボードと時計 */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-slate-50 to-slate-100">
+        <div className="absolute left-[6%] top-[15%] h-14 w-[34%] rounded-lg border-4 border-slate-300 bg-white shadow-inner sm:h-16">
+          <p className="px-2 pt-1 text-[9px] font-bold text-slate-400">📌 アイデアボード</p>
+          <p className="px-2 text-[11px] text-slate-500">✍️ 📈 💡 🗓️</p>
+        </div>
+        <span className="absolute left-[48%] top-[20%] text-2xl">🕐</span>
+        <div className="absolute right-[8%] top-[15%] h-14 w-[20%] rounded-xl border-4 border-white bg-gradient-to-b from-sky-200 to-sky-100 shadow-inner sm:h-16"></div>
+      </div>
+      {/* 床：タイルカーペット */}
+      <div className="open-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
+      {/* 長机 ×2 */}
+      <div className="absolute left-[6%] top-[36%] z-[5] w-[30%] rounded-xl border-2 border-slate-300 bg-white/90 px-2 py-1 shadow-md">
+        <p className="flex justify-around text-sm leading-tight"><span>💻</span><span>🖱️</span><span>💻</span></p>
+      </div>
+      <div className="absolute left-[6%] top-[58%] z-[5] w-[30%] rounded-xl border-2 border-slate-300 bg-white/90 px-2 py-1 shadow-md">
+        <p className="flex justify-around text-sm leading-tight"><span>📓</span><span>💻</span><span>📐</span></p>
+      </div>
+      {/* ビーズクッション */}
+      <div className="absolute bottom-[10%] left-[8%] h-8 w-10 rounded-[50%] bg-rose-300 shadow-md"></div>
+      <div className="absolute bottom-[6%] left-[16%] h-8 w-10 rounded-[50%] bg-sky-300 shadow-md"></div>
+      <div className="absolute bottom-[13%] left-[20%] h-7 w-9 rounded-[50%] bg-lime-300 shadow-md"></div>
+      {/* スタンディングテーブル・プリンタ・本棚 */}
+      <div className="absolute left-[46%] top-[48%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-base shadow">📝</div>
+      <span className="absolute left-[56%] top-[33%] text-2xl">🖨️</span>
+      <span className="absolute left-[42%] top-[31%] text-2xl">📚</span>
+      {/* 植物 */}
+      <span className="absolute bottom-[5%] left-[42%] text-4xl drop-shadow">🪴</span>
+      <span className="absolute left-[58%] top-[60%] text-3xl drop-shadow">🌿</span>
+    </React.Fragment>
+  );
+}
+
+/* 4F 会員限定メンバーズバー */
+function BarDecor() {
+  return (
+    <React.Fragment>
+      {/* 壁：夜景とネオン */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-[#191331] to-[#241a3d]">
+        <div className="absolute left-[6%] top-[16%] flex h-14 w-[20%] items-center justify-center rounded-lg border-2 border-slate-500/50 bg-gradient-to-b from-[#0e1a3a] to-[#13234d] text-xl shadow-inner sm:h-16">🌃</div>
+        <div className="absolute right-[8%] top-[16%] flex h-14 w-[20%] items-center justify-center rounded-lg border-2 border-slate-500/50 bg-gradient-to-b from-[#0e1a3a] to-[#13234d] text-xl shadow-inner sm:h-16">🌙</div>
+        <p className="neon-text absolute left-1/2 top-[26%] -translate-x-1/2 whitespace-nowrap text-sm font-bold tracking-[.3em]">🍸 MEMBERS BAR</p>
+      </div>
+      {/* 床：ダーク */}
+      <div className="bar-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
+      {/* バーカウンター＆ボトル棚 */}
+      <div className="absolute left-[4%] top-[30%] z-[5] w-[36%] rounded-xl border-2 border-amber-500/30 bg-gradient-to-b from-[#3d2a18] to-[#2a1c0e] px-2 py-1 shadow-lg">
+        <p className="text-center text-sm leading-tight">🍾🥃🍷🍹</p>
+        <p className="text-center text-[9px] font-bold tracking-widest text-amber-200/80">B A R</p>
+      </div>
+      {/* スツール */}
+      {[10, 18, 26, 34].map(x => (
+        <div key={x} className="absolute h-5 w-5 rounded-full border-2 border-amber-500/40 bg-[#4a3320] shadow" style={{ left: x + '%', top: '44%' }}></div>
+      ))}
+      {/* ベルベットソファ＆キャンドルテーブル */}
+      <div className="absolute left-[6%] top-[64%] h-[10%] w-[15%] rounded-lg border-2 border-fuchsia-900/40 bg-gradient-to-b from-purple-700 to-purple-900 shadow-md">
+        <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-fuchsia-900/40 bg-purple-800"></div>
+      </div>
+      <div className="absolute left-[40%] top-[70%] h-[9%] w-[12%] rounded-lg border-2 border-fuchsia-900/40 bg-gradient-to-b from-purple-700 to-purple-900 shadow-md">
+        <div className="absolute inset-x-0 -top-[45%] h-1/2 rounded-t-lg border-2 border-b-0 border-fuchsia-900/40 bg-purple-800"></div>
+      </div>
+      <div className="absolute left-[24%] top-[70%] flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/40 bg-[#241a3d] text-sm shadow">🕯️</div>
+      <div className="absolute left-[55%] top-[52%] flex h-9 w-9 items-center justify-center rounded-full border border-amber-400/40 bg-[#241a3d] text-sm shadow">🕯️</div>
+      {/* 装飾 */}
+      <span className="absolute bottom-[6%] left-[55%] text-3xl drop-shadow">🎷</span>
+      <span className="absolute bottom-[5%] left-[2%] text-3xl drop-shadow">🪴</span>
+      <span className="absolute left-[47%] top-[36%] text-2xl">🍸</span>
+    </React.Fragment>
+  );
+}
+
+/* 5F ルーフトップテラス */
+function RooftopDecor() {
+  return (
+    <React.Fragment>
+      {/* 空：夕焼け */}
+      <div className="absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-sky-300 via-orange-200 to-amber-100">
+        <span className="absolute left-[10%] top-[20%] text-2xl">☁️</span>
+        <span className="absolute left-[45%] top-[10%] text-3xl">🌇</span>
+        <span className="absolute right-[12%] top-[26%] text-xl">🕊️</span>
+        <span className="absolute right-[30%] top-[8%] text-xl">☁️</span>
+        {/* 手すり */}
+        <div className="absolute inset-x-0 bottom-0 h-2 bg-slate-500/50"></div>
+      </div>
+      {/* 床：ウッドデッキ */}
+      <div className="deck-floor absolute inset-x-0 bottom-0 h-[72%]"></div>
+      {/* パラソル席 ×2 */}
+      <span className="absolute left-[14%] top-[34%] z-[6] text-5xl drop-shadow">⛱️</span>
+      <div className="absolute left-[16%] top-[52%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-900/20 bg-amber-100 text-base shadow">🍹</div>
+      <span className="absolute left-[42%] top-[52%] z-[6] text-5xl drop-shadow">⛱️</span>
+      <div className="absolute left-[44%] top-[70%] flex h-10 w-10 items-center justify-center rounded-full border-2 border-amber-900/20 bg-amber-100 text-base shadow">🧃</div>
+      {/* デッキチェア */}
+      <div className="absolute left-[4%] top-[70%] h-[7%] w-[12%] rounded-lg border-2 border-sky-700/30 bg-sky-300 shadow-md"></div>
+      <div className="absolute left-[4%] top-[80%] h-[7%] w-[12%] rounded-lg border-2 border-sky-700/30 bg-sky-200 shadow-md"></div>
+      {/* プランター＆望遠鏡 */}
+      <div className="absolute left-[28%] top-[30%] z-[5] w-[24%] rounded-lg border-2 border-emerald-900/20 bg-emerald-200/90 px-2 py-0.5 text-center text-sm shadow">🌸🌿🌼🌿🌸</div>
+      <span className="absolute bottom-[8%] left-[58%] text-3xl drop-shadow">🔭</span>
+      <span className="absolute bottom-[4%] left-[2%] text-4xl drop-shadow">🪴</span>
+      <span className="absolute left-[56%] top-[42%] text-2xl">✨</span>
+    </React.Fragment>
+  );
+}
+
+function FloorDecor({ floor }) {
+  if (floor === 1) return <LobbyDecor />;
+  if (floor === 3) return <OpenDecor />;
+  if (floor === 4) return <BarDecor />;
+  if (floor === 5) return <RooftopDecor />;
+  return <CafeDecor />;
+}
+
+/* 集中スペース（全フロア共通・4Fはダークトーン） */
+function FocusZone({ dark }) {
+  return (
+    <div className={'absolute bottom-0 right-0 top-[28%] w-[32%] border-l-4 backdrop-blur-[1px] ' +
+      (dark ? 'border-fuchsia-900/50 bg-slate-900/50' : 'border-slate-400/50 bg-slate-200/55')}>
+      <div className="absolute inset-x-0 top-1 text-center">
+        <span className="rounded-full bg-slate-700/80 px-2.5 py-0.5 text-[10px] font-bold text-white">🤫 集中スペース</span>
+      </div>
+      {FOCUS_SEATS.map((s, i) => (
+        <div key={i} className="absolute -translate-x-1/2" style={{ left: ((s.x - 68) / 32 * 100) + '%', top: ((s.y - 28) / 72 * 100 - 12) + '%' }}>
+          <div className={'h-5 w-16 rounded-t-lg ' + (dark ? 'bg-slate-600/80' : 'bg-slate-400/70')}></div>
+          <div className={'flex h-6 w-16 items-center justify-center rounded-b-md text-sm ' + (dark ? 'bg-slate-700/90' : 'bg-slate-500/80')}>🖥️</div>
+        </div>
+      ))}
+      <span className="absolute bottom-[3%] right-[4%] text-3xl">🪴</span>
+    </div>
+  );
+}
+
+function AvatarSprite({ user, dispName, pos, bubble, isMe, seated, dragging, onClick, dragHandlers }) {
+  return (
+    <button
+      onClick={onClick}
+      {...(dragHandlers || {})}
+      className={'absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-center outline-none ' +
+        (isMe && !seated ? 'cursor-grab active:cursor-grabbing' : '')}
+      style={{
+        left: pos.x + '%',
+        top: pos.y + '%',
+        transition: dragging ? 'none' : 'left .25s ease, top .25s ease',
+        touchAction: isMe && !seated ? 'none' : 'auto',
+        zIndex: dragging ? 20 : 10,
+      }}
+    >
+      {bubble && (
+        <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 -translate-x-1/2">
+          <span className="ac-bubble block animate-popIn">{bubble}</span>
+        </span>
+      )}
+      <span className="relative text-3xl drop-shadow-sm" style={{ lineHeight: 1 }}>
+        {user.avatar}
+        {seated && (
+          <span className="absolute -right-2 -top-2 text-sm">🔥</span>
+        )}
+        {user.status === 'resting' && (
+          <span className="absolute -right-2 -top-2 text-sm">☕</span>
+        )}
+      </span>
+      <span className={'mt-0.5 rounded-full px-2 py-px text-[10px] font-bold shadow-sm ' +
+        (isMe ? 'bg-emerald-500 text-white ring-2 ring-emerald-200' : 'bg-white/90 text-slate-600')}>
+        {dispName}
+      </span>
+    </button>
+  );
+}
+
+function OfficeScene({ users, me, bubbles, dispName, onAvatarClick, onEnterFocus, onMoveMe, onMoveFloor }) {
+  const sceneRef = useRef(null);
+  const [drag, setDrag] = useState(null); // { x, y, startX, startY, moved }
+  const dragRef = useRef(null);
+  const setD = (v) => { dragRef.current = v; setDrag(v); };
+
+  const floor = me.floor || 2;
+  const sameFloor = (u) => (u.floor || 2) === floor;
+  const loungeUsers = users.filter(u => u.isOnline && sameFloor(u) && (u.status === 'lounge' || u.status === 'resting'));
+  const focusUsers = users.filter(u => u.isOnline && sameFloor(u) && u.status === 'studying');
+
+  /* エレベーターに表示する各フロアの在室人数 */
+  const floorCounts = {};
+  users.forEach(u => {
+    if (u.isOnline && u.status !== 'offline') {
+      const f = u.floor || 2;
+      floorCounts[f] = (floorCounts[f] || 0) + 1;
+    }
+  });
+
+  const toScenePct = (e) => {
+    const r = sceneRef.current.getBoundingClientRect();
+    return {
+      x: Math.min(LOUNGE_BOUNDS.xMax, Math.max(LOUNGE_BOUNDS.xMin, (e.clientX - r.left) / r.width * 100)),
+      y: Math.min(LOUNGE_BOUNDS.yMax, Math.max(LOUNGE_BOUNDS.yMin, (e.clientY - r.top) / r.height * 100)),
+    };
+  };
+
+  /* setPointerCapture でアバター要素上でドラッグを完結させる */
+  const dragHandlers = {
+    onPointerDown: (e) => {
+      if (me.status === 'studying') return;
+      e.preventDefault();
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* 合成イベント対策 */ }
+      const p = toScenePct(e);
+      setD({ ...p, startX: p.x, startY: p.y, moved: false });
+    },
+    onPointerMove: (e) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const p = toScenePct(e);
+      setD({
+        ...d, x: p.x, y: p.y,
+        moved: d.moved || Math.abs(p.x - d.startX) > 1.2 || Math.abs(p.y - d.startY) > 1.2,
+      });
+    },
+    onPointerUp: (e) => {
+      const d = dragRef.current;
+      if (!d) return;
+      setD(null);
+      if (d.moved) onMoveMe(d.x, d.y);
+      else onAvatarClick(me, false);
+    },
+    onPointerCancel: () => setD(null),
+  };
+
+  const posOf = (u) => (drag && u.username === me.username)
+    ? { x: drag.x, y: drag.y }
+    : (u.pos || { x: 30, y: 60 });
+
+  return (
+    <div
+      ref={sceneRef}
+      className="relative w-full select-none overflow-hidden rounded-3xl border-4 border-amber-900/20 shadow-lg"
+      style={{ aspectRatio: '16/9', minHeight: 320, background: 'linear-gradient(180deg,#fdf6e3 0%,#faeed2 100%)' }}
+    >
+      {/* ===== フロアごとの内装 ===== */}
+      <FloorDecor floor={floor} />
+
+      {/* ===== 集中スペース（全フロア共通） ===== */}
+      <FocusZone dark={floor === 4} />
+
+      {/* フロア名バナー */}
+      <div className="absolute left-1/2 top-1.5 z-20 -translate-x-1/2">
+        <span className="rounded-full bg-black/45 px-3 py-1 text-[11px] font-bold text-white backdrop-blur">
+          {FLOOR_INFO[floor].icon} {floor}F {FLOOR_INFO[floor].label}
+        </span>
+      </div>
+
+      {/* ===== エレベーター（フロア移動） ===== */}
+      <div className="absolute left-1.5 top-1/2 z-30 flex -translate-y-1/2 flex-col gap-1 rounded-2xl border border-slate-300/60 bg-white/90 p-1.5 shadow-lg backdrop-blur">
+        <p className="text-center text-sm leading-none">🛗</p>
+        {FLOOR_LIST.map(f => {
+          const locked = FLOOR_INFO[f].memberOnly && me.plan !== 'invited';
+          const active = floor === f;
+          return (
+            <button
+              key={f}
+              onClick={() => onMoveFloor(f)}
+              title={f + 'F ' + FLOOR_INFO[f].label + (locked ? '（会員限定）' : '')}
+              className={'relative w-12 rounded-lg px-1 py-1 text-[10px] font-bold transition ' +
+                (active
+                  ? 'bg-emerald-600 text-white shadow'
+                  : locked
+                    ? 'bg-slate-100 text-slate-400'
+                    : 'bg-white text-slate-600 hover:bg-emerald-50')}
+            >
+              {f}F {locked ? '🔒' : FLOOR_INFO[f].icon}
+              {(floorCounts[f] || 0) > 0 && (
+                <span className={'absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full px-0.5 text-[9px] font-bold ' +
+                  (active ? 'bg-white text-emerald-600' : 'bg-emerald-500 text-white')}>
+                  {floorCounts[f]}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 集中スペースへのドア */}
+      {(me.status === 'lounge' || me.status === 'resting') && (
+        <button
+          onClick={onEnterFocus}
+          className="absolute bottom-[4%] right-[33%] z-20 rounded-xl border-2 border-slate-600 bg-white/95 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-md transition hover:scale-105 hover:bg-emerald-50"
+        >
+          🚪 {me.status === 'resting' ? '集中スペースに戻る' : '集中スペースへ'}
+        </button>
+      )}
+
+      {/* ===== 集中中のメンバー（デスクに着席・話しかけ不可） ===== */}
+      {focusUsers.map((u, i) => {
+        const seat = FOCUS_SEATS[i % FOCUS_SEATS.length];
+        return (
+          <AvatarSprite
+            key={u.username}
+            user={u}
+            dispName={dispName(u.username)}
+            pos={{ x: seat.x, y: seat.y }}
+            bubble={null}
+            isMe={u.username === me.username}
+            seated
+            dragging={false}
+            onClick={() => onAvatarClick(u, true)}
+          />
+        );
+      })}
+
+      {/* ===== ラウンジのメンバー（自分だけドラッグで移動可・自分を最前面に） ===== */}
+      {[...loungeUsers.filter(u => u.username !== me.username),
+        ...loungeUsers.filter(u => u.username === me.username)].map(u => {
+        const isMe = u.username === me.username;
+        return (
+          <AvatarSprite
+            key={u.username}
+            user={u}
+            dispName={dispName(u.username)}
+            pos={posOf(u)}
+            bubble={bubbles[u.username] || null}
+            isMe={isMe}
+            seated={false}
+            dragging={isMe && drag !== null}
+            onClick={isMe ? undefined : () => onAvatarClick(u, false)}
+            dragHandlers={isMe ? dragHandlers : undefined}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================================================
+   プロフィールポップオーバー
+   ============================================================ */
+function ProfilePopover({ user, now, isMe, onWave, onClose }) {
+  return (
+    <div className="fixed inset-x-4 bottom-4 z-40 mx-auto max-w-sm animate-popIn rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl">
+      <div className="flex items-start gap-3">
+        <span className="text-4xl">{user.avatar}</span>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-slate-800">
+            {user.displayName || user.username}
+            <span className="ml-1.5 text-[11px] font-normal text-slate-400">@{user.username}</span>
+            {isMe && <span className="ml-1 text-xs text-emerald-500">(自分)</span>}
+          </p>
+          <p className="text-xs text-slate-500">{user.bio}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-600">{statusLabel(user.status)}</span>
+            {user.isOnline && user.status !== 'offline' && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                {FLOOR_INFO[user.floor || 2].icon} {(user.floor || 2)}F
+              </span>
+            )}
+            <PlanBadge plan={user.plan} />
+          </div>
+          {user.status === 'resting' && user.currentTodo && (
+            <p className="mt-1 truncate text-xs text-slate-500">目標：{user.currentTodo}（⏱ {fmtElapsed(elapsedMs(user, now))}）</p>
+          )}
+          {user.comment && (
+            <p className="mt-2 inline-block rounded-xl bg-amber-50 px-3 py-1 text-xs text-amber-800">💬 {user.comment}</p>
+          )}
+        </div>
+        <button onClick={onClose} className="rounded-full px-2 text-slate-400 transition hover:bg-slate-100">✕</button>
+      </div>
+      {!isMe && (
+        <button
+          onClick={onWave}
+          className="mt-3 w-full rounded-xl bg-amber-400 py-2 text-sm font-bold text-amber-900 transition hover:bg-amber-500"
+        >
+          👋 手を振る
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   マイパネル（表示名・ひとこと・セッション操作）
+   ============================================================ */
+function MyPanel({ me, now, onSetComment, onSetDisplayName, onEnterFocus, onResume, onOpenCheckout, onDiscard }) {
+  const [draft, setDraft] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const resting = me.status === 'resting';
+
+  return (
+    <div className="rounded-3xl border border-amber-200 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-start gap-3">
+        <span className="text-3xl">{me.avatar}</span>
+        <div className="min-w-0 flex-1">
+          {editingName ? (
+            <form
+              className="flex gap-1.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (nameDraft.trim()) { onSetDisplayName(nameDraft.trim()); setEditingName(false); }
+              }}
+            >
+              <input
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                maxLength={20}
+                autoFocus
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none focus:border-emerald-400"
+              />
+              <button type="submit" className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">保存</button>
+              <button type="button" onClick={() => setEditingName(false)} className="rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-500">✕</button>
+            </form>
+          ) : (
+            <p className="flex items-center gap-1.5 font-bold text-slate-800">
+              <span className="truncate">{me.displayName}</span>
+              <button
+                onClick={() => { setNameDraft(me.displayName); setEditingName(true); }}
+                title="表示名を変更"
+                className="rounded-md px-1 text-xs text-slate-400 transition hover:bg-slate-100"
+              >✏️</button>
+            </p>
+          )}
+          <p className="text-[11px] text-slate-400">@{me.username}</p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+            <p className="text-xs font-bold text-slate-500">{statusLabel(me.status)}</p>
+            <PlanBadge plan={me.plan} />
+          </div>
+        </div>
+        {resting && (
+          <span className="shrink-0 font-mono text-lg font-bold text-sky-500">⏸ {fmtElapsed(elapsedMs(me, now))}</span>
+        )}
+      </div>
+
+      {/* ひとこと（あつ森風の吹き出しに反映） */}
+      <label className="mb-1 block text-xs font-bold text-slate-500">💬 ひとこと（頭の上の吹き出しに残ります）</label>
+      <form
+        className="mb-2 flex gap-2"
+        onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { onSetComment(draft.trim()); setDraft(''); } }}
+      >
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={me.comment || '例：今日もがんばるぞ〜'}
+          maxLength={25}
+          className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+        />
+        <button type="submit" disabled={!draft.trim()} className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-amber-900 transition hover:bg-amber-500 disabled:opacity-40">
+          つぶやく
+        </button>
+      </form>
+      {me.comment && (
+        <button onClick={() => onSetComment('')} className="mb-3 text-[11px] text-slate-400 underline-offset-2 hover:underline">
+          吹き出しを消す
+        </button>
+      )}
+
+      <div className="mt-2 space-y-2">
+        {me.status === 'lounge' && (
+          <button
+            onClick={onEnterFocus}
+            className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-700"
+          >
+            🔥 集中スペースに入って勉強する
+          </button>
+        )}
+        {resting && (
+          <React.Fragment>
+            <div className="rounded-xl bg-slate-50 px-3 py-2">
+              <p className="text-[11px] font-bold text-slate-400">今日の目標</p>
+              <p className="text-sm text-slate-700">{me.currentTodo}</p>
+              <div className="mt-1"><GenreBadge genre={me.genre} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={onResume} className="rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white transition hover:bg-orange-600">
+                🔥 勉強を再開
+              </button>
+              <button onClick={onOpenCheckout} className="rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600">
+                🚪 退出して記録
+              </button>
+            </div>
+            <button
+              onClick={() => { if (confirm('ログを残さずにセッションを終了します。よろしいですか？')) onDiscard(); }}
+              className="w-full text-center text-[11px] text-slate-400 underline-offset-2 hover:underline"
+            >
+              セッションを消去する
+            </button>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   チェックインモーダル（集中スペース入室ゲート）
+   ============================================================ */
+function CheckInModal({ onCheckIn, onCancel }) {
+  const [genre, setGenre] = useState(GENRES[0]);
+  const [todo, setTodo] = useState('');
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md animate-fadeUp rounded-3xl bg-white p-6 shadow-2xl">
+        <h3 className="mb-1 text-lg font-bold text-slate-800">🚪 集中スペースに入る</h3>
+        <p className="mb-4 text-xs text-slate-500">
+          入室中はまわりの様子が見えなくなり、誰にも話しかけられません 🤫
+        </p>
+
+        <label className="mb-1 block text-xs font-bold text-slate-500">勉強するジャンル</label>
+        <div className="mb-4 flex flex-wrap gap-2">
+          {GENRES.map(g => (
+            <button
+              key={g}
+              onClick={() => setGenre(g)}
+              className={'rounded-full border px-3 py-1.5 text-sm font-bold transition ' +
+                (genre === g
+                  ? 'border-emerald-500 bg-emerald-600 text-white'
+                  : 'border-slate-300 bg-white text-slate-600 hover:border-emerald-300')}
+            >
+              {(GENRE_STYLE[g] || {}).emoji} {g}
+            </button>
+          ))}
+        </div>
+
+        <label className="mb-1 block text-xs font-bold text-slate-500">今日の目標（やること）</label>
+        <input
+          value={todo}
+          onChange={(e) => setTodo(e.target.value)}
+          placeholder="例：単語帳を10ページ進める"
+          maxLength={80}
+          autoFocus
+          className="mb-4 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+        />
+
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 rounded-xl border border-slate-300 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
+            やめておく
+          </button>
+          <button
+            onClick={() => todo.trim() && onCheckIn(genre, todo.trim())}
+            disabled={!todo.trim()}
+            className="flex-[2] rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-40"
+          >
+            🔥 入室して勉強スタート
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   タイムライン
+   ============================================================ */
+function ReactionBar({ log, me, onReact, dispName }) {
+  const reactions = log.reactions || {};
+  const isMine = log.username === me.username;
+  const hasAny = STAMPS.some(s => (reactions[s] || []).length > 0);
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2.5">
+      <span className="text-[10px] font-bold text-slate-400">
+        {isMine ? 'みんなからの応援' : '応援する'}
+      </span>
+      {STAMPS.map(s => {
+        const who = reactions[s] || [];
+        const names = who.map(dispName).join('、');
+        if (isMine) {
+          /* 自分のログ：もらったスタンプの表示のみ（自分では押せない） */
+          if (who.length === 0) return null;
+          return (
+            <span
+              key={s}
+              title={names}
+              className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-sm"
+            >
+              {s} <span className="text-xs font-bold text-amber-700">{who.length}</span>
+            </span>
+          );
+        }
+        const reacted = who.includes(me.username);
+        return (
+          <button
+            key={s}
+            onClick={() => onReact(log.id, s)}
+            title={names}
+            className={'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm transition active:scale-90 ' +
+              (reacted
+                ? 'border-amber-400 bg-amber-100 shadow-sm'
+                : 'border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50')}
+          >
+            {s}
+            {who.length > 0 && (
+              <span className={'text-xs font-bold ' + (reacted ? 'text-amber-700' : 'text-slate-500')}>{who.length}</span>
+            )}
+          </button>
+        );
+      })}
+      {isMine && !hasAny && (
+        <span className="text-[10px] text-slate-300">まだスタンプはありません</span>
+      )}
+    </div>
+  );
+}
+
+function TimelineItem({ log, name, me, onReact, dispName }) {
+  return (
+    <div className="animate-fadeUp rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-2xl">{log.avatar || avatarFor(log.username)}</span>
+        <p className="flex-1 text-sm text-slate-700">
+          <span className="font-bold">{name}</span> さんが退出しました！
+        </p>
+        <span className="text-xs text-slate-400">{fmtLogDate(log.date)}</span>
+      </div>
+      <div className="mb-2 space-y-1.5">
+        <div className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2">
+          <span className="mt-0.5 shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">目標</span>
+          <p className="text-sm leading-snug text-slate-500">{log.todo}</p>
+        </div>
+        <div className="flex justify-center text-slate-300">↓</div>
+        <div className="flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2">
+          <span className="mt-0.5 shrink-0 rounded bg-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">結果</span>
+          <p className="text-sm font-medium leading-snug text-emerald-800">{log.done}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <GenreBadge genre={log.genre} />
+        <span className="text-xs font-bold text-slate-500">実質 {log.actualStudyTimeMinutes} 分</span>
+      </div>
+      <ReactionBar log={log} me={me} onReact={onReact} dispName={dispName} />
+    </div>
+  );
+}
+
+/* ============================================================
+   ② 集中スペース画面（入室中・外の様子は見えない）
+   ============================================================ */
+function CheckoutModal({ me, studyMinutes, onSave, onCancel }) {
+  const [done, setDone] = useState('');
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md animate-fadeUp rounded-3xl bg-white p-6 shadow-2xl">
+        <h3 className="mb-1 text-lg font-bold text-slate-800">🎉 おつかれさま！</h3>
+        <p className="mb-4 text-sm text-slate-500">今日の結果を記録して、みんなに共有しましょう</p>
+
+        <div className="mb-4 rounded-2xl bg-slate-50 p-4">
+          <p className="mb-1 text-[11px] font-bold text-slate-400">今日の目標だったこと</p>
+          <p className="mb-3 text-sm text-slate-700">{me.currentTodo}</p>
+          <div className="flex items-center gap-3 text-sm">
+            <GenreBadge genre={me.genre} />
+            <span className="font-bold text-slate-600">実質勉強時間：{studyMinutes} 分</span>
+          </div>
+        </div>
+
+        <label className="mb-1 block text-xs font-bold text-slate-500">今日の結果（やったこと）</label>
+        <textarea
+          value={done}
+          onChange={(e) => setDone(e.target.value)}
+          placeholder="例：単語帳を12ページ進めて、ミニテストで満点を取った！"
+          rows={3}
+          maxLength={140}
+          autoFocus
+          className="mb-4 w-full resize-none rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+        />
+
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 rounded-xl border border-slate-300 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">
+            戻る
+          </button>
+          <button
+            onClick={() => done.trim() && onSave(done.trim())}
+            disabled={!done.trim()}
+            className="flex-[2] rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-40"
+          >
+            記録して退出する
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FocusRoom({ me, now, onRest, onCheckout, onDiscard }) {
+  const [showModal, setShowModal] = useState(false);
+  const ms = elapsedMs(me, now);
+
+  return (
+    <main className="mx-auto flex max-w-2xl flex-col items-center px-4 py-10">
+      <div className="w-full animate-fadeUp rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 text-center shadow-2xl">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-orange-500/20 px-4 py-1.5 text-sm font-bold text-orange-300">
+          🔥 集中モード
+          <span className="h-2 w-2 animate-pulseSoft rounded-full bg-orange-400"></span>
+        </div>
+
+        <p className="mb-2 font-mono text-6xl font-bold tracking-wider text-white">{fmtElapsed(ms)}</p>
+        <p className="mb-6 text-xs text-slate-400">実質勉強時間（休憩中はカウント停止）</p>
+
+        <div className="mb-6 rounded-2xl bg-white/5 p-4 text-left">
+          <p className="mb-1 text-[11px] font-bold tracking-wide text-slate-400">今日の目標</p>
+          <p className="text-lg font-bold leading-snug text-white">{me.currentTodo}</p>
+          <div className="mt-2"><GenreBadge genre={me.genre} /></div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button onClick={onRest} className="rounded-xl bg-sky-500 py-3.5 font-bold text-white transition hover:bg-sky-600">
+            ☕ カフェで休憩する
+          </button>
+          <button onClick={() => setShowModal(true)} className="rounded-xl bg-emerald-500 py-3.5 font-bold text-white transition hover:bg-emerald-600">
+            🚪 退出する（記録する）
+          </button>
+        </div>
+
+        <button
+          onClick={() => { if (confirm('ログを残さずに退出します。よろしいですか？')) onDiscard(); }}
+          className="mt-4 text-xs text-slate-500 underline-offset-2 transition hover:text-slate-300 hover:underline"
+        >
+          セッションを消去して退出
+        </button>
+      </div>
+
+      <p className="mt-6 text-center text-xs text-slate-400">
+        🤫 集中スペースでは、まわりの様子は見えず、誰もあなたに話しかけられません
+      </p>
+
+      {showModal && (
+        <CheckoutModal
+          me={me}
+          studyMinutes={Math.max(1, Math.round(ms / 60000))}
+          onSave={(done) => { setShowModal(false); onCheckout(done, Math.max(1, Math.round(ms / 60000))); }}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
+    </main>
+  );
+}
+
+/* ============================================================
+   アプリ本体
+   ============================================================ */
+function App() {
+  const [users, setUsers] = useState(() => loadDB(DB_USERS, seedUsers, migrateUsers));
+  const [logs, setLogs] = useState(() => loadDB(DB_LOGS, () => migrateLogs(seedLogs()), migrateLogs));
+  const [currentName, setCurrentName] = useState(() => localStorage.getItem(DB_CURRENT) || null);
+  const [now, setNow] = useState(Date.now());
+
+  /* シーン演出用（表示だけの状態・保存しない） */
+  const [mockComments, setMockComments] = useState({});
+  const [reactions, setReactions] = useState({});
+  const [selected, setSelected] = useState(null);
+  const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  /* タイマー刻み */
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  /* 別タブでの変更を反映（マルチユーザー模擬） */
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === DB_USERS && e.newValue) setUsers(JSON.parse(e.newValue));
+      if (e.key === DB_LOGS && e.newValue) setLogs(JSON.parse(e.newValue));
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const updateUsers = useCallback((updater) => {
+    setUsers(prev => {
+      const next = updater(prev);
+      saveDB(DB_USERS, next);
+      return next;
+    });
+  }, []);
+
+  const me = users.find(u => u.username === currentName) || null;
+  const dispName = useCallback(
+    (username) => {
+      const u = users.find(x => x.username === username);
+      return (u && u.displayName) || username;
+    },
+    [users]
+  );
+
+  /* ログイン済みなのにオフライン状態（旧データなど）ならラウンジに入れる */
+  useEffect(() => {
+    if (me && me.status === 'offline') {
+      updateUsers(prev => prev.map(u => u.username === currentName
+        ? { ...u, isOnline: true, status: 'lounge' }
+        : u));
+    }
+  }, [me && me.status, currentName]);
+
+  /* モックユーザーがときどきつぶやきを変える（表示のみ・歩き回りはしない） */
+  const loungeKey = users
+    .filter(u => u.isOnline && (u.status === 'lounge' || u.status === 'resting'))
+    .map(u => u.username).sort().join(',');
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      const names = (loungeKey ? loungeKey.split(',') : []).filter(n => MOCK_PHRASES[n] && n !== currentName);
+      if (names.length === 0) return;
+      const n = names[Math.floor(Math.random() * names.length)];
+      const phrases = MOCK_PHRASES[n];
+      setMockComments(prev => ({ ...prev, [n]: phrases[Math.floor(Math.random() * phrases.length)] }));
+    }, 20000);
+    return () => clearInterval(t);
+  }, [loungeKey, currentName]);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  };
+
+  /* ---- ログイン（既存・プリセット） ---- */
+  const handleLogin = (name) => {
+    updateUsers(prev => {
+      const exists = prev.some(u => u.username === name);
+      if (exists) {
+        return prev.map(u => (u.username === name && u.status === 'offline')
+          ? { ...u, isOnline: true, status: 'lounge' }
+          : u);
+      }
+      const preset = PRESET_USERS.find(p => p.username === name);
+      return [...prev, {
+        username: name,
+        displayName: name,
+        avatar: preset ? preset.avatar : avatarFor(name),
+        bio: preset ? preset.bio : '新メンバー',
+        plan: preset ? 'invited' : 'standard',
+        isOnline: true, status: 'lounge', genre: '', currentTodo: '', comment: '', floor: 1,
+        pos: randLoungePoint(),
+        sessionStartTime: null, restStartedAt: null, totalRestMs: 0,
+      }];
+    });
+    localStorage.setItem(DB_CURRENT, name);
+    setCurrentName(name);
+    setSelected(null);
+  };
+
+  /* ---- 新規登録（ID・表示名・招待コード） ---- */
+  const handleRegister = (username, displayName, plan) => {
+    updateUsers(prev => [...prev, {
+      username, displayName,
+      avatar: avatarFor(username),
+      bio: '新メンバー',
+      plan,
+      isOnline: true, status: 'lounge', genre: '', currentTodo: '', comment: '', floor: 1,
+      pos: randLoungePoint(),
+      sessionStartTime: null, restStartedAt: null, totalRestMs: 0,
+    }]);
+    localStorage.setItem(DB_CURRENT, username);
+    setCurrentName(username);
+    if (plan === 'invited') {
+      showToast('🎟️ 招待コードが適用されました！無料でご利用いただけます');
+    } else {
+      showToast('ようこそ！' + displayName + ' さん 🎉');
+    }
+  };
+
+  const handleLogout = () => {
+    /* アバターはオフィスに残す（他のユーザーから見える世界を維持） */
+    localStorage.removeItem(DB_CURRENT);
+    setCurrentName(null);
+    setSelected(null);
+  };
+
+  /* ---- 表示名変更 / ひとこと ---- */
+  const handleSetDisplayName = (text) => {
+    updateUsers(prev => prev.map(u => u.username === currentName ? { ...u, displayName: text } : u));
+  };
+  const handleSetComment = (text) => {
+    updateUsers(prev => prev.map(u => u.username === currentName ? { ...u, comment: text } : u));
+  };
+
+  /* ---- 自分のアバターをドラッグで移動 ---- */
+  const handleMoveMe = (x, y) => {
+    updateUsers(prev => prev.map(u => u.username === currentName ? { ...u, pos: { x, y } } : u));
+  };
+
+  /* ---- エレベーターでフロア移動（4Fは会員限定） ---- */
+  const handleMoveFloor = (f) => {
+    if (f === (me.floor || 2)) return;
+    if (FLOOR_INFO[f].memberOnly && me.plan !== 'invited') {
+      showToast('🔒 4F メンバーズバーは会員限定フロアです（招待コードで解放されます）');
+      return;
+    }
+    updateUsers(prev => prev.map(u => u.username === currentName ? { ...u, floor: f } : u));
+    showToast(FLOOR_INFO[f].icon + ' ' + f + 'F ' + FLOOR_INFO[f].label + ' に移動しました');
+  };
+
+  /* ---- チェックイン（集中スペース入室） ---- */
+  const handleCheckIn = (genre, todo) => {
+    setShowCheckIn(false);
+    updateUsers(prev => prev.map(u => u.username === currentName
+      ? { ...u, isOnline: true, status: 'studying', genre, currentTodo: todo,
+          sessionStartTime: nowIso(), restStartedAt: null, totalRestMs: 0 }
+      : u));
+  };
+
+  /* ---- 休憩（カフェへ） / 再開（集中スペースへ） ---- */
+  const handleRest = () => {
+    updateUsers(prev => prev.map(u => u.username === currentName
+      ? { ...u, status: 'resting', restStartedAt: nowIso() }
+      : u));
+  };
+  const handleResume = () => {
+    updateUsers(prev => prev.map(u => {
+      if (u.username !== currentName) return u;
+      const restMs = u.restStartedAt ? Date.now() - new Date(u.restStartedAt).getTime() : 0;
+      return { ...u, status: 'studying', restStartedAt: null, totalRestMs: (u.totalRestMs || 0) + restMs };
+    }));
+  };
+
+  /* ---- 退出（記録あり）→ カフェに戻る ---- */
+  const handleCheckout = (done, minutes) => {
+    const newLog = {
+      id: 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      username: me.username,
+      avatar: me.avatar,
+      date: nowIso(),
+      genre: me.genre,
+      todo: me.currentTodo,
+      done,
+      actualStudyTimeMinutes: minutes,
+    };
+    setLogs(prev => {
+      const next = [newLog, ...prev];
+      saveDB(DB_LOGS, next);
+      return next;
+    });
+    setShowCheckout(false);
+    updateUsers(prev => prev.map(u => u.username === currentName
+      ? { ...u, status: 'lounge', genre: '', currentTodo: '',
+          sessionStartTime: null, restStartedAt: null, totalRestMs: 0 }
+      : u));
+  };
+
+  /* ---- セッション消去 → カフェに戻る ---- */
+  const handleDiscard = () => {
+    updateUsers(prev => prev.map(u => u.username === currentName
+      ? { ...u, status: 'lounge', genre: '', currentTodo: '',
+          sessionStartTime: null, restStartedAt: null, totalRestMs: 0 }
+      : u));
+  };
+
+  /* ---- タイムラインへのいいねスタンプ（トグル式） ---- */
+  const handleReact = (logId, stamp) => {
+    setLogs(prev => {
+      const next = prev.map(l => {
+        if (l.id !== logId) return l;
+        const reactions = { ...(l.reactions || {}) };
+        const who = reactions[stamp] || [];
+        if (who.includes(currentName)) {
+          const rest = who.filter(n => n !== currentName);
+          if (rest.length === 0) delete reactions[stamp];
+          else reactions[stamp] = rest;
+        } else {
+          reactions[stamp] = [...who, currentName];
+        }
+        return { ...l, reactions };
+      });
+      saveDB(DB_LOGS, next);
+      return next;
+    });
+  };
+
+  /* ---- アバタークリック ---- */
+  const handleAvatarClick = (user, inFocus) => {
+    if (inFocus && user.username !== currentName) {
+      showToast('🤫 ' + dispName(user.username) + ' さんは集中モード中。話しかけられません');
+      return;
+    }
+    setSelected(user.username);
+  };
+
+  const handleWave = (target) => {
+    setReactions(prev => ({ ...prev, [target]: '👋 ' + dispName(currentName) + 'が手をふった！' }));
+    setTimeout(() => {
+      setReactions(prev => {
+        const next = { ...prev };
+        delete next[target];
+        return next;
+      });
+    }, 3000);
+    setSelected(null);
+  };
+
+  /* ---- 画面分岐 ---- */
+  if (!me) {
+    return (
+      <React.Fragment>
+        <LoginScreen users={users} onLogin={handleLogin} onRegister={handleRegister} />
+        {toast && (
+          <div className="fixed inset-x-4 top-16 z-50 mx-auto max-w-sm animate-popIn rounded-2xl bg-slate-800/95 px-4 py-3 text-center text-sm font-bold text-white shadow-xl">
+            {toast}
+          </div>
+        )}
+      </React.Fragment>
+    );
+  }
+
+  if (me.status === 'studying') {
+    /* 集中スペース：外の様子は見えない */
+    return (
+      <div className="min-h-screen">
+        <Header me={me} users={users} onSwitch={handleLogin} onLogout={handleLogout} />
+        <FocusRoom me={me} now={now} onRest={handleRest} onCheckout={handleCheckout} onDiscard={handleDiscard} />
+      </div>
+    );
+  }
+
+  /* 表示用の吹き出し：リアクション > モックのつぶやき > 本人のひとこと */
+  const bubbles = {};
+  for (const u of users) {
+    bubbles[u.username] = reactions[u.username]
+      || (u.username !== currentName ? mockComments[u.username] : null)
+      || u.comment
+      || null;
+  }
+
+  const selectedUser = selected ? users.find(u => u.username === selected) : null;
+  const sortedLogs = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-amber-50/60 to-slate-100">
+      <Header me={me} users={users} onSwitch={handleLogin} onLogout={handleLogout} />
+
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        {/* オフィスシーン */}
+        <OfficeScene
+          users={users}
+          me={me}
+          bubbles={bubbles}
+          dispName={dispName}
+          onAvatarClick={handleAvatarClick}
+          onEnterFocus={() => (me.status === 'resting' ? handleResume() : setShowCheckIn(true))}
+          onMoveMe={handleMoveMe}
+          onMoveFloor={handleMoveFloor}
+        />
+        <p className="mt-2 text-center text-[11px] text-slate-400">
+          🖱 自分のアイコンはドラッグで好きな場所へ移動できます ／ 他の人のアイコンをクリックすると話しかけられます（集中スペースの人は不可）
+        </p>
+
+        {/* 操作パネル & タイムライン */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <MyPanel
+              me={me}
+              now={now}
+              onSetComment={handleSetComment}
+              onSetDisplayName={handleSetDisplayName}
+              onEnterFocus={() => setShowCheckIn(true)}
+              onResume={handleResume}
+              onOpenCheckout={() => setShowCheckout(true)}
+              onDiscard={handleDiscard}
+            />
+          </div>
+          <section className="lg:col-span-3">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-800">🏆 みんなの成果タイムライン</h2>
+            <div className="space-y-3">
+              {sortedLogs.length === 0 && (
+                <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-400">
+                  まだログがありません
+                </p>
+              )}
+              {sortedLogs.map(log => (
+                <TimelineItem key={log.id} log={log} name={dispName(log.username)} me={me} onReact={handleReact} dispName={dispName} />
+              ))}
+            </div>
+          </section>
+        </div>
+      </main>
+
+      {/* モーダル・ポップオーバー・トースト */}
+      {showCheckIn && (
+        <CheckInModal onCheckIn={handleCheckIn} onCancel={() => setShowCheckIn(false)} />
+      )}
+      {showCheckout && me.status === 'resting' && (
+        <CheckoutModal
+          me={me}
+          studyMinutes={Math.max(1, Math.round(elapsedMs(me, now) / 60000))}
+          onSave={(done) => handleCheckout(done, Math.max(1, Math.round(elapsedMs(me, now) / 60000)))}
+          onCancel={() => setShowCheckout(false)}
+        />
+      )}
+      {selectedUser && (
+        <ProfilePopover
+          user={selectedUser}
+          now={now}
+          isMe={selectedUser.username === currentName}
+          onWave={() => handleWave(selectedUser.username)}
+          onClose={() => setSelected(null)}
+        />
+      )}
+      {toast && (
+        <div className="fixed inset-x-4 top-16 z-50 mx-auto max-w-sm animate-popIn rounded-2xl bg-slate-800/95 px-4 py-3 text-center text-sm font-bold text-white shadow-xl">
+          {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
