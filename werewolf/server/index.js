@@ -78,7 +78,10 @@ R.startJanitor();
 /* ---------- 流量制限 ---------- */
 const RATE_WINDOW_MS = 10_000;
 const RATE_MAX_EVENTS = 120; // 人力の操作なら10秒で120回も送らない
-const CREATE_COOLDOWN_MS = 20_000; // 同じ接続からのルーム連続作成を抑える
+// ルーム作成は「間隔」ではなく「回数」で抑える。
+// 一定秒数あけさせる方式にすると、作り直したいだけの人まで止めてしまう。
+const CREATE_WINDOW_MS = 10 * 60_000;
+const CREATE_MAX = 10;
 
 /** 1接続あたりのイベント流量を制限する。超えたら切断する。 */
 function withinRate(socket) {
@@ -132,11 +135,13 @@ io.on('connection', (socket) => {
 
   handle(socket, 'room:create', ({ name }) => {
     const now = Date.now();
-    if (socket.data.lastCreate && now - socket.data.lastCreate < CREATE_COOLDOWN_MS) {
-      throw new R.UserError('ルームの作成が続けて行われました。少し待ってください');
+    const d = socket.data;
+    if (!d.creates || now - d.creates.start > CREATE_WINDOW_MS) d.creates = { start: now, count: 0 };
+    if (d.creates.count >= CREATE_MAX) {
+      throw new R.UserError('ルームを作りすぎです。しばらくしてからお試しください');
     }
     const { room, player } = R.createRoom(name);
-    socket.data.lastCreate = now;
+    d.creates.count += 1;
     const info = bind(socket, room, player);
     console.log(`[room:create] ${room.id} by ${player.name} (rooms=${R.roomCount()})`);
     return info;

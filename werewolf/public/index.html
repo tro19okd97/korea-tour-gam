@@ -182,6 +182,12 @@ input,select{font:inherit;color:inherit}
   display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:var(--muted);
 }
 .iconbtn:active{transform:scale(.92)}
+.leavebtn{
+  flex:none;padding:5px 12px;border-radius:999px;font-size:.78rem;font-weight:700;
+  background:var(--panel2);border:1px solid var(--line);color:var(--muted);transition:.15s;
+}
+.leavebtn:active{transform:scale(.94)}
+.leavebtn.arm{background:rgba(239,94,111,.22);border-color:rgba(239,94,111,.55);color:#ff9aa6}
 #rules{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;justify-content:flex-end}
 #rules .backdrop{position:absolute;inset:0;background:rgba(4,6,16,.72);backdrop-filter:blur(4px);animation:fadein .2s ease}
 #rules .sheet{
@@ -283,6 +289,7 @@ input,select{font:inherit;color:inherit}
         <span class="roomcode" id="tbCode"></span>
         <span class="badge" id="tbPhase"></span>
         <span class="spacer"></span>
+        <button class="leavebtn" id="leaveBtn">退出</button>
         <button class="iconbtn" data-open-rules title="ルールを見る">？</button>
         <span class="timer" id="tbTimer"></span>
       </div>
@@ -540,6 +547,41 @@ $('#joinBtn').onclick = async () => {
 $('#codeInput').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
 $('#nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#createBtn').click(); });
 $('#codeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#joinBtn').click(); });
+
+/* ================================================================
+   ルームからの退出
+   ================================================================ */
+/**
+ * 誤操作でゲームから抜けてしまわないよう、2段階にする。
+ * 1回目のタップで「本当に退出？」に変わり、4秒以内にもう一度押すと実行。
+ */
+let leaveArmed = null;
+
+function resetLeaveButton() {
+  const btn = $('#leaveBtn');
+  btn.classList.remove('arm');
+  btn.textContent = '退出';
+  clearTimeout(leaveArmed);
+  leaveArmed = null;
+}
+
+$('#leaveBtn').onclick = async () => {
+  const btn = $('#leaveBtn');
+  if (!leaveArmed) {
+    btn.classList.add('arm');
+    btn.textContent = S && S.room.phase === 'lobby' ? '本当に退出？' : '途中で抜けます';
+    leaveArmed = setTimeout(resetLeaveButton, 4000);
+    return;
+  }
+  resetLeaveButton();
+  await emit('room:leave');
+  clearSession();
+  // 招待リンクから来ていた場合、リロードで同じ部屋に戻らないようURLも戻す
+  history.replaceState(null, '', location.pathname);
+  $('#codeInput').value = '';
+  showEntry();
+  toast('ルームを出ました');
+};
 
 /* ================================================================
    ルール説明シート
