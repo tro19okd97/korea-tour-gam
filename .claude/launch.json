@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "werewolf",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["werewolf/server/index.js"],
+      "port": 3000
+    }
+  ]
+}

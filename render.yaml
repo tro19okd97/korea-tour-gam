@@ -1,0 +1,20 @@
+# Render Blueprint
+# リポジトリのルートに werewolf/ が入っている構成を前提にしています。
+# Render のダッシュボードで「New +」→「Blueprint」からこのリポジトリを選ぶと、
+# この定義がそのまま読み込まれます。
+services:
+  - type: web
+    name: werewolf-online
+    runtime: node
+    plan: free
+    region: singapore # 日本から一番近い無料リージョン
+    rootDir: werewolf
+    buildCommand: npm ci --omit=dev
+    startCommand: node server/index.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MAX_ROOMS
+        value: "300"

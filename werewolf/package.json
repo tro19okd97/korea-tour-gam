@@ -1,0 +1,21 @@
+{
+  "name": "werewolf-online",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GM不要のオンライン人狼ゲーム（サーバー権威型 / Socket.IO）",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

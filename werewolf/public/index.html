@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1020">
+<title>人狼オンライン</title>
+<style>
+:root{
+  --bg:#0d1020; --bg2:#151a30; --panel:rgba(255,255,255,.05); --panel2:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.12); --text:#eef1f8; --muted:#9aa3bd;
+  --accent:#7c6cf0; --accent2:#a08cff; --danger:#ef5e6f; --safe:#3fc9a0; --warn:#f5b545;
+  --wolf:#e2544f; --village:#4fa8e2;
+  --radius:16px;
+  --sat:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1; transition:background 1.2s ease;
+  background:radial-gradient(1200px 700px at 50% -10%, #23294a 0%, #0d1020 60%, #07091a 100%);
+}
+body[data-phase="discussion"]::before,body[data-phase="vote"]::before,body[data-phase="morning"]::before{
+  background:radial-gradient(1200px 700px at 50% -10%, #2f3a5e 0%, #182038 60%, #0b0f22 100%);
+}
+body[data-phase="night"]::before{
+  background:radial-gradient(1000px 600px at 50% -20%, #1b1f3d 0%, #0a0c1c 55%, #05060f 100%);
+}
+body[data-phase="gameOver"]::before{
+  background:radial-gradient(1100px 700px at 50% -10%, #3a2a4e 0%, #171029 60%, #0a0714 100%);
+}
+
+.wrap{max-width:820px;margin:0 auto;padding:calc(12px + var(--sat)) 14px 90px}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:.02em}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+input,select{font:inherit;color:inherit}
+
+/* ---------- 共通パーツ ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;backdrop-filter:blur(8px)}
+.card + .card{margin-top:12px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 20px;border-radius:12px;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  transition:transform .12s ease,filter .12s ease,opacity .12s;
+  box-shadow:0 6px 20px rgba(124,108,240,.28);
+}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:var(--panel2);box-shadow:none;border:1px solid var(--line)}
+.btn.danger{background:linear-gradient(135deg,#e2544f,#f0786f);box-shadow:0 6px 20px rgba(226,84,79,.28)}
+.btn.full{width:100%}
+.btn.sm{padding:8px 14px;font-size:.85rem;border-radius:10px}
+.field{width:100%;padding:13px 15px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--line);outline:none}
+.field:focus{border-color:var(--accent2)}
+.muted{color:var(--muted);font-size:.85rem}
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.spacer{flex:1}
+.center{text-align:center}
+
+/* ---------- 入口 ---------- */
+#entry{min-height:calc(100vh - 40px);display:flex;flex-direction:column;justify-content:center;gap:18px}
+.logo{text-align:center;margin-bottom:6px}
+.logo .moon{font-size:56px;line-height:1;filter:drop-shadow(0 0 24px rgba(160,140,255,.5))}
+.logo h1{font-size:1.9rem;margin-top:6px}
+.logo p{margin:4px 0 0;color:var(--muted);font-size:.88rem}
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.8rem}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- ヘッダー ---------- */
+.topbar{
+  position:sticky;top:0;z-index:20;margin:calc(-12px - var(--sat)) -14px 12px;
+  padding:calc(10px + var(--sat)) 14px 10px;
+  background:rgba(9,12,26,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+}
+.topbar .line1{display:flex;align-items:center;gap:10px}
+.roomcode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;letter-spacing:.12em;font-size:.95rem}
+.badge{padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;background:var(--panel2);border:1px solid var(--line)}
+.badge.night{background:rgba(124,108,240,.22);border-color:rgba(160,140,255,.4)}
+.badge.day{background:rgba(245,181,69,.2);border-color:rgba(245,181,69,.4)}
+.badge.vote{background:rgba(239,94,111,.2);border-color:rgba(239,94,111,.4)}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.05rem}
+.timer.urgent{color:var(--danger);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.progressbar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:8px;overflow:hidden}
+.progressbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s linear}
+
+/* ---------- プレイヤーグリッド ---------- */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.pcard{
+  position:relative;padding:12px;border-radius:14px;text-align:left;
+  background:var(--panel);border:1px solid var(--line);transition:.15s;
+}
+.pcard.selectable{cursor:pointer}
+.pcard.selectable:active{transform:scale(.97)}
+.pcard.selected{border-color:var(--accent2);background:rgba(124,108,240,.2);box-shadow:0 0 0 2px rgba(160,140,255,.35) inset}
+.pcard.dead{opacity:.42;filter:grayscale(.7)}
+.pcard.me{border-color:rgba(255,255,255,.35)}
+.pcard .pname{font-weight:700;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard .pmeta{font-size:.72rem;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pcard .tag{padding:1px 7px;border-radius:999px;font-size:.68rem;font-weight:700;border:1px solid var(--line)}
+.tag.host{background:rgba(245,181,69,.18);border-color:rgba(245,181,69,.4);color:#f7c76a}
+.tag.wolf{background:rgba(226,84,79,.2);border-color:rgba(226,84,79,.45);color:#ff9b96}
+.tag.role{background:rgba(255,255,255,.1)}
+.tag.voted{background:rgba(63,201,160,.18);border-color:rgba(63,201,160,.4);color:#7ce0c2}
+.tag.off{background:rgba(255,255,255,.06);color:var(--muted)}
+.tag.bot{background:rgba(63,201,160,.14);border-color:rgba(63,201,160,.35);color:#7ce0c2}
+.pcard.bot{border-style:dashed}
+.pcard .votecount{
+  position:absolute;top:8px;right:8px;min-width:22px;height:22px;border-radius:11px;
+  background:var(--danger);color:#fff;font-size:.72rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;padding:0 6px;
+}
+
+/* ---------- 役職カード ---------- */
+.rolecard{
+  text-align:center;padding:28px 20px;border-radius:20px;
+  background:linear-gradient(160deg,rgba(124,108,240,.28),rgba(255,255,255,.04));
+  border:1px solid rgba(160,140,255,.35);
+}
+.rolecard.wolf{background:linear-gradient(160deg,rgba(226,84,79,.3),rgba(255,255,255,.04));border-color:rgba(226,84,79,.45)}
+.rolecard .emoji{font-size:64px;line-height:1;filter:drop-shadow(0 6px 20px rgba(0,0,0,.5))}
+.rolecard .rname{font-size:1.7rem;font-weight:800;margin-top:8px}
+.rolecard .team{font-size:.78rem;color:var(--muted);letter-spacing:.1em}
+.rolecard .rdesc{margin-top:12px;font-size:.9rem;color:#d6dbeb;text-align:left;background:rgba(0,0,0,.22);padding:12px 14px;border-radius:12px}
+
+/* ---------- アナウンス・ログ ---------- */
+.announce{padding:18px;border-radius:16px;text-align:center;font-size:1.05rem;font-weight:700;line-height:1.7}
+.announce.death{background:rgba(239,94,111,.16);border:1px solid rgba(239,94,111,.4)}
+.announce.safe{background:rgba(63,201,160,.14);border:1px solid rgba(63,201,160,.35)}
+.announce.night{background:rgba(124,108,240,.16);border:1px solid rgba(160,140,255,.35)}
+.announce.result{background:rgba(245,181,69,.16);border:1px solid rgba(245,181,69,.4)}
+.loglist{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
+.logitem{font-size:.85rem;padding:9px 12px;border-radius:10px;background:rgba(0,0,0,.22);border-left:3px solid var(--line)}
+.logitem.wolf{border-left-color:var(--wolf)}
+.logitem.human{border-left-color:var(--village)}
+.logitem .lday{color:var(--muted);font-size:.72rem;margin-right:6px}
+.feed{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;font-size:.85rem;color:#c9d0e4}
+.feed div{padding:6px 10px;border-radius:8px;background:rgba(0,0,0,.18)}
+
+/* ---------- 構成エディタ ---------- */
+.comprow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.comprow:last-child{border-bottom:none}
+.comprow .cname{flex:1;font-size:.92rem}
+.comprow .cemoji{width:26px;text-align:center;font-size:1.1rem}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:32px;height:32px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);font-weight:800;display:flex;align-items:center;justify-content:center}
+.stepper button:disabled{opacity:.3}
+.stepper .val{min-width:26px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.total{display:flex;justify-content:space-between;font-weight:700;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.total.bad{color:var(--danger)}
+.settingrow{display:flex;align-items:center;gap:10px;padding:7px 0}
+.settingrow label{flex:1;font-size:.9rem}
+.settingrow select{padding:7px 10px;border-radius:9px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+.switch{width:46px;height:27px;border-radius:14px;background:rgba(255,255,255,.14);position:relative;transition:.2s;flex:none}
+.switch.on{background:var(--accent)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:.2s}
+.switch.on::after{transform:translateX(19px)}
+
+/* ---------- 結果 ---------- */
+.winner{text-align:center;padding:26px 18px;border-radius:20px}
+.winner.village{background:linear-gradient(160deg,rgba(79,168,226,.3),rgba(255,255,255,.04));border:1px solid rgba(79,168,226,.45)}
+.winner.wolf{background:linear-gradient(160deg,rgba(226,84,79,.3),rgba(255,255,255,.04));border:1px solid rgba(226,84,79,.45)}
+.winner .big{font-size:1.8rem;font-weight:800}
+.winner .youwin{margin-top:10px;display:inline-block;padding:6px 16px;border-radius:999px;font-weight:800;background:rgba(255,255,255,.16)}
+
+/* ---------- 招待 ---------- */
+.invite{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.invite code{flex:1;font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- トースト ---------- */
+/* ---------- ルール説明シート ---------- */
+.iconbtn{
+  width:28px;height:28px;border-radius:50%;flex:none;
+  background:var(--panel2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:var(--muted);
+}
+.iconbtn:active{transform:scale(.92)}
+#rules{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;justify-content:flex-end}
+#rules .backdrop{position:absolute;inset:0;background:rgba(4,6,16,.72);backdrop-filter:blur(4px);animation:fadein .2s ease}
+#rules .sheet{
+  position:relative;max-height:88vh;max-width:820px;width:100%;margin:0 auto;
+  background:linear-gradient(180deg,#171d33,#101426);border:1px solid var(--line);border-bottom:none;
+  border-radius:22px 22px 0 0;display:flex;flex-direction:column;
+  box-shadow:0 -20px 60px rgba(0,0,0,.55);animation:slideup .28s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes fadein{from{opacity:0}}
+@keyframes slideup{from{transform:translateY(40px);opacity:.4}}
+#rules .sheethead{
+  display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--line);
+}
+#rules .sheethead h2{font-size:1.05rem}
+#rules .close{width:32px;height:32px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1rem}
+#rules .body{overflow-y:auto;padding:16px 18px calc(24px + env(safe-area-inset-bottom,0px));-webkit-overflow-scrolling:touch}
+.rsec{margin-bottom:22px}
+.rsec:last-child{margin-bottom:0}
+.rsec > h3{font-size:.98rem;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.rsec p{margin:0 0 8px;font-size:.88rem;color:#cfd6ea}
+.rsec p:last-child{margin-bottom:0}
+.rlead{background:rgba(124,108,240,.14);border:1px solid rgba(160,140,255,.3);border-radius:14px;padding:14px 16px}
+.rlead strong{color:#c8bcff}
+.wincards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.wincards{grid-template-columns:1fr}}
+.wincard{border-radius:14px;padding:12px 14px;font-size:.85rem;line-height:1.6}
+.wincard.village{background:rgba(79,168,226,.14);border:1px solid rgba(79,168,226,.35)}
+.wincard.wolf{background:rgba(226,84,79,.14);border:1px solid rgba(226,84,79,.35)}
+.wincard > b:first-child{display:block;font-size:.95rem;margin-bottom:3px}
+.wincard.village > b:first-child{color:#96cdf2}
+.wincard.wolf > b:first-child{color:#ff9b96}
+.flow{position:relative;padding-left:26px}
+.flow::before{content:"";position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--accent),rgba(124,108,240,.15))}
+.fstep{position:relative;padding:0 0 14px}
+.fstep:last-child{padding-bottom:0}
+.fstep::before{
+  content:"";position:absolute;left:-22px;top:5px;width:10px;height:10px;border-radius:50%;
+  background:var(--accent2);box-shadow:0 0 0 3px rgba(124,108,240,.2);
+}
+.fstep b{font-size:.9rem}
+.fstep span{display:block;font-size:.82rem;color:var(--muted);line-height:1.6}
+.rrole{display:flex;gap:11px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.rrole:last-child{border-bottom:none}
+.rrole .rr-emoji{font-size:1.35rem;width:28px;text-align:center;flex:none;line-height:1.4}
+.rrole .rr-name{font-weight:700;font-size:.92rem;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.rrole .rr-desc{font-size:.82rem;color:var(--muted);line-height:1.6;margin-top:2px}
+.teamtag{padding:1px 8px;border-radius:999px;font-size:.68rem;font-weight:700;border:1px solid var(--line)}
+.teamtag.village{background:rgba(79,168,226,.18);border-color:rgba(79,168,226,.4);color:#96cdf2}
+.teamtag.wolf{background:rgba(226,84,79,.18);border-color:rgba(226,84,79,.4);color:#ff9b96}
+.rlist{margin:0;padding-left:1.1em;font-size:.85rem;color:#cfd6ea;line-height:1.9}
+.rlist li{margin-bottom:2px}
+.rlist b{color:var(--text)}
+.rnote{font-size:.8rem;color:var(--muted);background:rgba(0,0,0,.24);border-radius:10px;padding:10px 12px;line-height:1.7}
+
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:100;opacity:0;transition:.25s;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast .t{background:#242a45;border:1px solid var(--line);padding:11px 18px;border-radius:12px;font-size:.88rem;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#toast.err .t{background:#4a2030;border-color:rgba(239,94,111,.5)}
+
+.sticky-action{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,rgba(9,12,26,.96),rgba(9,12,26,.7),transparent);
+}
+.sticky-action .inner{max-width:820px;margin:0 auto}
+.hidden{display:none !important}
+.fade{animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+</style>
+</head>
+<body data-phase="entry">
+<div class="wrap">
+  <!-- ===================== 入口 ===================== -->
+  <div id="entry">
+    <div class="logo">
+      <div class="moon">🌕</div>
+      <h1>人狼オンライン</h1>
+      <p>GM不要・自動進行 / 4〜16人</p>
+    </div>
+    <div class="card">
+      <label class="muted" for="nameInput">あなたの名前</label>
+      <input id="nameInput" class="field" style="margin-top:6px" maxlength="12" placeholder="ニックネーム" autocomplete="nickname">
+      <button id="createBtn" class="btn full" style="margin-top:14px">ルームを作る</button>
+      <div class="divider" style="margin:16px 0">または</div>
+      <div class="row">
+        <input id="codeInput" class="field" style="flex:1;text-transform:uppercase;letter-spacing:.15em;font-family:ui-monospace,monospace" maxlength="6" placeholder="ルームID">
+        <button id="joinBtn" class="btn ghost">参加</button>
+      </div>
+    </div>
+    <button class="btn ghost full" data-open-rules>📖 ルールと遊び方</button>
+    <p class="muted center" style="font-size:.78rem;line-height:1.8">
+      議論は Discord などの通話でどうぞ。<br>このアプリは役職の秘匿・時間管理・投票集計を担当します。
+    </p>
+  </div>
+
+  <!-- ===================== ゲーム ===================== -->
+  <div id="game" class="hidden">
+    <div class="topbar">
+      <div class="line1">
+        <span class="roomcode" id="tbCode"></span>
+        <span class="badge" id="tbPhase"></span>
+        <span class="spacer"></span>
+        <button class="iconbtn" data-open-rules title="ルールを見る">？</button>
+        <span class="timer" id="tbTimer"></span>
+      </div>
+      <div class="progressbar" id="tbProgress" style="display:none"><i style="width:0%"></i></div>
+    </div>
+    <div id="panel"></div>
+  </div>
+</div>
+
+<!-- ===================== ルール説明 ===================== -->
+<div id="rules" class="hidden">
+  <div class="backdrop" data-close-rules></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="ルールと遊び方">
+    <div class="sheethead">
+      <h2>📖 ルールと遊び方</h2>
+      <span class="spacer"></span>
+      <button class="close" data-close-rules aria-label="閉じる">✕</button>
+    </div>
+    <div class="body">
+
+      <div class="rsec">
+        <div class="rlead">
+          <p>参加者の中に隠れている <strong>人狼</strong> を、<strong>議論と投票</strong> で見つけ出すゲームです。</p>
+          <p>あなたの役職はあなたにしか見えません。人狼になったら、正体を隠して村人のフリをしてください。</p>
+        </div>
+      </div>
+
+      <div class="rsec">
+        <h3>🏆 勝利条件</h3>
+        <div class="wincards">
+          <div class="wincard village">
+            <b>村人陣営の勝ち</b>
+            人狼を全員処刑して、生存する人狼が<b>0人</b>になったとき。
+          </div>
+          <div class="wincard wolf">
+            <b>人狼陣営の勝ち</b>
+            生き残った人狼の数が、人狼以外の生存者と<b>同数以上</b>になったとき。
+          </div>
+        </div>
+        <p class="rnote" style="margin-top:10px">勝敗は「夜の襲撃のあと」と「昼の処刑のあと」に毎回チェックされます。決着がつかなければ次の夜へ進みます。</p>
+      </div>
+
+      <div class="rsec">
+        <h3>🔄 1日の流れ</h3>
+        <div class="flow">
+          <div class="fstep">
+            <b>🌙 夜（アクション）</b>
+            <span>役職ごとの能力を使います。占い師は1人を占って結果をその場で受け取り、騎士は誰かを護衛し、人狼は襲撃先を選びます。能力のない人は待つだけです。全員の行動が終わるか制限時間で朝になります。</span>
+          </div>
+          <div class="fstep">
+            <b>☀️ 朝（結果発表）</b>
+            <span>襲撃されたプレイヤーが発表され、ゲームから外れます。騎士の護衛が成功していれば「犠牲者は出ませんでした」と表示されます。</span>
+          </div>
+          <div class="fstep">
+            <b>💬 議論</b>
+            <span>誰が人狼かを話し合います。占い師や霊媒師は結果を公表するか、黙っておくかを自分で決めます。生存者が減るほど議論時間は自動的に短くなります。</span>
+          </div>
+          <div class="fstep">
+            <b>🗳️ 投票 → 処刑</b>
+            <span>処刑したい人を1人選びます。最多票の人が処刑され、投票の内訳が全員に公開されます。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rsec">
+        <h3>🎭 役職</h3>
+        <div id="rulesRoles"></div>
+      </div>
+
+      <div class="rsec">
+        <h3>🤖 人数が足りないとき（CPU）</h3>
+        <p>ホストがロビーで <b>CPU</b> を追加できます。CPUは<b>市民として頭数に加わるだけ</b>の存在で、議論には参加しません。</p>
+        <p class="rnote">
+          人狼の勝敗は生存者の頭数で決まります。たとえば<b>3人しか集まらないとき</b>にCPUを2体入れて5人にすると、人狼・占い師・狂人といった役職はすべて人間3人が持ち、CPUは市民として人狼陣営の勝利ラインを押し上げる駒になります。本来4人以上必要なところを、3人でも駆け引きが成立させられます。
+        </p>
+        <ul class="rlist" style="margin-top:8px">
+          <li>CPUは<b>必ず市民</b>です。誰がCPUかは全員に見えているので、占う必要も疑う必要もありません</li>
+          <li>夜は何もしません。投票にはランダムで参加します（ホスト設定で棄権にもできます）</li>
+          <li>CPUはホストになれません。人間が最低1人必要です</li>
+        </ul>
+      </div>
+
+      <div class="rsec">
+        <h3>📌 細かいルール</h3>
+        <ul class="rlist">
+          <li><b>同票のとき</b>：最多票が並んだ場合、その中から<b>ランダムに1人</b>が処刑されます。</li>
+          <li><b>棄権</b>：時間内に投票しなければ棄権です。全員が棄権した日は誰も処刑されません。</li>
+          <li><b>人狼が複数いるとき</b>：襲撃先は人狼全員の多数決です。誰の希望が何票入っているかは人狼同士だけに見えます。同数や無投票のときはランダムに決まります。</li>
+          <li><b>狂人</b>：占っても「人間」と出ます。人数としては人間側に数えますが、人狼陣営が勝てば狂人の勝ちです。人狼が誰かは分かりません。</li>
+          <li><b>騎士</b>：自分自身は護衛できません。誰を守ったかは本人にしか分かりません。</li>
+          <li><b>霊媒師</b>：前日に処刑された人の正体が、夜になると自動的に届きます（処刑がなかった日は何も届きません）。</li>
+          <li><b>死亡したら</b>：発言も投票もできません。そのまま観戦してください。</li>
+          <li><b>初日の襲撃</b>：ホストの設定でON／OFFを切り替えられます。</li>
+        </ul>
+      </div>
+
+      <div class="rsec">
+        <h3>🕹️ このアプリの使い方</h3>
+        <ul class="rlist">
+          <li>ホストがルームを作り、表示されたURLを全員に共有します。4〜16人で遊べます。</li>
+          <li>役職の構成はホストが決めます。人数を選べば<b>推奨構成</b>が自動で入ります。</li>
+          <li>進行役（GM）は不要です。役職配布・時間管理・集計・勝敗判定はすべて自動です。</li>
+          <li>議論は Discord などの通話で行ってください。アプリ内にチャットはありません。</li>
+          <li>ホストは各フェーズを手動でスキップできます。全員の準備が早く終わったときに使ってください。</li>
+          <li>ページをリロードしても、同じプレイヤーとしてそのまま復帰します。</li>
+        </ul>
+      </div>
+
+      <div class="rsec">
+        <h3>💡 はじめての人へ</h3>
+        <p class="rnote">
+          迷ったら「自分は市民です」と正直に話すところから始めて大丈夫です。<br>
+          占い師は結果を早めに出すと人狼に狙われますが、黙っていると村が不利になります。いつ名乗るかがこのゲームの一番の悩みどころです。
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="sticky-action hidden" id="stickyAction"><div class="inner" id="stickyInner"></div></div>
+<div id="toast"><div class="t"></div></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+/* ================================================================
+   状態
+   ================================================================ */
+const socket = io({ transports: ['websocket', 'polling'] });
+
+let META = { roles: {}, roleOrder: [] };
+let S = null;              // サーバーから届く「自分専用ビュー」
+let clockOffset = 0;       // serverNow - Date.now()
+let session = loadSession();
+let lastPhaseKey = '';
+let soundOn = true;
+
+const $ = (sel) => document.querySelector(sel);
+const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem('werewolf.session') || 'null'); } catch { return null; }
+}
+function saveSession(s) {
+  session = s;
+  localStorage.setItem('werewolf.session', JSON.stringify(s));
+}
+function clearSession() {
+  session = null;
+  localStorage.removeItem('werewolf.session');
+}
+
+function toast(msg, isError) {
+  const t = $('#toast');
+  t.querySelector('.t').textContent = msg;
+  t.classList.toggle('err', !!isError);
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/** ack を Promise で受ける */
+function emit(event, payload) {
+  return new Promise((resolve) => {
+    socket.emit(event, payload || {}, (res) => {
+      if (res && res.ok === false) { toast(res.error, true); resolve(null); }
+      else resolve(res || {});
+    });
+  });
+}
+
+/* ================================================================
+   効果音（アセット不要の簡易チャイム）
+   ================================================================ */
+let audioCtx = null;
+function chime(kind) {
+  if (!soundOn) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const notes = { night: [392, 294], day: [523, 659], vote: [440, 440], death: [220, 165], result: [523, 659, 784] }[kind] || [440];
+    notes.forEach((freq, i) => {
+      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      const t0 = audioCtx.currentTime + i * 0.16;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.13, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t0); o.stop(t0 + 0.55);
+    });
+  } catch { /* 音が出なくてもゲームは進む */ }
+}
+
+/* ================================================================
+   接続
+   ================================================================ */
+socket.on('meta', (m) => { META = m; });
+
+socket.on('state', (view) => {
+  clockOffset = view.serverNow - Date.now();
+  S = view;
+  render();
+});
+
+socket.on('error:toast', (msg) => toast(msg, true));
+
+socket.on('connect', async () => {
+  const roomFromUrl = new URLSearchParams(location.search).get('r') || (location.pathname.match(/^\/r\/([A-Za-z0-9]+)/) || [])[1];
+  if (session && (!roomFromUrl || session.roomId === roomFromUrl.toUpperCase())) {
+    const res = await emit('room:reconnect', session);
+    if (res && res.ok) return;
+    clearSession();
+  }
+  if (roomFromUrl) $('#codeInput').value = roomFromUrl.toUpperCase();
+  showEntry();
+});
+
+socket.on('disconnect', () => toast('接続が切れました。再接続しています…', true));
+
+/* ================================================================
+   入口の操作
+   ================================================================ */
+function showEntry() {
+  S = null;
+  document.body.dataset.phase = 'entry';
+  $('#entry').classList.remove('hidden');
+  $('#game').classList.add('hidden');
+  $('#stickyAction').classList.add('hidden');
+  const saved = localStorage.getItem('werewolf.name');
+  if (saved && !$('#nameInput').value) $('#nameInput').value = saved;
+}
+
+function currentName() {
+  const name = $('#nameInput').value.trim();
+  if (!name) { toast('名前を入力してください', true); $('#nameInput').focus(); return null; }
+  localStorage.setItem('werewolf.name', name);
+  return name;
+}
+
+$('#createBtn').onclick = async () => {
+  const name = currentName(); if (!name) return;
+  const res = await emit('room:create', { name });
+  if (res && res.ok) { saveSession({ roomId: res.roomId, playerId: res.playerId, token: res.token }); }
+};
+
+$('#joinBtn').onclick = async () => {
+  const name = currentName(); if (!name) return;
+  const roomId = $('#codeInput').value.trim().toUpperCase();
+  if (!roomId) { toast('ルームIDを入力してください', true); return; }
+  const res = await emit('room:join', { roomId, name });
+  if (res && res.ok) { saveSession({ roomId: res.roomId, playerId: res.playerId, token: res.token }); }
+};
+
+$('#codeInput').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
+$('#nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#createBtn').click(); });
+$('#codeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#joinBtn').click(); });
+
+/* ================================================================
+   ルール説明シート
+   ================================================================ */
+const TEAM_LABEL = { village: '村人陣営', wolf: '人狼陣営' };
+
+/** 役職一覧はサーバーが配る定義から作る（説明文が二重管理にならないように） */
+function buildRulesRoles() {
+  const box = $('#rulesRoles');
+  const order = META.roleOrder || [];
+  if (!order.length) {
+    box.innerHTML = '<p class="rnote">役職の一覧を読み込んでいます…</p>';
+    return;
+  }
+  box.innerHTML = order.map((key) => {
+    const r = META.roles[key];
+    const night = r.night ? '<span class="teamtag">夜に行動あり</span>' : '';
+    return `<div class="rrole">
+      <div class="rr-emoji">${r.emoji}</div>
+      <div>
+        <div class="rr-name">${esc(r.name)}
+          <span class="teamtag ${r.team}">${TEAM_LABEL[r.team]}</span>${night}</div>
+        <div class="rr-desc">${esc(r.desc)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRules() {
+  buildRulesRoles();
+  $('#rules').classList.remove('hidden');
+  $('#rules .body').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function closeRules() {
+  $('#rules').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-open-rules]')) openRules();
+  else if (e.target.closest('[data-close-rules]')) closeRules();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#rules').classList.contains('hidden')) closeRules();
+});
+
+/* ================================================================
+   タイマー表示
+   ================================================================ */
+const PHASE_LABEL = {
+  lobby: '待機中', roleReveal: '役職確認', night: '夜', morning: '朝',
+  discussion: '議論', vote: '投票', execution: '処刑', gameOver: '終了',
+};
+const PHASE_STYLE = { night: 'night', morning: 'day', discussion: 'day', vote: 'vote', execution: 'vote' };
+
+function remainingMs() {
+  if (!S || !S.room.phaseEndsAt) return null;
+  return Math.max(0, S.room.phaseEndsAt - (Date.now() + clockOffset));
+}
+
+function fmtTime(ms) {
+  const total = Math.ceil(ms / 1000);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+setInterval(() => {
+  if (!S) return;
+  const ms = remainingMs();
+  const t = $('#tbTimer');
+  if (ms === null) { t.textContent = ''; t.classList.remove('urgent'); $('#tbProgress').style.display = 'none'; return; }
+  t.textContent = fmtTime(ms);
+  t.classList.toggle('urgent', ms < 15000);
+  const bar = $('#tbProgress');
+  bar.style.display = 'block';
+  const total = phaseTotalSeconds() * 1000;
+  bar.querySelector('i').style.width = total ? `${Math.max(0, Math.min(100, (ms / total) * 100))}%` : '0%';
+}, 250);
+
+function phaseTotalSeconds() {
+  if (!S) return 0;
+  const c = S.room.config;
+  return { night: c.nightSeconds, vote: c.voteSeconds, discussion: c.discussionSeconds, roleReveal: 180, morning: 8, execution: 8 }[S.room.phase] || 0;
+}
+
+/* ================================================================
+   描画
+   ================================================================ */
+function render() {
+  if (!S || !S.me) { showEntry(); return; }
+  $('#entry').classList.add('hidden');
+  $('#game').classList.remove('hidden');
+  document.body.dataset.phase = S.room.phase;
+
+  $('#tbCode').textContent = S.room.id;
+  const badge = $('#tbPhase');
+  badge.textContent = (S.room.day ? `${S.room.day}日目 ` : '') + PHASE_LABEL[S.room.phase];
+  badge.className = 'badge ' + (PHASE_STYLE[S.room.phase] || '');
+
+  const key = `${S.room.phase}:${S.room.day}`;
+  if (key !== lastPhaseKey) {
+    lastPhaseKey = key;
+    const k = { night: 'night', morning: 'day', discussion: 'day', vote: 'vote', execution: 'vote', gameOver: 'result' }[S.room.phase];
+    if (k) chime(k);
+  }
+
+  const panel = $('#panel');
+  panel.innerHTML = '';
+  panel.classList.add('fade');
+  setTimeout(() => panel.classList.remove('fade'), 400);
+
+  const sticky = $('#stickyInner');
+  sticky.innerHTML = '';
+  $('#stickyAction').classList.add('hidden');
+
+  ({
+    lobby: renderLobby, roleReveal: renderRoleReveal, night: renderNight,
+    morning: renderAnnouncePhase, discussion: renderDiscussion, vote: renderVote,
+    execution: renderAnnouncePhase, gameOver: renderGameOver,
+  }[S.room.phase] || renderLobby)(panel, sticky);
+}
+
+function setSticky(node) {
+  $('#stickyInner').appendChild(node);
+  $('#stickyAction').classList.remove('hidden');
+}
+
+/* ---------------- プレイヤーグリッド ---------------- */
+/**
+ * @param opts {{selectable?:(p)=>boolean, selectedId?:string, onSelect?:(p)=>void,
+ *               counts?:Record<string,number>, showRole?:boolean, extraTag?:(p)=>string}}
+ */
+function playerGrid(opts = {}) {
+  const grid = el('div', 'pgrid');
+  for (const p of S.players) {
+    const canSelect = opts.selectable ? opts.selectable(p) : false;
+    const card = el(canSelect ? 'button' : 'div', 'pcard' + (canSelect ? ' selectable' : '') + (p.isMe ? ' me' : '') + (p.isBot ? ' bot' : '') + (!p.alive && S.room.phase !== 'lobby' ? ' dead' : '') + (opts.selectedId === p.id ? ' selected' : ''));
+
+    const name = el('div', 'pname', esc(p.name) + (p.isMe ? ' <span class="muted">(あなた)</span>' : ''));
+    card.appendChild(name);
+
+    const meta = el('div', 'pmeta');
+    if (p.isHost) meta.appendChild(el('span', 'tag host', 'ホスト'));
+    if (p.isBot) meta.appendChild(el('span', 'tag bot', '🤖 CPU'));
+    if (!p.connected && !p.isBot) meta.appendChild(el('span', 'tag off', '切断中'));
+    if (S.room.phase !== 'lobby' && !p.alive) {
+      meta.appendChild(el('span', 'tag', p.status === 'executed' ? '処刑' : '襲撃死'));
+    }
+    if (p.role && (opts.showRole !== false)) {
+      const info = META.roles[p.role] || { name: p.role, emoji: '' };
+      meta.appendChild(el('span', 'tag role' + (info.team === 'wolf' ? ' wolf' : ''), `${info.emoji} ${esc(info.name)}`));
+    }
+    if (p.hasVoted) meta.appendChild(el('span', 'tag voted', '投票済み'));
+    if (opts.extraTag) { const t = opts.extraTag(p); if (t) meta.appendChild(el('span', 'tag', t)); }
+    if (meta.childNodes.length) card.appendChild(meta);
+
+    if (opts.counts && opts.counts[p.id]) card.appendChild(el('div', 'votecount', String(opts.counts[p.id])));
+
+    if (canSelect) card.onclick = () => opts.onSelect(p);
+    grid.appendChild(card);
+  }
+  return grid;
+}
+
+/* ---------------- ロビー ---------------- */
+function renderLobby(panel, sticky) {
+  const isHost = S.me.isHost;
+
+  const inviteCard = el('div', 'card');
+  const humans = S.room.playerCount - (S.botCount || 0);
+  const head0 = el('div', 'row');
+  head0.appendChild(el('h3', null, `参加者 ${S.room.playerCount}人` + (S.botCount ? ` <span class="muted" style="font-size:.8rem;font-weight:400">（人間${humans} + CPU${S.botCount}）</span>` : '')));
+  inviteCard.appendChild(head0);
+  inviteCard.appendChild(el('p', 'muted', 'このリンクを共有すると参加できます'));
+  const url = `${location.origin}/?r=${S.room.id}`;
+  const invite = el('div', 'invite');
+  invite.appendChild(el('code', null, esc(url)));
+  const copyBtn = el('button', 'btn sm ghost', 'コピー');
+  copyBtn.onclick = async () => {
+    try { await navigator.clipboard.writeText(url); toast('リンクをコピーしました'); }
+    catch { toast('コピーできませんでした。手動で選択してください', true); }
+  };
+  invite.appendChild(copyBtn);
+  inviteCard.appendChild(invite);
+  inviteCard.appendChild(el('div', null, '')).style.height = '10px';
+  inviteCard.appendChild(playerGrid({ showRole: false }));
+
+  if (isHost) {
+    const botRow = el('div', 'row wrap');
+    botRow.style.marginTop = '12px';
+    const add = el('button', 'btn sm ghost', '🤖 CPUを追加');
+    add.disabled = S.room.playerCount >= S.room.maxPlayers;
+    add.onclick = () => emit('bot:add');
+    botRow.appendChild(add);
+    if (S.botCount) {
+      const rm = el('button', 'btn sm ghost', 'CPUを減らす');
+      rm.onclick = () => emit('bot:remove', {});
+      botRow.appendChild(rm);
+    }
+    inviteCard.appendChild(botRow);
+    inviteCard.appendChild(el('p', 'muted', '人数が足りないときの頭数合わせです。CPUは議論に参加しません。'));
+  }
+  panel.appendChild(inviteCard);
+
+  // --- 役職構成 ---
+  const compCard = el('div', 'card');
+  const head = el('div', 'row');
+  head.appendChild(el('h3', null, '役職構成'));
+  head.appendChild(el('span', 'spacer'));
+  if (isHost) {
+    const sug = el('button', 'btn sm ghost', '推奨構成');
+    sug.onclick = () => emit('config:suggest');
+    head.appendChild(sug);
+  }
+  compCard.appendChild(head);
+
+  const counts = S.room.config.roleCounts;
+  let total = 0;
+  for (const key of META.roleOrder || []) {
+    const info = META.roles[key];
+    const n = counts[key] || 0;
+    total += n;
+    const row = el('div', 'comprow');
+    row.appendChild(el('div', 'cemoji', info.emoji));
+    row.appendChild(el('div', 'cname', `${esc(info.name)}<div class="muted" style="font-size:.72rem;line-height:1.4">${esc(info.desc)}</div>`));
+    if (isHost) {
+      const st = el('div', 'stepper');
+      const minus = el('button', null, '−'); minus.disabled = n <= 0;
+      const plus = el('button', null, '＋');
+      minus.onclick = () => changeCount(key, -1);
+      plus.onclick = () => changeCount(key, +1);
+      st.appendChild(minus); st.appendChild(el('span', 'val', String(n))); st.appendChild(plus);
+      row.appendChild(st);
+    } else {
+      row.appendChild(el('div', 'val', `${n}人`));
+    }
+    compCard.appendChild(row);
+  }
+  const bad = total !== S.room.playerCount;
+  const tot = el('div', 'total' + (bad ? ' bad' : ''));
+  tot.appendChild(el('span', null, '役職の合計'));
+  tot.appendChild(el('span', null, `${total}人 <span class="muted">/ 参加者 ${S.room.playerCount}人</span>`));
+  compCard.appendChild(tot);
+  if (S.compositionError) compCard.appendChild(el('p', 'muted', `⚠️ ${esc(S.compositionError)}`)).style.color = 'var(--danger)';
+  panel.appendChild(compCard);
+
+  // --- 時間設定 ---
+  const setCard = el('div', 'card');
+  setCard.appendChild(el('h3', null, '進行設定'));
+  const timeOpts = [
+    ['nightSeconds', '夜の制限時間', [30, 60, 90, 120, 180]],
+    ['discussionSeconds', '議論の時間', [120, 180, 300, 420, 600]],
+    ['voteSeconds', '投票の時間', [30, 45, 60, 90, 120]],
+  ];
+  for (const [key, label, values] of timeOpts) {
+    const row = el('div', 'settingrow');
+    row.appendChild(el('label', null, label));
+    if (isHost) {
+      const sel = el('select');
+      for (const v of values) {
+        const o = el('option', null, v >= 60 ? `${v / 60}分` : `${v}秒`);
+        o.value = v; if (S.room.config[key] === v) o.selected = true;
+        sel.appendChild(o);
+      }
+      if (!values.includes(S.room.config[key])) {
+        const o = el('option', null, `${S.room.config[key]}秒`); o.value = S.room.config[key]; o.selected = true; sel.appendChild(o);
+      }
+      sel.onchange = () => emit('config:update', { [key]: Number(sel.value) });
+      row.appendChild(sel);
+    } else {
+      row.appendChild(el('span', 'muted', `${S.room.config[key]}秒`));
+    }
+    setCard.appendChild(row);
+  }
+  const toggles = [['firstNightAttack', '初日の夜も襲撃する', null]];
+  if (S.botCount) {
+    toggles.push(
+      ['botsAreVillagersOnly', 'CPUは市民に固定する', 'オフにするとCPUが人狼や占い師を引きます。喋れないので、まともなゲームにはなりません。'],
+      ['botsVote', 'CPUも投票する', 'オフにするとCPUは棄権します。ランダム票で事故らせたくないときに。'],
+    );
+  }
+  for (const [key, label, note] of toggles) {
+    const row = el('div', 'settingrow');
+    row.appendChild(el('label', null, label));
+    const sw = el('div', 'switch' + (S.room.config[key] ? ' on' : ''));
+    if (isHost) sw.onclick = () => emit('config:update', { [key]: !S.room.config[key] });
+    row.appendChild(sw);
+    setCard.appendChild(row);
+    if (note) setCard.appendChild(el('p', 'muted', note)).style.marginTop = '-4px';
+  }
+  setCard.appendChild(el('p', 'muted', '議論時間は生存者が減るほど自動的に短くなります。'));
+  panel.appendChild(setCard);
+
+  if (isHost) {
+    const start = el('button', 'btn full', '🌙 ゲーム開始');
+    start.disabled = !!S.compositionError;
+    start.onclick = () => emit('game:start');
+    setSticky(start);
+  } else {
+    setSticky(el('div', 'card center muted', 'ホストの開始を待っています…'));
+  }
+}
+
+function changeCount(key, delta) {
+  const counts = { ...S.room.config.roleCounts };
+  counts[key] = Math.max(0, (counts[key] || 0) + delta);
+  emit('config:update', { roleCounts: counts });
+}
+
+/* ---------------- 役職確認 ---------------- */
+function renderRoleReveal(panel, sticky) {
+  const info = S.me.roleInfo;
+  const card = el('div', 'rolecard' + (info.team === 'wolf' ? ' wolf' : ''));
+  card.appendChild(el('div', 'emoji', info.emoji));
+  card.appendChild(el('div', 'team', info.team === 'wolf' ? '人狼陣営' : '村人陣営'));
+  card.appendChild(el('div', 'rname', esc(info.name)));
+  card.appendChild(el('div', 'rdesc', esc(info.desc)));
+  panel.appendChild(card);
+
+  if (S.me.role === 'werewolf') {
+    const mates = S.players.filter((p) => p.role === 'werewolf' && !p.isMe);
+    const c = el('div', 'card');
+    c.appendChild(el('h3', null, '🐺 仲間の人狼'));
+    c.appendChild(el('p', 'muted', mates.length ? '襲撃先はこの人たちと相談して決めてください。' : 'あなたが唯一の人狼です。'));
+    if (mates.length) c.appendChild(el('div', null, mates.map((m) => `<div class="logitem wolf">${esc(m.name)}</div>`).join('')));
+    panel.appendChild(c);
+  }
+
+  const readyCount = S.players.filter((p) => p.ready).length;
+  const status = el('div', 'card center muted', `確認済み ${readyCount} / ${S.players.length}人`);
+  panel.appendChild(status);
+
+  if (S.me.ready) {
+    setSticky(el('div', 'card center muted', '他の人の確認を待っています…'));
+  } else {
+    const btn = el('button', 'btn full', '確認しました');
+    btn.onclick = () => emit('player:ready');
+    setSticky(btn);
+  }
+}
+
+/* ---------------- 夜 ---------------- */
+function renderNight(panel, sticky) {
+  panel.appendChild(el('div', 'announce night', `🌙 ${S.room.day}日目の夜`));
+
+  if (!S.me.alive) {
+    panel.appendChild(el('div', 'card center', 'あなたは死亡しています。<div class="muted">霊界から観戦してください（発言・投票はできません）</div>'));
+    panel.appendChild(playerGrid({}));
+    appendMyLogs(panel);
+    hostSkip(sticky, '夜を終わらせる');
+    return;
+  }
+
+  const action = S.night?.myAction;
+  const kind = action?.kind;
+
+  if (!kind) {
+    panel.appendChild(el('div', 'card center', '😴 朝が来るのを待っています…<div class="muted">あなたに夜の行動はありません</div>'));
+  } else if (kind === 'divine') {
+    const done = S.logs.filter((l) => l.type === 'divine' && l.day === S.room.day)[0];
+    if (done) {
+      const target = S.players.find((p) => p.id === done.targetId);
+      const isWolf = done.result === 'wolf';
+      panel.appendChild(el('div', 'card center',
+        `🔮 占いの結果<div style="font-size:1.4rem;font-weight:800;margin-top:8px">${esc(target?.name || '?')} さんは</div>
+         <div style="font-size:2rem;font-weight:800;color:${isWolf ? 'var(--wolf)' : 'var(--village)'}">${isWolf ? '人狼' : '人間'}</div>
+         <div class="muted" style="margin-top:6px">でした</div>`));
+    } else {
+      panel.appendChild(actionPrompt('🔮 占う相手を選んでください', '一度選ぶと変更できません。'));
+      panel.appendChild(playerGrid({
+        selectable: (p) => p.alive && !p.isMe,
+        onSelect: (p) => emit('night:action', { kind: 'divine', targetId: p.id }),
+      }));
+    }
+  } else if (kind === 'guard') {
+    panel.appendChild(actionPrompt('🛡️ 護衛する相手を選んでください', '自分以外の生存者を人狼の襲撃から守ります。時間内なら変更できます。'));
+    panel.appendChild(playerGrid({
+      selectable: (p) => p.alive && !p.isMe,
+      selectedId: action.targetId,
+      onSelect: (p) => emit('night:action', { kind: 'guard', targetId: p.id }),
+    }));
+  } else if (kind === 'attack') {
+    const wolfVotes = S.night.wolfVotes || {};
+    const counts = {};
+    for (const t of Object.values(wolfVotes)) counts[t] = (counts[t] || 0) + 1;
+    const mates = S.players.filter((p) => p.role === 'werewolf' && !p.isMe);
+    panel.appendChild(actionPrompt('🐺 襲撃する相手を選んでください',
+      mates.length ? '仲間の人狼の希望も数字で表示されます。多数決で決まり、同数の場合はランダムです。' : '時間内なら変更できます。'));
+    panel.appendChild(playerGrid({
+      selectable: (p) => p.alive && p.role !== 'werewolf',
+      selectedId: action.targetId,
+      counts,
+      onSelect: (p) => emit('night:action', { kind: 'attack', targetId: p.id }),
+    }));
+  }
+
+  if (S.night) {
+    panel.appendChild(el('div', 'card center muted', `夜の行動 ${S.night.actorDone} / ${S.night.actorTotal} 人が完了`));
+  }
+  appendMyLogs(panel);
+  hostSkip(sticky, '夜を終わらせる');
+}
+
+function actionPrompt(title, note) {
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, title));
+  if (note) c.appendChild(el('p', 'muted', note));
+  return c;
+}
+
+/* ---------------- 朝・処刑結果 ---------------- */
+function renderAnnouncePhase(panel, sticky) {
+  const last = S.announcements[S.announcements.length - 1];
+  if (last) panel.appendChild(el('div', 'announce ' + (last.kind || ''), esc(last.text)));
+
+  if (S.room.phase === 'execution' && S.voteResult) {
+    panel.appendChild(voteBreakdown(S.voteResult));
+  }
+  panel.appendChild(playerGrid({}));
+  appendMyLogs(panel);
+  hostSkip(sticky, '次へ進む');
+}
+
+function voteBreakdown(vr) {
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, '🗳️ 投票の内訳'));
+  const byId = new Map(S.players.map((p) => [p.id, p]));
+  const rows = Object.entries(vr.ballots || {}).map(([voter, target]) =>
+    `<div class="logitem">${esc(byId.get(voter)?.name || '?')} → <strong>${esc(byId.get(target)?.name || '?')}</strong></div>`);
+  const abstained = S.players.filter((p) => p.alive || p.id === vr.executedId).filter((p) => !(vr.ballots || {})[p.id] && p.id !== vr.executedId);
+  c.appendChild(el('div', 'loglist', rows.join('') || '<div class="logitem">投票はありませんでした</div>'));
+  if (vr.reason === 'tieRandom') {
+    c.appendChild(el('p', 'muted', `同票（${vr.tied.map((id) => esc(byId.get(id)?.name || '?')).join('・')}）のため、ランダムに処刑者が決まりました。`));
+  }
+  if (abstained.length) c.appendChild(el('p', 'muted', `棄権: ${abstained.map((p) => esc(p.name)).join('、')}`));
+  return c;
+}
+
+/* ---------------- 議論 ---------------- */
+function renderDiscussion(panel, sticky) {
+  const c = el('div', 'card center');
+  c.appendChild(el('h3', null, `☀️ ${S.room.day}日目の議論`));
+  c.appendChild(el('p', 'muted', S.me.alive
+    ? '通話やチャットで話し合って、人狼を見つけ出してください。時間が来ると自動で投票に移ります。'
+    : 'あなたは死亡しています。議論には参加できません。'));
+  panel.appendChild(c);
+
+  panel.appendChild(playerGrid({}));
+  appendMyLogs(panel);
+  appendFeed(panel);
+  hostSkip(sticky, '議論を終えて投票へ');
+}
+
+/* ---------------- 投票 ---------------- */
+function renderVote(panel, sticky) {
+  if (!S.me.alive) {
+    panel.appendChild(el('div', 'card center', 'あなたは死亡しているため投票できません。'));
+    panel.appendChild(playerGrid({}));
+    appendMyLogs(panel);
+    hostSkip(sticky, '投票を締め切る');
+    return;
+  }
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, '🗳️ 処刑したい人に投票'));
+  c.appendChild(el('p', 'muted', '同票の場合はランダムに1人が処刑されます。時間内なら変更できます。'));
+  panel.appendChild(c);
+
+  panel.appendChild(playerGrid({
+    selectable: (p) => p.alive && !p.isMe,
+    selectedId: S.vote?.myVote,
+    onSelect: (p) => emit('vote:cast', { targetId: p.id }),
+  }));
+
+  const alive = S.players.filter((p) => p.alive).length;
+  panel.appendChild(el('div', 'card center muted', `投票済み ${S.vote?.castCount || 0} / ${alive}人`));
+  appendMyLogs(panel);
+  hostSkip(sticky, '投票を締め切る');
+}
+
+/* ---------------- 終了 ---------------- */
+function renderGameOver(panel, sticky) {
+  const r = S.result;
+  const iWon = r.winners.includes(S.me.id);
+  const w = el('div', 'winner ' + r.winner);
+  w.appendChild(el('div', 'big', r.winner === 'village' ? '🎉 村人陣営の勝利' : '🐺 人狼陣営の勝利'));
+  w.appendChild(el('div', 'muted', esc(r.reason)));
+  w.appendChild(el('div', 'youwin', iWon ? 'あなたの勝ち！' : 'あなたの負け…'));
+  panel.appendChild(w);
+
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, '全員の役職'));
+  c.appendChild(playerGrid({}));
+  panel.appendChild(c);
+
+  panel.appendChild(fullLog());
+
+  if (S.me.isHost) {
+    const btn = el('button', 'btn full', '🔁 同じメンバーで再戦');
+    btn.onclick = () => emit('game:restart');
+    setSticky(btn);
+  } else {
+    setSticky(el('div', 'card center muted', 'ホストの再戦を待っています…'));
+  }
+}
+
+function fullLog() {
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, '📜 進行の記録'));
+  const byId = new Map(S.players.map((p) => [p.id, p]));
+  const n = (id) => esc(byId.get(id)?.name || '?');
+  const items = S.logs.map((l) => {
+    const day = `<span class="lday">${l.day}日目</span>`;
+    if (l.type === 'divine') return `<div class="logitem ${l.result}">${day}🔮 ${n(l.actorId)} が ${n(l.targetId)} を占い、<strong>${l.result === 'wolf' ? '人狼' : '人間'}</strong>だった</div>`;
+    if (l.type === 'medium') return `<div class="logitem ${l.result}">${day}🕯️ 霊媒の結果、${n(l.targetId)} は<strong>${l.result === 'wolf' ? '人狼' : '人間'}</strong>だった</div>`;
+    if (l.type === 'guard') return `<div class="logitem">${day}🛡️ ${n(l.actorId)} が ${n(l.targetId)} を護衛した</div>`;
+    if (l.type === 'attack') return `<div class="logitem wolf">${day}🐺 人狼が ${n(l.targetId)} を襲撃${l.blocked ? 'したが護衛で防がれた' : 'した'}</div>`;
+    if (l.type === 'execute') return `<div class="logitem">${day}⚖️ ${l.targetId ? `${n(l.targetId)} が処刑された` : '処刑なし'}</div>`;
+    return '';
+  });
+  c.appendChild(el('div', 'loglist', items.join('') || '<div class="logitem muted">記録はありません</div>'));
+  return c;
+}
+
+/* ---------------- 自分だけが見えるログ ---------------- */
+function appendMyLogs(panel) {
+  const relevant = S.logs.filter((l) => ['divine', 'medium'].includes(l.type));
+  if (!relevant.length) return;
+  const byId = new Map(S.players.map((p) => [p.id, p]));
+  const n = (id) => esc(byId.get(id)?.name || '?');
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, '🔒 あなただけが知っている情報'));
+  c.appendChild(el('div', 'loglist', relevant.map((l) => {
+    const label = l.type === 'divine' ? `🔮 ${n(l.targetId)} を占った結果` : `🕯️ 処刑された ${n(l.targetId)} は`;
+    return `<div class="logitem ${l.result}"><span class="lday">${l.day}日目</span>${label} <strong>${l.result === 'wolf' ? '人狼' : '人間'}</strong></div>`;
+  }).join('')));
+  panel.appendChild(c);
+}
+
+function appendFeed(panel) {
+  if (!S.announcements.length) return;
+  const c = el('div', 'card');
+  c.appendChild(el('h3', null, '進行アナウンス'));
+  c.appendChild(el('div', 'feed', S.announcements.slice(-8).map((a) => `<div>${esc(a.text)}</div>`).join('')));
+  panel.appendChild(c);
+}
+
+function hostSkip(sticky, label) {
+  if (!S.me.isHost) return;
+  const btn = el('button', 'btn ghost full sm', `⏭ ${label}（ホスト）`);
+  btn.onclick = () => emit('host:skip');
+  setSticky(btn);
+}
+</script>
+</body>
+</html>
